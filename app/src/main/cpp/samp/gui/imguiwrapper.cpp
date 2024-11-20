@@ -168,8 +168,8 @@ void ImGuiWrapper::checkVertexBuffer(ImDrawData* draw_data)
 
 void ImGuiWrapper::renderDrawData(ImDrawData* draw_data)
 {
-	const RwReal nearScreenZ = getNearScreenZ();
-	const RwReal recipNearClip = getRecipNearClip();
+	const RwReal nearScreenZ = *(RwReal*)(g_libGTASA + (VER_x32 ? 0x00675F8C : 0x849FA0));
+	const RwReal recipNearClip = *(RwReal*)(g_libGTASA + (VER_x32 ? 0x006766AC : 0x84ADC8));
 
 	checkVertexBuffer(draw_data);
 	setupRenderState(draw_data);
@@ -212,7 +212,7 @@ void ImGuiWrapper::renderDrawData(ImDrawData* draw_data)
 				clip_rect.y = pcmd->ClipRect.w;
 				clip_rect.z = pcmd->ClipRect.z;
 				clip_rect.w = pcmd->ClipRect.y;
-				setScissorRect((void*)&clip_rect);
+				SetScissorRect((void*)&clip_rect);
 
 				RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)pcmd->TextureId);
 				RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST,
@@ -221,7 +221,7 @@ void ImGuiWrapper::renderDrawData(ImDrawData* draw_data)
 				RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)0);
 
 				clip_rect = { 0.0f, 0.0f, 0.0f, 0.0f };
-				setScissorRect((void*)&clip_rect);
+				SetScissorRect((void*)&clip_rect);
 			}
 
 			idx_buffer += pcmd->ElemCount;

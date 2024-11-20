@@ -26,7 +26,7 @@ void StreamAtVehicle::Tick() noexcept
     CVehicle *pVehicle = pVehiclePool->GetAt(this->vehicleId);
     if(!pVehicle) return;
 
-    MATRIX4X4 pVehicleMatrix;
+    RwMatrix pVehicleMatrix;
     pVehicle->GetMatrix(&pVehicleMatrix);
 
     for(const auto& channel : this->GetChannels())
@@ -54,7 +54,7 @@ void StreamAtVehicle::OnChannelCreate(const Channel& channel) noexcept
     CVehicle *pVehicle = pVehiclePool->GetAt(this->vehicleId);
     if(!pVehicle) return;
 
-    MATRIX4X4 pVehicleMatrix;
+    RwMatrix pVehicleMatrix;
     pVehicle->GetMatrix(&pVehicleMatrix);
 
     BASS_ChannelSet3DPosition(channel.GetHandle(),

@@ -4,24 +4,34 @@
 
 struct GAME_SCRIPT_THREAD
 {
-	uint8_t Pad1[20];			// +00
-	uintptr_t dwScriptIP;		// +20
-	uint8_t Pad2[36];			// +24
-	uint32_t dwLocalVar[32];	// +60
-	uint32_t dwTimers[2];		// +188
-	uint8_t Pad3[33];			// +196
-	uint8_t condResult;			// +229
-	uint8_t Pad4[10];			// +230
-	uint16_t logicalOp;			// +240
-	uint8_t notFlag;			// +242
-	uint8_t Pad5[13];			// +243
-	// STRUCT SIZE = 256
+    uintptr *pNext;
+    uintptr *pPrevious;
+    char ScriptName[8];
+    uint8 *BaseAddressOfThisScript;
+    uintptr dwScriptIP;
+    uint8 *PCStack[8];
+    uint16 StackDepth;
+    int32 dwLocalVar[42];
+    bool bActive;
+    bool condResult;
+    bool IsThisAMissionScript;
+    bool bIsThisAStreamedScript;
+    bool bIsThisAMiniGameScript;
+    uint8 ScriptBrainType;
+    uint32 ActivateTime;
+    uint16 AndOrState;
+    bool NotForLatestExpression;
+    bool DeatharrestCheckEnabled;
+    bool DoneDeatharrest;
+    int32 EndOfScriptedCutscenePC;
+    bool ThisMustBeTheOnlyMissionRunning;
 };
+VALIDATE_SIZE(GAME_SCRIPT_THREAD, (VER_x32 ? 0x100 : 0x130));
 
 struct SCRIPT_COMMAND
 {
-	uint16_t OpCode;
-	char Params[MAX_SCRIPT_VARS];
+    uint16_t OpCode;
+    char Params[MAX_SCRIPT_VARS];
 };
 
 int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...);
@@ -56,6 +66,7 @@ const SCRIPT_COMMAND link_actor_to_interior					= { 0x0860, "ii" };
 const SCRIPT_COMMAND select_interior						= { 0x04BB, "i" };
 const SCRIPT_COMMAND restore_camera_to_user					= { 0x0925, "" };
 const SCRIPT_COMMAND lock_camera_position					= { 0x0930, "i" };
+const SCRIPT_COMMAND lock_camera_position1 = { 0x0930, "i" };
 const SCRIPT_COMMAND get_active_interior					= { 0x077e, "v" };
 const SCRIPT_COMMAND request_animation						= { 0x04ED, "s" };
 const SCRIPT_COMMAND is_animation_loaded					= { 0x04EE, "s" };

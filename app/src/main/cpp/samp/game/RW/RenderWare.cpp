@@ -1,12 +1,11 @@
 #include "../../main.h"
 #include "RenderWare.h"
-#include "armhook/armhook.h"
+#include "../vendor/armhook//patch.h"
 
 RsGlobalType* RsGlobal;
 
 /* rwcore.h */
 RwCamera* (*RwCameraBeginUpdate)(RwCamera* camera);
-RwCamera* (*RwCameraEndUpdate)(RwCamera* camera);
 RwCamera* (*RwCameraShowRaster)(RwCamera * camera, void *pDev, RwUInt32 flags);
 
 RwRaster* 	(*RwRasterCreate)(RwInt32 width, RwInt32 height, RwInt32 depth, RwInt32 flags);
@@ -65,84 +64,60 @@ void InitRenderWareFunctions()
 	FLog("Initializing RenderWare..");
 
 	/* skeleton.h */
-	RsGlobal = (RsGlobalType*)(g_libGTASA+0x009FC8FC);
+	RsGlobal = (RsGlobalType*)(g_libGTASA + (VER_x32 ? 0x009FC8FC : 0xC9B320));
 
 	/* rwCore.h */
-	*(void**)(&RwCameraBeginUpdate) 			= (void*)(g_libGTASA+0x001D5A18+1);
-	*(void**)(&RwCameraEndUpdate) 				= (void*)(g_libGTASA+0x001D5A14+1);
-	*(void**)(&RwCameraShowRaster)				= (void*)(g_libGTASA+0x001D5D14+1);
+	*(void**)(&RwCameraBeginUpdate) 			= (void*)(CHook::getSym("_Z19RwCameraBeginUpdateP8RwCamera"));
+	*(void**)(&RwCameraShowRaster)				= (void*)(CHook::getSym("_Z18RwCameraShowRasterP8RwCameraPvj"));
 
-	*(void **)(&RwRasterCreate) 				= (void*)(g_libGTASA+0x001DA9D0+1);
-	*(void **)(&RwRasterDestroy) 				= (void*)(g_libGTASA+0x001DA7D0+1);
-	*(void **)(&RwRasterGetOffset) 				= (void*)(g_libGTASA+0x001DA6AC+1);
-	*(void **)(&RwRasterGetNumLevels) 			= (void*)(g_libGTASA+0x001DA900+1);
-	*(void **)(&RwRasterSubRaster) 				= (void*)(g_libGTASA+0x001DA974+1);
-	*(void **)(&RwRasterRenderFast)				= (void*)(g_libGTASA+0x001DA734+1);
-	*(void **)(&RwRasterRender)					= (void*)(g_libGTASA+0x001DA780+1);
-	*(void **)(&RwRasterRenderScaled)			= (void*)(g_libGTASA+0x001DA68C+1);
-	*(void **)(&RwRasterPushContext)			= (void*)(g_libGTASA+0x001DA818+1);
-	*(void **)(&RwRasterPopContext)				= (void*)(g_libGTASA+0x001DA8B8+1);
-	*(void **)(&RwRasterGetCurrentContext)		= (void*)(g_libGTASA+0x001DA66C+1);
-	*(void **)(&RwRasterClear)					= (void*)(g_libGTASA+0x001DA6DC+1);
-	*(void **)(&RwRasterClearRect)				= (void*)(g_libGTASA+0x001DA760+1);
-	*(void **)(&RwRasterShowRaster)				= (void*)(g_libGTASA+0x001DA93C+1);
-	*(void **)(&RwRasterLock)					= (void*)(g_libGTASA+0x001DAA74+1);
-	*(void **)(&RwRasterUnlock)					= (void*)(g_libGTASA+0x001DA6B8+1);
-	*(void **)(&RwRasterLockPalette)			= (void*)(g_libGTASA+0x001DA88C+1);
-	*(void **)(&RwRasterUnlockPalette)			= (void*)(g_libGTASA+0x001DA7AC+1);
-	*(void **)(&RwImageCreate)					= (void*)(g_libGTASA+0x001D8E20+1);
-	*(void **)(&RwImageDestroy)					= (void*)(g_libGTASA+0x001D8E78+1);
-	*(void **)(&RwImageAllocatePixels)			= (void*)(g_libGTASA+0x001D8F04+1);
-	*(void **)(&RwImageFreePixels)				= (void*)(g_libGTASA+0x001D8ED8+1);
-	*(void **)(&RwImageCopy)					= (void*)(g_libGTASA+0x001D9560+1);
-	*(void **)(&RwImageResize)					= (void*)(g_libGTASA+0x001D8FA0+1);
-	*(void **)(&RwImageApplyMask)				= (void*)(g_libGTASA+0x001D9280+1);
-	*(void **)(&RwImageMakeMask)				= (void*)(g_libGTASA+0x001D90C8+1);
-	*(void **)(&RwImageReadMaskedImage)			= (void*)(g_libGTASA+0x001D9DDC+1);
-	*(void **)(&RwImageRead)					= (void*)(g_libGTASA+0x001D97AC+1);
-	*(void **)(&RwImageWrite)					= (void*)(g_libGTASA+0x001D9D40+1);
-	*(void **)(&RwImageSetFromRaster)			= (void*)(g_libGTASA+0x001DA454+1);
-	*(void **)(&RwRasterSetFromImage)			= (void*)(g_libGTASA+0x001DA478+1);
-	*(void **)(&RwRasterRead)					= (void*)(g_libGTASA+0x001DA574+1);
-	*(void **)(&RwRasterReadMaskedRaster)		= (void*)(g_libGTASA+0x001DA614+1);
-	*(void **)(&RwImageFindRasterFormat)		= (void*)(g_libGTASA+0x001DA49C+1);
+	*(void **)(&RwRasterCreate) 				= (void*)(CHook::getSym("_Z14RwRasterCreateiiii"));
+	*(void **)(&RwRasterDestroy) 				= (void*)(CHook::getSym("_Z15RwRasterDestroyP8RwRaster"));
+	*(void **)(&RwRasterGetOffset) 				= (void*)(CHook::getSym("_Z17RwRasterGetOffsetP8RwRasterPsS1_"));
+	*(void **)(&RwRasterGetNumLevels) 			= (void*)(CHook::getSym("_Z20RwRasterGetNumLevelsP8RwRaster"));
+	*(void **)(&RwRasterSubRaster) 				= (void*)(CHook::getSym("_Z17RwRasterSubRasterP8RwRasterS0_P6RwRect"));
+	*(void **)(&RwRasterRenderFast)				= (void*)(CHook::getSym("_Z18RwRasterRenderFastP8RwRasterii"));
+	*(void **)(&RwRasterRender)					= (void*)(CHook::getSym("_Z14RwRasterRenderP8RwRasterii"));
+	*(void **)(&RwRasterRenderScaled)			= (void*)(CHook::getSym("_Z20RwRasterRenderScaledP8RwRasterP6RwRect"));
+	*(void **)(&RwRasterPushContext)			= (void*)(CHook::getSym("_Z19RwRasterPushContextP8RwRaster"));
+	*(void **)(&RwRasterPopContext)				= (void*)(CHook::getSym("_Z18RwRasterPopContextv"));
+	*(void **)(&RwRasterGetCurrentContext)		= (void*)(CHook::getSym("_Z25RwRasterGetCurrentContextv"));
+	*(void **)(&RwRasterClear)					= (void*)(CHook::getSym("_Z13RwRasterCleari"));
+	*(void **)(&RwRasterClearRect)				= (void*)(CHook::getSym("_Z17RwRasterClearRectP6RwRecti"));
+	*(void **)(&RwRasterShowRaster)				= (void*)(CHook::getSym("_Z18RwRasterShowRasterP8RwRasterPvj"));
+	*(void **)(&RwRasterLock)					= (void*)(CHook::getSym("_Z12RwRasterLockP8RwRasterhi"));
+	*(void **)(&RwRasterUnlock)					= (void*)(CHook::getSym("_Z14RwRasterUnlockP8RwRaster"));
+	*(void **)(&RwRasterLockPalette)			= (void*)(CHook::getSym("_Z19RwRasterLockPaletteP8RwRasteri"));
+	*(void **)(&RwRasterUnlockPalette)			= (void*)(CHook::getSym("_Z21RwRasterUnlockPaletteP8RwRaster"));
+	*(void **)(&RwImageCreate)					= (void*)(CHook::getSym("_Z13RwImageCreateiii"));
+	*(void **)(&RwImageDestroy)					= (void*)(CHook::getSym("_Z14RwImageDestroyP7RwImage"));
+	*(void **)(&RwImageAllocatePixels)			= (void*)(CHook::getSym("_Z21RwImageAllocatePixelsP7RwImage"));
+	*(void **)(&RwImageFreePixels)				= (void*)(CHook::getSym("_Z17RwImageFreePixelsP7RwImage"));
+	*(void **)(&RwImageCopy)					= (void*)(CHook::getSym("_Z11RwImageCopyP7RwImagePKS_"));
+	*(void **)(&RwImageResize)					= (void*)(CHook::getSym("_Z13RwImageResizeP7RwImageii"));
+	*(void **)(&RwImageApplyMask)				= (void*)(CHook::getSym("_Z16RwImageApplyMaskP7RwImagePKS_"));
+	*(void **)(&RwImageMakeMask)				= (void*)(CHook::getSym("_Z15RwImageMakeMaskP7RwImage"));
+	*(void **)(&RwImageReadMaskedImage)			= (void*)(CHook::getSym("_Z22RwImageReadMaskedImagePKcS0_"));
+	*(void **)(&RwImageRead)					= (void*)(CHook::getSym("_Z11RwImageReadPKc"));
+	*(void **)(&RwImageWrite)					= (void*)(CHook::getSym("_Z12RwImageWriteP7RwImagePKc"));
+	*(void **)(&RwImageSetFromRaster)			= (void*)(CHook::getSym("_Z20RwImageSetFromRasterP7RwImageP8RwRaster"));
+	*(void **)(&RwRasterSetFromImage)			= (void*)(CHook::getSym("_Z20RwRasterSetFromImageP8RwRasterP7RwImage"));
+	*(void **)(&RwRasterRead)					= (void*)(CHook::getSym("_Z12RwRasterReadPKc"));
+	*(void **)(&RwRasterReadMaskedRaster)		= (void*)(CHook::getSym("_Z24RwRasterReadMaskedRasterPKcS0_"));
+	*(void **)(&RwImageFindRasterFormat)		= (void*)(CHook::getSym("_Z23RwImageFindRasterFormatP7RwImageiPiS1_S1_S1_"));
 
 	/* rwlpcore.h */
-	*(void **)(&RwIm2DGetNearScreenZ)			= (void*)(g_libGTASA+0x001E2874+1);
-	*(void **)(&RwIm2DGetFarScreenZ)			= (void*)(g_libGTASA+0x001E2884+1);
-	*(void **)(&RwRenderStateGet)				= (void*)(g_libGTASA+0x001E28C8+1);
-	*(void **)(&RwRenderStateSet)				= (void*)(g_libGTASA+0x001E2894+1);
-	*(void **)(&RwIm2DRenderLine)				= (void*)(g_libGTASA+0x001E28D8+1);
-	*(void **)(&RwIm2DRenderTriangle)			= (void*)(g_libGTASA+0x001E28F0+1);
-	*(void **)(&RwIm2DRenderPrimitive)			= (void*)(g_libGTASA+0x001E2908+1);
-	*(void **)(&RwIm2DRenderIndexedPrimitive)	= (void*)(g_libGTASA+0x001E2918+1);
+	*(void **)(&RwIm2DGetNearScreenZ)			= (void*)(CHook::getSym("_Z20RwIm2DGetNearScreenZv"));
+	*(void **)(&RwIm2DGetFarScreenZ)			= (void*)(CHook::getSym("_Z19RwIm2DGetFarScreenZv"));
+	*(void **)(&RwRenderStateGet)				= (void*)(CHook::getSym("_Z16RwRenderStateGet13RwRenderStatePv"));
+	*(void **)(&RwRenderStateSet)				= (void*)(CHook::getSym("_Z16RwRenderStateSet13RwRenderStatePv"));
+	*(void **)(&RwIm2DRenderLine)				= (void*)(CHook::getSym("_Z23RwIm2DRenderLine_BUGFIXP14RwOpenGLVertexiii"));
+	*(void **)(&RwIm2DRenderTriangle)			= (void*)(CHook::getSym("_Z27RwIm2DRenderTriangle_BUGFIXP14RwOpenGLVertexiiii"));
+	*(void **)(&RwIm2DRenderPrimitive)			= (void*)(CHook::getSym("_Z28RwIm2DRenderPrimitive_BUGFIX15RwPrimitiveTypeP14RwOpenGLVertexi"));
+	*(void **)(&RwIm2DRenderIndexedPrimitive)	= (void*)(CHook::getSym("_Z35RwIm2DRenderIndexedPrimitive_BUGFIX15RwPrimitiveTypeP14RwOpenGLVertexiPti"));
 
 	/* rtpng.h */
-	*(void **)(&RtPNGImageWrite)				= (void*)(g_libGTASA+0x0020A144+1);
-	*(void **)(&RtPNGImageRead)					= (void*)(g_libGTASA+0x0020A3F4+1);
+	*(void **)(&RtPNGImageWrite)				= (void*)(CHook::getSym("_Z15RtPNGImageWriteP7RwImagePKc"));
+	*(void **)(&RtPNGImageRead)					= (void*)(CHook::getSym("_Z14RtPNGImageReadPKc"));
 
-	*(void**)(&RwTextureDestroy) = (void*)(g_libGTASA + 0x001DB6E4 + 1);
-}
-
-void setScissorRect(void* pRect)
-{
-	return ((void(*)(void*))(g_libGTASA + 0x2B3EC4 + 1))(pRect);
-}
-
-RwReal getNearScreenZ()
-{
-	return *(RwReal*)(g_libGTASA + 0xA7C348);
-}
-
-RwReal getRecipNearClip()
-{
-	return *(RwReal*)(g_libGTASA + 0xA7C344);
-}
-
-RpGeometry* RpGeometryForAllMaterials(RpGeometry* geometry, RpMaterialCallBack fpCallBack, void* data) {
-    return CallFunction<RpGeometry*>(g_libGTASA + (VER_x32 ? 0x00215F30 + 1 : 0x2BCE78), geometry, fpCallBack, data);
-}
-
-RwFrame* RwFrameForAllObjects(RwFrame* frame, RwObjectCallBack callBack, void* data) {
-    return CallFunction<RwFrame*>(g_libGTASA + (VER_x32 ? 0x001D8858 + 1 : 0x2703BC), frame, callBack, data);
+	*(void**)(&RwTextureDestroy) 				= (void*)(CHook::getSym("_Z16RwTextureDestroyP9RwTexture"));
 }

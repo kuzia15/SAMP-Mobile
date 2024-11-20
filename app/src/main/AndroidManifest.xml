@@ -23,8 +23,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.Ad_ID" />
 
-    <uses-feature
-        android:glEsVersion="0x00020000" />
+    <uses-feature android:glEsVersion="0x00020000" android:required="true"/>
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
@@ -103,16 +102,6 @@
 
         <service android:name=".launcher.UpdateService" android:enabled="true" android:exported="false"/>
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="com.samp.mobile.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-        </provider>
-
         <service
             android:name="com.samp.mobile.launcher.util.FirebaseMessageReceiver"
             android:exported="false">
@@ -120,21 +109,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_baseline_notifications_24" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/wallet_highlighted_text_holo_dark" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="SA-MP Launcher" />
-
-        <meta-data android:name="applovin.sdk.key"
-            android:value="X_RLxUrKlqpEH5nQ8kN6v6Uwr4AhiDVXqOfRu_1kGK_SXHUZ2flDJZ8hILdCwuvtWIv1l73aQF0ng_EKaPSBrt"/>
-
-
     </application>
 
 </manifest>

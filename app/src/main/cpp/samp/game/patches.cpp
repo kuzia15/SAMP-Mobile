@@ -1,20 +1,12 @@
 #include "../main.h"
 #include "../game/game.h"
-#include "../vendor/armhook/armhook.h"
+#include "../vendor/armhook/patch.h"
 #include "vehicleColoursTable.h"
 #include "../settings.h"
 extern CSettings* pSettings;
 
-char* WORLD_PLAYERS = nullptr;
-
-struct _ATOMIC_MODEL
-{
-	uintptr_t func_tbl;
-	char data[56];
-} *ATOMIC_MODELS = nullptr;
-
 VehicleAudioPropertiesStruct VehicleAudioProperties[20000];
-
+char* WORLD_PLAYERS = nullptr;
 #include "game.h"
 extern CGame* pGame;
 void readVehiclesAudioSettings()
@@ -35,7 +27,7 @@ void readVehiclesAudioSettings()
 	memset(&CurrentVehicleAudioProperties, 0x0, sizeof(VehicleAudioPropertiesStruct));
 
 	char buffer[0xFF];
-	sprintf(buffer, "%sSAMP/vehicleAudioSettings.cfg", pGame->GetDataDirectory());
+	sprintf(buffer, "%sSAMP/vehicleAudioSettings.cfg", g_pszStorage);
 	pFile = fopen(buffer, "r");
 	if (!pFile)
 	{
@@ -77,301 +69,262 @@ void readVehiclesAudioSettings()
 	fclose(pFile);
 }
 
+void DisableAutoAim()
+{
+    CHook::RET("_ZN10CPlayerPed22FindWeaponLockOnTargetEv"); // CPedSamp::FindWeaponLockOnTarget
+    CHook::RET("_ZN10CPlayerPed26FindNextWeaponLockOnTargetEP7CEntityb"); // CPedSamp::FindNextWeaponLockOnTarget
+    CHook::RET("_ZN4CPed21SetWeaponLockOnTargetEP7CEntity"); // CPed::SetWeaponLockOnTarget
+}
+
 void ApplySAMPPatchesInGame()
 {
-	LOGI("Applying samp patches.. (ingame)");
+    FLog("Installing patches (ingame)..");
 
-	// CTheZones::ZonesVisited[100]
-	memset((void*)(g_libGTASA + /*0x8EA7B0*/0x98D252), 1, 100);
-	// CTheZones::ZonesRevealed
-	*(uint32_t*)(g_libGTASA + /*0x8EA7A8*/0x98D2B8) = 100;
+    /* Разблокировка карты */
+    // CTheZones::ZonesVisited[100]
+    memset((void*)(g_libGTASA + (VER_x32 ? 0x0098D252 : 0xC1BF92)), 1, 100);
+    // CTheZones::ZonesRevealed
+    *(uint32_t*)(g_libGTASA + (VER_x32 ? 0x0098D2B8 : 0xC1BFF8)) = 100;
 
-	// Make pay 'n' spray always free
-	*(bool*)(g_libGTASA+0x7A4DB2) = true;
+    // CPlayerPed::CPlayerPed task fix
+#if VER_x32
+    CHook::WriteMemory(g_libGTASA + 0x004C36E2, (uintptr_t)"\xE0", 1);
+#else
+    CHook::WriteMemory(g_libGTASA + 0x5C0BC4, (uintptr_t)"\x34\x00\x80\x52", 4);
+#endif
+    // radar draw blips
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x0043FE5A : 0x52522C), 2);
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x004409AE : 0x525E14), 2);
 
-    // displayFPS
-    *(unsigned char*)(g_libGTASA + 0x98F1AD) = pSettings->Get().iFPSCounter;
+//	CHook::WriteMemory(g_libGTASA + 0x00341F84, (uintptr_t)"\x00\xF0\x21\xBE", 4);
 
-	ARMHook::unprotect(g_libGTASA+0x5E4978);
-	*(uint8_t*)(g_libGTASA+0x5E4978) = pSettings->Get().iFPSCount;
-	ARMHook::unprotect(g_libGTASA+0x5E4990);
-	*(uint8_t*)(g_libGTASA+0x5E4990) = pSettings->Get().iFPSCount;
+    CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
 
-    // множитель для MaxHealth
-    ARMHook::unprotect(g_libGTASA + 0x41C33C);
-    *(float*)(g_libGTASA + 0x41C33C) = 176.0f;
-    // множитель для Armour
-    ARMHook::unprotect(g_libGTASA + 0x2BD94C);
-    *(float*)(g_libGTASA + 0x2BD94C) = 176.0;
+    // no vehicle audio processing
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x00553E96 : 0x674610), 2);
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x00561AC2 : 0x682C1C), 2);
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x0056BED4 : 0x68DD0C), 2);
+
+    // Disable in-game radio
+    CHook::RET("_ZN20CAERadioTrackManager7ServiceEi");
+
+    // карта в меню
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x2ABA08 : 0x36A6E8), 2); // текст легенды карты
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x2ABA14 : 0x36A6F8), 2); // значки легенды
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x2AB4A6 : 0x36A190), 2); // название местности
+}
+
+int32_t CWorld__FindPlayerSlotWithPedPointer(uint32_t pPlayersPed)
+{
+    uint32_t result = 0;
+
+    uint32_t *dwWorldPlayers = (uint32_t*)WORLD_PLAYERS;
+    while(*dwWorldPlayers != pPlayersPed)
+    {
+        ++result;
+        dwWorldPlayers += 101;
+        if(result > 210)
+            return 0;
+    }
+
+    return result;
+}
+
+void ApplyPatches_level0()
+{
+    FLog("ApplyPatches_level0");
+
+    WORLD_PLAYERS = new char[0x404 * PLAYER_PED_SLOTS];
+    memset(WORLD_PLAYERS, 0, 0x404 * PLAYER_PED_SLOTS);
+    CHook::UnFuck(g_libGTASA+(VER_x32 ? 0x006783C0 : 0x84E7A8));
+    *(char**)(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8)) = WORLD_PLAYERS;
+    FLog("CWorld::Players new address: 0x%X", WORLD_PLAYERS);
+
+    CHook::Redirect("_ZN6CWorld28FindPlayerSlotWithPedPointerEPv", &CWorld__FindPlayerSlotWithPedPointer);
+
+// fix aplha raster
+#if VER_x32
+    CHook::WriteMemory(g_libGTASA + 0x001AE8DE, (uintptr_t)"\x01\x22", 2);
+#else
+    CHook::WriteMemory(g_libGTASA + 0x23FDE0, (uintptr_t)"\x22\x00\x80\x52", 4);
+#endif
+    DisableAutoAim();
+
+    CHook::RET("_ZN6CTrain10InitTrainsEv"); // CTrain::InitTrains
+
+    CHook::RET("_ZN8CClothes4InitEv"); // CClothes::Init()
+    CHook::RET("_ZN8CClothes13RebuildPlayerEP10CPlayerPedb"); // CClothes::RebuildPlayer
+
+    CHook::RET("_ZNK35CPedGroupDefaultTaskAllocatorRandom20AllocateDefaultTasksEP9CPedGroupP4CPed"); // AllocateDefaultTasks
+    CHook::RET("_ZN6CGlass4InitEv"); // CGlass::Init
+    CHook::RET("_ZN8CGarages17Init_AfterRestartEv"); // CGarages::Init_AfterRestart
+    CHook::RET("_ZN6CGangs10InitialiseEv"); // CGangs::Initialise
+    CHook::RET("_ZN5CHeli9InitHelisEv"); // CHeli::InitHelis(void)
+    CHook::RET("_ZN11CFileLoader10LoadPickupEPKc"); // CFileLoader::LoadPickup
+
+    // entryexit
+    //CHook::RET("_ZN17CEntryExitManager4InitEv");
+   // CHook::RET("_ZN17CEntryExitManager22PostEntryExitsCreationEv");
+
+    CHook::RET("_ZN10CSkidmarks6UpdateEv"); // CSkidmarks::Update
+    CHook::RET("_ZN10CSkidmarks6RenderEv"); // CSkidmarks::Render
+
+    //CHook::RET("_ZN14SurfaceInfos_c17CreatesWheelGrassEj"); // SurfaceInfos_c::CreatesWheelGrass
+    //CHook::RET("_ZN14SurfaceInfos_c18CreatesWheelGravelEj"); // SurfaceInfos_c::CreatesWheelGravel
+    //CHook::RET("_ZN14SurfaceInfos_c15CreatesWheelMudEj"); // SurfaceInfos_c::CreatesWheelMud
+    CHook::RET("_ZN14SurfaceInfos_c16CreatesWheelDustEj"); // SurfaceInfos_c::CreatesWheelDust
+    //CHook::RET("_ZN14SurfaceInfos_c16CreatesWheelSandEj"); // SurfaceInfos_c::CreatesWheelSand
+    CHook::RET("_ZN14SurfaceInfos_c17CreatesWheelSprayEj"); // SurfaceInfos_c::CreatesWheelSpray
+
+    //CHook::RET("_ZN4Fx_c13AddWheelGrassEP8CVehicle7CVectorhf"); // Fx_c::AddWheelGrass
+    //CHook::RET("_ZN4Fx_c14AddWheelGravelEP8CVehicle7CVectorhf"); // Fx_c::AddWheelGravel
+    //CHook::RET("_ZN4Fx_c11AddWheelMudEP8CVehicle7CVectorhf"); // Fx_c::AddWheelMud
+    CHook::RET("_ZN4Fx_c12AddWheelDustEP8CVehicle7CVectorhf"); // Fx_c::AddWheelDust
+    //CHook::RET("_ZN4Fx_c12AddWheelSandEP8CVehicle7CVectorhf"); // Fx_c::AddWheelSand
+    CHook::RET("_ZN4Fx_c13AddWheelSprayEP8CVehicle7CVectorhhf"); // Fx_c::AddWheelSpray
 }
 
 void ApplyGlobalPatches()
 {
-	LOGI("Applying global patches..");
+    FLog("Installing patches..");
+
+    CHook::RET("_ZN17CVehicleModelInfo17SetCarCustomPlateEv"); // default plate
+
+    CHook::RET("_Z16SaveGameForPause10eSaveTypesPc"); // не сохранять при сворачивании. черный экран
+
+#if VER_x32
+    // черные значки
+    CHook::WriteMemory(g_libGTASA + 0x00442120, (uintptr_t)"\x2C\xE0", 2); // B 0x44217c
+    CHook::WriteMemory(g_libGTASA + 0x0044217C, (uintptr_t)"\x30\x46", 2); // mov r0, r6
+
+    /*// CRadar::DrawEntityBlip (translate color)
+    CHook::WriteMemory(g_libGTASA + 0x004404C0, (uintptr_t)"\x3A\xE0", 2); // B 0x440538
+    CHook::WriteMemory(g_libGTASA + 0x00440538, (uintptr_t)"\x30\x46", 2); // mov r0, r6
+
+    // CRadar::DrawCoordBlip (translate color)
+    CHook::WriteMemory(g_libGTASA + 0x0043FB5E, (uintptr_t)"\x12\xE0", 2); // B 0x43fb86
+    CHook::WriteMemory(g_libGTASA + 0x0043FB86, (uintptr_t)"\x48\x46", 2); // mov r0, r9
+    CHook::WriteMemory(g_libGTASA + 0x002AB5C6, (uintptr_t)"\x00\x21", 2);*/
+#else
+    // черные значки
+    CHook::WriteMemory(g_libGTASA + 0x52737C, (uintptr_t)"\x1E\x00\x00\x14", 4); // B 0x5273F4
+    CHook::WriteMemory(g_libGTASA + 0x5273F4, (uintptr_t)"\xE1\x03\x14\x2A", 4); // mov w1, w20
+
+    /*// CRadar::DrawEntityBlip (translate color)
+    CHook::WriteMemory(g_libGTASA + 0x5258D8, (uintptr_t)"\x22\x00\x00\x14", 4); // B 0x525960
+    CHook::WriteMemory(g_libGTASA + 0x525960, (uintptr_t)"\xE1\x03\x16\x2A", 4); // mov w1, W22
+
+    // CRadar::DrawCoordBlip (translate color)
+    CHook::WriteMemory(g_libGTASA + 0x524F58, (uintptr_t)"\xCC\xFF\xFF\x17", 4); // B 0x524E88
+    CHook::WriteMemory(g_libGTASA + 0x524E88, (uintptr_t)"\xE1\x03\x16\x2A", 4); // mov w1, W22*/
+
+    // crash legend
+    CHook::NOP(g_libGTASA + 0x36A690, 1);
+#endif
+
+    //ApplyShadowPatch();
+
+    //CDebugInfo::ApplyDebugPatches();
+
+    CHook::RET("_ZN12CAudioEngine16StartLoadingTuneEv"); // звук загрузочного экрана
+
+    // DefaultPCSaveFileName
+    char* DefaultPCSaveFileName = (char*)(g_libGTASA + (VER_x32 ? 0x006B012C : 0x88CB08));
+    memcpy(DefaultPCSaveFileName, "GTASAMP", 8);
+
+#if VER_x32
+    CHook::NOP(g_libGTASA + 0x003F61B6, 2);	// CCoronas::RenderSunReflection crash
+    CHook::NOP(g_libGTASA + 0x00584884, 2);	// не давать ган при выходе из тачки 	( клюшка, дробовик and etc )
+    CHook::NOP(g_libGTASA + 0x00584850, 2);	// не давать ган при выходе из тачки	( клюшка, дробовик and etc )
+#else
+    CHook::NOP(g_libGTASA + 0x004D8700, 1);  // CCoronas::RenderSunReflection crash
+    CHook::NOP(g_libGTASA + 0x006A852C, 1);  // не давать ган при выходе из тачки   ( клюшка, дробовик and etc )
+    CHook::NOP(g_libGTASA + 0x006A84E0, 1);  // не давать ган при выходе из тачки  ( клюшка, дробовик and etc )
+#endif
+
+    CHook::RET("_ZN17CVehicleRecording4LoadEP8RwStreamii"); // CVehicleRecording::Load
+
+    CHook::RET("_ZN18CMotionBlurStreaks6UpdateEv");
+    CHook::RET("_ZN7CCamera16RenderMotionBlurEv");
+
+    CHook::RET("_ZN11CPlayerInfo17FindObjectToStealEP4CPed"); // Crash
+    CHook::RET("_ZN26CAEGlobalWeaponAudioEntity21ServiceAmbientGunFireEv");	// CAEGlobalWeaponAudioEntity::ServiceAmbientGunFire
+    CHook::RET("_ZN30CWidgetRegionSteeringSelection4DrawEv"); // CWidgetRegionSteeringSelection::Draw
+    CHook::RET("_ZN23CTaskSimplePlayerOnFoot18PlayIdleAnimationsEP10CPlayerPed");	// CTaskSimplePlayerOnFoot::PlayIdleAnimations
+    CHook::RET("_ZN13CCarEnterExit17SetPedInCarDirectEP4CPedP8CVehicleib");	// CCarEnterExit::SetPedInCarDirect
+    CHook::RET("_ZN6CRadar10DrawLegendEiii"); // CRadar::DrawLgegend
+    CHook::RET("_ZN6CRadar19AddBlipToLegendListEhi"); // CRadar::AddBlipToLegendList
+
+    CHook::RET("_ZN11CAutomobile35CustomCarPlate_BeforeRenderingStartEP17CVehicleModelInfo"); // CAutomobile::CustomCarPlate_BeforeRenderingStart
+    CHook::RET("_ZN11CAutomobile33CustomCarPlate_AfterRenderingStopEP17CVehicleModelInfo"); // CAutomobile::CustomCarPlate_AfterRenderingStop
+    CHook::RET("_ZN7CCamera8CamShakeEffff"); // CCamera::CamShake
+    CHook::RET("_ZN7CEntity23PreRenderForGlassWindowEv"); // CEntity::PreRenderForGlassWindow
+    CHook::RET("_ZN8CMirrors16RenderReflBufferEb"); // CMirrors::RenderReflBuffer
+    CHook::RET("_ZN4CHud23DrawBustedWastedMessageEv"); // CHud::DrawBustedWastedMessage // ПОТРАЧЕНО
+    CHook::RET("_ZN4CHud14SetHelpMessageEPKcPtbbbj"); // CHud::SetHelpMessage
+    CHook::RET("_ZN4CHud24SetHelpMessageStatUpdateEhtff"); // CHud::SetHelpMessageStatUpdate
+    CHook::RET("_ZN6CCheat16ProcessCheatMenuEv"); // CCheat::ProcessCheatMenu
+    CHook::RET("_ZN6CCheat13ProcessCheatsEv"); // CCheat::ProcessCheats
+    CHook::RET("_ZN6CCheat16AddToCheatStringEc"); // CCheat::AddToCheatString
+    CHook::RET("_ZN6CCheat12WeaponCheat1Ev"); // CCheat::WeaponCheat1
+    CHook::RET("_ZN6CCheat12WeaponCheat2Ev"); // CCheat::WeaponCheat2
+    CHook::RET("_ZN6CCheat12WeaponCheat3Ev"); // CCheat::WeaponCheat3
+    CHook::RET("_ZN6CCheat12WeaponCheat4Ev"); // CCheat::WeaponCheat4
+    CHook::RET("_ZN8CGarages14TriggerMessageEPcsts"); // CGarages::TriggerMessage
+
+    CHook::RET("_ZN11CPopulation6AddPedE8ePedTypejRK7CVectorb"); // CPopulation::AddPed
+    CHook::RET("_ZN6CPlane27DoPlaneGenerationAndRemovalEv"); // CPlane::DoPlaneGenerationAndRemoval
+
+    CHook::RET("_ZN10CEntryExit19GenerateAmbientPedsERK7CVector"); // CEntryExit::GenerateAmbientPeds
+    CHook::RET("_ZN8CCarCtrl31GenerateOneEmergencyServicesCarEj7CVector"); // CCarCtrl::GenerateOneEmergencyServicesCar
+    CHook::RET("_ZN11CPopulation17AddPedAtAttractorEiP9C2dEffect7CVectorP7CEntityi"); // CPopulation::AddPedAtAttractor crash. wtf stuff?
+
+    CHook::RET("_ZN7CDarkel26RegisterCarBlownUpByPlayerEP8CVehiclei"); // CDarkel__RegisterCarBlownUpByPlayer_hook
+    CHook::RET("_ZN7CDarkel25ResetModelsKilledByPlayerEi"); // CDarkel__ResetModelsKilledByPlayer_hook
+    CHook::RET("_ZN7CDarkel25QueryModelsKilledByPlayerEii"); // CDarkel__QueryModelsKilledByPlayer_hook
+    CHook::RET("_ZN7CDarkel27FindTotalPedsKilledByPlayerEi"); // CDarkel__FindTotalPedsKilledByPlayer_hook
+    CHook::RET("_ZN7CDarkel20RegisterKillByPlayerEPK4CPed11eWeaponTypebi"); // CDarkel__RegisterKillByPlayer_hook
+
+    CHook::NOP(g_libGTASA + (VER_x32 ? 0x0046BE88 : 0x55774C), 1);	// CStreaming::ms_memoryAvailable = (int)v24
+
+#if VER_x32
+    CHook::NOP(g_libGTASA + (VER_2_1 ? 0x0040BF26 : 0x3AC8B2), 2); 	// CMessages::AddBigMessage from CPlayerInfo::KillPlayer
 
-	//Fix ShowPlayerMarkers(0); and
-	//fix problem when enter police vehicle it will get shotgun
-	ARMHook::makeNOP(g_libGTASA + 0x5847E0, 2);
-	ARMHook::makeNOP(g_libGTASA + 0x584822, 2);
-	ARMHook::makeRET(g_libGTASA + 0x40C296);//fix hospital car
+    CHook::NOP(g_libGTASA + 0x004C5902, 2);  // CCamera::ClearPlayerWeaponMode from CPedSamp::ClearWeaponTarget
+    //CHook::NOP(g_libGTASA + 0x2FEE76, 2);	// CGarages::RespraysAreFree = true in CRunningScript::ProcessCommands800To899
+    CHook::NOP(g_libGTASA + (VER_2_1 ? 0x003F395E : 0x39840A), 2);	// CStreaming::Shutdown from CGame::Shutdown
 
-	// relocate CWorld::Players[]
-	WORLD_PLAYERS = new char[0x404 * PLAYER_PED_SLOTS];
-	memset(WORLD_PLAYERS, 0, 0x404 * PLAYER_PED_SLOTS);
-	ARMHook::unprotect(g_libGTASA + /*0x5D021C*/0x6783C8);
-	*(char**)(g_libGTASA + /*0x5D021C*/0x6783C8) = WORLD_PLAYERS;
-	FLog("CWorld::Players new address: 0x%X", WORLD_PLAYERS);
+    //	CHook::WriteMemory(g_libGTASA + 0x2C3868, "\x00\x20\x70\x47", 4); 					// CGameLogic::IsCoopGameGoingOn
 
-	// allocate Atoomic models pool
-	ATOMIC_MODELS = new _ATOMIC_MODEL[20000];
-	for (int i = 0; i < 20000; i++) {
-		// CBaseModelInfo::CBaseModelInfo
-		((void(*)(_ATOMIC_MODEL*))(g_libGTASA + /*0x33559C*/0x384F88 + 1))(&ATOMIC_MODELS[i]);
-		// vtable
-		ATOMIC_MODELS[i].func_tbl = g_libGTASA + /*0x5C6C68*/0x667454;
-		memset(ATOMIC_MODELS[i].data, 0, sizeof(ATOMIC_MODELS->data));
-	}
-	FLog("AtomicModelsPool new address: 0x%X", ATOMIC_MODELS);
+    //CHook::WriteMemory(g_libGTASA + 0x001D16EA, "\x4F\xF4\x00\x10\x4F\xF4\x80\x06", 8); 	// RenderQueue::RenderQueue
+    //CHook::WriteMemory(g_libGTASA + 0x001D193A, "\x4F\xF4\x00\x16", 4); 	// RenderQueue::RenderQueue
 
-	// path CVehicleModelInfo allcator
-	ARMHook::writeMemory(g_libGTASA + 0x468B7E, (uintptr_t)"\x4F\xF4\x00\x30", 4); // MOV R0, #0ApplyGlobalPatchesx20000
-	ARMHook::writeMemory(g_libGTASA + 0x468B88, (uintptr_t)"\xF7\x20", 2); // MOVS r0, #0xF7
-	ARMHook::writeMemory(g_libGTASA + 0x468B8A, (uintptr_t)"\xF7\x25", 2); // MOVS r5, #0xF7
-	ARMHook::writeMemory(g_libGTASA + 0x468BCC, (uintptr_t)"\xF7\x28", 2); // CMP R0, #0xF7
+    CHook::WriteMemory(g_libGTASA + 0x003F4138, "\x03", 1); // RE3: Fix R* optimization that prevents peds to spawn
+#else
+    CHook::NOP(g_libGTASA + 0x5C3258, 1);  // CCamera::ClearPlayerWeaponMode from CPlayerPed::ClearWeaponTarget
+    //CHook::WriteMemory(g_libGTASA + 0x266FC8, "\xF5\x03\x08\x32", 4); //  RenderQueue::RenderQueue
+    CHook::WriteMemory(g_libGTASA + 0x4D644C, "\x1F\x0D\x00\x71", 4); // RE3: Fix R* optimization that prevents peds to spawn
+#endif
 
+    CHook::RET("_ZN10CPlayerPed14AnnoyPlayerPedEb"); // CPedSamp::AnnoyPlayerPed
+    CHook::RET("_ZN11CPopulation15AddToPopulationEffff");	// CPopulation::AddToPopulation
 
-	// CAudioEngine::StartLoadingTune
-	ARMHook::makeNOP(g_libGTASA + /*0x56C150*/0x5E4916, 2);
-	// DefualtPCSaveFileName
-	char* DefaultPCSaveFileName = (char*)(g_libGTASA + /*0x60EAE8*/0x6B012C);
-	memcpy((char*)DefaultPCSaveFileName, "GTASAMP", 8);
+    CHook::RET("_ZN23CAEPedSpeechAudioEntity11AddSayEventEisjfhhh"); // CPed::Say
 
-	// menu_newGame Menu_SWithOffToGame
-	ARMHook::makeNOP(g_libGTASA + 0x2A7258, 2);
+    CHook::RET("_ZN10CPedGroups7ProcessEv"); // CPedGroups::Process
+    CHook::RET("_ZN21CPedGroupIntelligence7ProcessEv"); // CPedGroupIntelligence::Process
+    CHook::RET("_ZN19CPedGroupMembership9SetLeaderEP4CPed"); // CPedGroupMembership::SetLeader
+    CHook::RET("_ZN21CPedGroupIntelligence5FlushEv"); // CPedGroupIntelligence::Flush
 
-	// CPlayerPed::CPlayerPed
-	ARMHook::writeMemory(g_libGTASA + 0x4C3673, (uintptr_t)"\xB3", 1);
+    CHook::RET("_ZN22CRealTimeShadowManager4InitEv"); // CRealTimeShadowManager::Init
+    CHook::RET("_ZN22CRealTimeShadowManager6UpdateEv"); // CRealTimeShadowManager::Update
 
-	// CAEGlobalWeaponAudioEntity::ServiceAmbientGunFire
-	//ARMHook::makeRET(g_libGTASA + 0x3976AC);
-
-	// CPlaceName::Process
-	ARMHook::makeRET(g_libGTASA + 0x4211A0);
-
-	// CHud::DrawVehicleName
-	ARMHook::makeRET(g_libGTASA + 0x438634);
-
-	// CTaskSimplePlayerOnFoot::PlayIdleAnimations
-	ARMHook::makeRET(g_libGTASA + 0x538C8C);
-
-	// CEntryExit::GenerateAmbientPeds
-	ARMHook::makeRET(g_libGTASA + 0x306EC0);
-
-	// CFileLoader::LoadPickup
-	ARMHook::makeRET(g_libGTASA + 0x46B548);
-
-	//	CHud::SetHelpMessage
-	ARMHook::makeRET(g_libGTASA + 0x436F5C);
-
-	// CTheCarGenerators::Process
-	ARMHook::makeRET(g_libGTASA + 0x56E350);
-
-	// CPlane::DoPlaneGenerationAndRemoval
-	ARMHook::makeRET(g_libGTASA + 0x579214);
-
-	// CPopulation::AddPed
-	ARMHook::makeRET(g_libGTASA + 0x4CF26C);
-
-	// CCarEnterExit::SetPedInCarDirect
-	ARMHook::makeRET(g_libGTASA + 0x50AA58);
-
-	// CPlayerPed::ProcessAnimGroups
-	ARMHook::makeNOP(g_libGTASA + 0x4C5EFA, 2);
-
-	// CCarCtrl::GenerateRandomCars
-	ARMHook::makeRET(g_libGTASA + 0x2E82CC);
-
-	//  CPlayerInfo::KillPlayer -> CMessages::AddBigMessage
-	ARMHook::makeNOP(g_libGTASA + 0x40BED6, 2);
-
-	// CRealTimeShadowManager::ReturnRealTimeShadow
-	ARMHook::makeNOP(g_libGTASA + 0x3FCD34, 2);
-	ARMHook::makeNOP(g_libGTASA + 0x3FCD74, 2);
-
-	// CRealTimeShadowManager::Update
-	ARMHook::makeRET(g_libGTASA + 0x5B83FC);
-
-	// RpWorldAddLight direct
-	//ARMHook::makeNOP(g_libGTASA + 0x46FC54, 2);
-
-	// CPlayerPed::GetPlayerInfoForThisPlayerPed (CPed::RemoveWeaponWhereEnteringVehicle)
-	ARMHook::makeNOP(g_libGTASA + 0x4A5328, 6);
-
-	// CVehicleModelInfo::ms_vehicleColourTable
-	ARMHook::unprotect(g_libGTASA + 0x677654);
-	*(uintptr_t*)(g_libGTASA + 0x677654) = (uintptr_t)VehicleColoursTableRGBA;
-
-	// alpha RasterCreate
-	ARMHook::writeMemory(g_libGTASA + 0x1AE95E, (uintptr_t)"\x01\x22", 2);
-
-	// CBike::ProcessAI
-	ARMHook::makeNOP(g_libGTASA + 0x564CC0, 1);
-
-	// CHud::SetHelpMessageStatUpdate
-	ARMHook::makeRET(g_libGTASA + 0x436FCC);
-
-	// radar draw blips
-	ARMHook::makeNOP(g_libGTASA + 0x43FE0A, 2);
-	ARMHook::makeNOP(g_libGTASA + 0x44095E, 2);
-	ARMHook::makeNOP(g_libGTASA + 0x43FE08, 3);
-	ARMHook::makeNOP(g_libGTASA + 0x44095C, 3);
-
-	// CCamera::CamShake
-	ARMHook::makeNOP(g_libGTASA + 0x5D87A6, 2);
-	ARMHook::makeNOP(g_libGTASA + 0x5D8734, 2);
-
-	// RwCameraEndUpdate (for Idle hook)
-	ARMHook::makeNOP(g_libGTASA + 0x3F6C8C, 2);
-
-	// fpslimit
-	//ARMHook::writeMemory(g_libGTASA + 0x5E4978, (uintptr_t)"\x64", 1);
-	//ARMHook::writeMemory(g_libGTASA + 0x5E4990, (uintptr_t)"\x64", 1);
-
-	// CRadar::Draw3dMarkers (translate color)
-	ARMHook::writeMemory(g_libGTASA + 0x4420D0, (uintptr_t)"\x2C\xE0", 2); // B 0x44212C
-	ARMHook::writeMemory(g_libGTASA + 0x44212C, (uintptr_t)"\x30\x46", 2); // mov r0, r6
-	// CRadar::DrawEntityBlip (translate color)
-	ARMHook::writeMemory(g_libGTASA + 0x440470, (uintptr_t)"\x3A\xE0", 2); // B0x4404E8
-	ARMHook::writeMemory(g_libGTASA + 0x4404E8, (uintptr_t)"\x30\x46", 2); // mov r0, r6
-	// CRadar::DrawCoordBlip (translate color)
-	ARMHook::writeMemory(g_libGTASA + 0x43FB0E, (uintptr_t)"\x12\xE0", 2); // B
-	ARMHook::writeMemory(g_libGTASA + 0x43FB36, (uintptr_t)"\x48\x46", 2); // mov r0, r9
-    ARMHook::writeMemory(g_libGTASA + 0x2AB556, (uintptr_t)"\x00\x21", 2);
-
-	// FindObjectToSteal patch
-	ARMHook::makeRET(g_libGTASA + 0x40B028);
-	// Interior_c::AddPickups
-	ARMHook::makeRET(g_libGTASA + 0x445E98);
-	// Interior_c::Exit
-	ARMHook::makeRET(g_libGTASA + 0x448984);
-
-	// no vehicle audio processing
-	ARMHook::makeNOP(g_libGTASA + 0x553E26, 2); // CAutomobile
-	ARMHook::makeNOP(g_libGTASA + 0x561A52, 2); // CBike
-	ARMHook::makeNOP(g_libGTASA + 0x56BE64, 2); // CBoat
-	ARMHook::makeNOP(g_libGTASA + 0x57D054, 2); // CTrain
-
-	// camera_on_actor path
-	ARMHook::writeMemory(g_libGTASA + 0x341F34, (uintptr_t)"\x00\xF0\x21\xBE", 4);
-
-	ARMHook::makeNOP(g_libGTASA + 0x005E54AA, 2); // не сохранять при сворачивании. черный экран
-
-	//ARMHook::writeMemory(g_libGTASA + 0x1C8064, (uintptr_t)"\x01", 1);
-	//ARMHook::writeMemory(g_libGTASA + 0x1C8082, (uintptr_t)"\x01", 1);
-
-	/*ARMHook::writeMemory(g_libGTASA + 0x5EAB20 + 52, (uintptr_t)"      ", 6);
-	ARMHook::writeMemory(g_libGTASA + 0x5EAB94 + 52, (uintptr_t)"      ", 6);
-	ARMHook::writeMemory(g_libGTASA + 0x5EAC96 + 75, (uintptr_t)"      ", 6);
-	ARMHook::writeMemory(g_libGTASA + 0x5EABE8 + 53, (uintptr_t)"      ", 6);
-	ARMHook::writeMemory(g_libGTASA + 0x5EABE8 + 99, (uintptr_t)"      ", 6);*/
-
-	// gamepad fix?
-	ARMHook::makeRET(g_libGTASA + 0x28CC04);
-
-	// lower threads sleeping timers p.s. killman
-	//ARMHook::writeMemory(g_libGTASA + 0x1D248E, (uintptr_t)"\x08", 1);
-	//ARMHook::writeMemory(g_libGTASA + 0x266D3A, (uintptr_t)"\x08", 1);
-	//ARMHook::writeMemory(g_libGTASA + 0x26706E, (uintptr_t)"\x08", 1);
-	//ARMHook::writeMemory(g_libGTASA + 0x26FDCC, (uintptr_t)"\x08", 1);
-
-	// Disable pay 'n' spray messages
-	ARMHook::makeRET(g_libGTASA+0x311E3C); // CGarages::TriggerMessage
-
-	// NOP calling CUpsideDownCarCheck::UpdateTimers from CTheScripts::Process
-	ARMHook::makeNOP(g_libGTASA+0x32AEC6, 2);
-
-	// Increase pickup distance visibility
-	ARMHook::unprotect(g_libGTASA+0x31D4BC);
-	*(float*)(g_libGTASA+0x31D4BC) = 10000.0f;
-
-	// Aggressively RETing automobile flying
-	ARMHook::makeRET(g_libGTASA+0x5524CC); // CAutomobile::ProcessFlyingCarStuff
-
-	// Remove cellphone holding
-	ARMHook::unprotect(g_libGTASA+0x4F0CF6);
-	*(float*)(g_libGTASA+0x4F0CF6) = 0xFFFFFFFF;
-	ARMHook::unprotect(g_libGTASA+0x4F10F6);
-	*(float*)(g_libGTASA+0x4F10F6) = 0xFFFFFFFF;
-
-	// Increase bullet world range
-	ARMHook::unprotect(g_libGTASA+0x5D7410);
-	*(float*)(g_libGTASA+0x5D7410) = -20000.0f;
-	ARMHook::unprotect(g_libGTASA+0x5D7414);
-	*(float*)(g_libGTASA+0x5D7414) = 20000.0f;
-
-	// No vehicle audio processing
-	//ARMHook::makeRET(g_libGTASA+0x3ACDB4);
-
-	// CPlayerPed::DoesPlayerWantNewWeapon
-	ARMHook::makeRET(g_libGTASA+0x4C6708);
-
-	// Disable cutscene processing
-	ARMHook::makeNOP(g_libGTASA+0x3F4000, 2); // NOP calling CCutsceneMgr::Update from CGame::Process
-
-	// Disable camera jump-cut after respawning
-	ARMHook::makeNOP(g_libGTASA+0x307BDE, 2); // NOP calling CCamera::RestoreWithJumpCut from CGameLogic::RestorePlayerStuffDuringResurrection
-
-	// Wanted level hook
-	//ARMHook::writeMemory(g_libGTASA+0x2BDF70, (uintptr_t)"\x4F\xF0\x00\x08", 4); // CWidgetPlayerInfo::DrawWanted
-
-	// Make peds dummy
-	ARMHook::makeNOP(g_libGTASA+0x37C01C, 9); // NOPing out case 31 from CEventHandler::ComputeEventResponseTask
-
-	// No IPL Vehicle
-	ARMHook::makeNOP(g_libGTASA+0x3F411E, 2); // NOP calling CTheCarGenerators::Process from CGame::Process
-	ARMHook::makeRET(g_libGTASA+0x2FB258); // CCarCtrl::GenerateOneEmergencyServicesCar
-
-	// CGame::InitialiseOnceBeforeRW
-	ARMHook::writeMemory(g_libGTASA+0x3F3648, (uintptr_t)"\x06\x20", 2);
-
-	// fix crash in menu (wardumbs :D)
-	ARMHook::makeNOP(g_libGTASA + 0x2AB998, 2); // CFont::PrintString in Menu_MapRender
-	ARMHook::makeNOP(g_libGTASA + 0x2AB9A4, 2); // CRadar::DrawLegend in Menu_MapRender
-	ARMHook::makeNOP(g_libGTASA + 0x2AB940, 2); // CFont::GetStringWidth check in Menu_MapRender
-	ARMHook::makeRET(g_libGTASA + 0x5AB020); // CFont::GetStringWidth this peace of shit :/
-	ARMHook::makeRET(g_libGTASA + 0x441A08); // CRadar::AddBlipToLegendList
-	ARMHook::makeRET(g_libGTASA + 0x441B74); // CRadar::DrawLegend
-	ARMHook::makeNOP(g_libGTASA + 0x43FE0A, 2); // NOP calling CSprite2d::Draw from CRadar::DrawCoordBlip
-	ARMHook::makeNOP(g_libGTASA + 0x44095E, 2); // NOP calling CSprite2d::Draw from CRadar::DrawEntityBlip
-
-	// why to set task if i create my task hmmm
-	//ARMHook::writeMemory(g_libGTASA + 0x40AC28, (uintptr_t)"\x8F\xF5\x3A\xEF", 4); // CTaskComplexEnterCarAsDriver
-	//ARMHook::makeNOP(g_libGTASA + 0x40AC30, 2); // NOP calling CTaskComplexEnterCarAsDriver::CTaskComplexEnterCarAsDriver from CPlayerInfo::Process
-	ARMHook::makeNOP(g_libGTASA + 0x40AC3C, 2); // CTaskManager::SetTask in CPLayerInfo::Process
-
-	//CCustomCarPlateMgr all meth
-	// убрать дефолтные номера
-	ARMHook::makeRET(g_libGTASA + 0x0052FF5C); //CCustomCarPlateMgr::GeneratePlateText
-
-	ARMHook::makeRET(g_libGTASA + 0x0052FE90);
-	ARMHook::makeRET(g_libGTASA + 0x00530098);
-	ARMHook::makeRET(g_libGTASA + 0x00530104);
-	ARMHook::makeRET(g_libGTASA + 0x0053012C);
-	ARMHook::makeRET(g_libGTASA + 0x00530158);
-	ARMHook::makeRET(g_libGTASA + 0x00530190);
-
-	ARMHook::makeRET(g_libGTASA + 0x0053021C);
-	ARMHook::makeRET(g_libGTASA + 0x0053038C);
-	ARMHook::makeRET(g_libGTASA + 0x00530420);
-
-	ARMHook::makeRET(g_libGTASA + 0x0050E37C);
-
-	// psInitialize
+    CHook::RET("_ZN8CCarCtrl18GenerateRandomCarsEv");
 }
 
 void InstallVehicleEngineLightPatches()
 {
 	// типо фикс задних фар
-	ARMHook::writeMemory(g_libGTASA + 0x591272, (uintptr_t)"\x02", 1);
-	ARMHook::writeMemory(g_libGTASA + 0x59128E, (uintptr_t)"\x02", 1);
+	CHook::WriteMemory(g_libGTASA + 0x591272, (uintptr_t)"\x02", 1);
+	CHook::WriteMemory(g_libGTASA + 0x59128E, (uintptr_t)"\x02", 1);
 }

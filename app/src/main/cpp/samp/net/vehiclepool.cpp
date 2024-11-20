@@ -37,9 +37,9 @@ bool CVehiclePool::New(NEW_VEHICLE* new_veh)
 
     CVehicle* pNewVehicle = pGame->NewVehicle(
             new_veh->iVehicleType,
-            new_veh->vecPos.X,
-            new_veh->vecPos.Y,
-            new_veh->vecPos.Z,
+            new_veh->vecPos.x,
+            new_veh->vecPos.y,
+            new_veh->vecPos.z,
             new_veh->fRotation,
             new_veh->byteAddSiren);
 
@@ -55,9 +55,9 @@ bool CVehiclePool::New(NEW_VEHICLE* new_veh)
     m_pGTAVehicles[new_veh->VehicleID] = m_pVehicles[new_veh->VehicleID]->m_pVehicle;
     m_bVehicleSlotState[new_veh->VehicleID] = true;
 
-    m_vecPos[new_veh->VehicleID].X = new_veh->vecPos.X;
-    m_vecPos[new_veh->VehicleID].Y = new_veh->vecPos.Y;
-    m_vecPos[new_veh->VehicleID].Z = new_veh->vecPos.Z;
+    m_vecPos[new_veh->VehicleID].x = new_veh->vecPos.x;
+    m_vecPos[new_veh->VehicleID].y = new_veh->vecPos.y;
+    m_vecPos[new_veh->VehicleID].z = new_veh->vecPos.z;
 
     if (new_veh->byteInterior) {
         m_pVehicles[new_veh->VehicleID]->LinkToInterior(new_veh->byteInterior);
@@ -75,9 +75,9 @@ bool CVehiclePool::New(NEW_VEHICLE* new_veh)
     }
 
     // Pos & Rotation
-    m_vecSpawnPos[new_veh->VehicleID].X = new_veh->vecPos.X;
-    m_vecSpawnPos[new_veh->VehicleID].Y = new_veh->vecPos.Y;
-    m_vecSpawnPos[new_veh->VehicleID].Z = new_veh->vecPos.Z;
+    m_vecSpawnPos[new_veh->VehicleID].x = new_veh->vecPos.x;
+    m_vecSpawnPos[new_veh->VehicleID].y = new_veh->vecPos.y;
+    m_vecSpawnPos[new_veh->VehicleID].z = new_veh->vecPos.z;
     m_fSpawnRotation[new_veh->VehicleID] = new_veh->fRotation;
 
     m_bIsActive[new_veh->VehicleID] = true;

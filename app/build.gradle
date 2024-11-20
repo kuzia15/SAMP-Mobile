@@ -19,8 +19,7 @@ android {
             keyAlias 'key0'
         }
     }
-    compileSdkVersion 31
-    buildToolsVersion "29.0.3"
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.samp.mobile"
@@ -32,21 +31,10 @@ android {
         multiDexEnabled true
 
         ndk {
-            abiFilters 'armeabi-v7a'
-        }
-        externalNativeBuild {
-            ndkBuild {
-                cppFlags ''
-            }
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
-        }
     }
 
     packagingOptions {
@@ -58,9 +46,20 @@ android {
         }
     }
 
+    ndkVersion '26.2.11394342'
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+
     buildTypes {
         debug {
+            debuggable false
+            jniDebuggable false
             minifyEnabled false
+
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -74,6 +73,8 @@ android {
                 strippedNativeLibsDir 'build/intermediates/stripped_native_libs/release/out/lib'
                 unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
             }
+            debuggable false
+            jniDebuggable false
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release

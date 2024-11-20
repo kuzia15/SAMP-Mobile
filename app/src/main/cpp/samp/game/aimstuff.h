@@ -39,7 +39,7 @@ void GameSetRemotePlayerCameraExtZoomAndAspect(uint8_t bytePlayerNumber);
 void GameStoreLocalPlayerCameraExtZoomAndAspect();
 void GameSetPlayerCameraExtZoomAndAspect(uint8_t bytePlayerNumber, float fExtZoom, float fAspectRatio);
 
-void calculateAimVector(PVECTOR vec1, PVECTOR vec2);
+void calculateAimVector(CVector* vec1, CVector* vec2);
 
 void GameResetLocalPlayerSkills();
 void GameUpdateLocalPlayerSkill(int iSkillType, uint16_t wSkillLevel);

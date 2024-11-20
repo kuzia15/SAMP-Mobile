@@ -29,7 +29,7 @@ void StreamAtPlayer::Tick() noexcept
     CPlayerPed *pPlayerPed = pPlayer->GetPlayerPed();
     if(!pPlayerPed) return;
 
-    MATRIX4X4 pPlayerMatrix;
+    RwMatrix pPlayerMatrix;
     pPlayerPed->GetMatrix(&pPlayerMatrix);
 
     for(const auto& channel : this->GetChannels())
@@ -60,7 +60,7 @@ void StreamAtPlayer::OnChannelCreate(const Channel& channel) noexcept
     CPlayerPed *pPlayerPed = pPlayer->GetPlayerPed();
     if(!pPlayerPed) return;
 
-    MATRIX4X4 pPlayerMatrix;
+    RwMatrix pPlayerMatrix;
     pPlayerPed->GetMatrix(&pPlayerMatrix);
 
     BASS_ChannelSet3DPosition(channel.GetHandle(),

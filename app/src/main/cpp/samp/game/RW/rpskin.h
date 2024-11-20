@@ -1,21 +1,8 @@
+//
+// Created by plaka on 20.04.2023.
+//
+
 #pragma once
-
-/**
- * \defgroup rpskin RpSkin
- * \ingroup skinning
- *
- * Skin Plugin for RenderWare Graphics.
- */
-
-/*===========================================================================*
- *--- Include files ---------------------------------------------------------*
- *===========================================================================*/
-#include "rwcore.h"
-#include "rpworld.h"
-
-#include "rpcriter.h"
-
-#include "rphanim.h"
 
 /*===========================================================================*
  *--- Global Types ----------------------------------------------------------*
@@ -71,62 +58,14 @@ enum RpSkinType
     rpNASKINTYPE        = 0, /**<Invalid skin pipeline.           */
     rpSKINTYPEGENERIC   = 1, /**<Generic skin rendering.          */
     rpSKINTYPEMATFX     = 2, /**<Material effects skin rendering. */
-    rpSKINTYPETOON      = 3, /**<Toon skin rendering.   To use this 
-                               * flag the \ref rptoon plugin (part 
-                               * of the FX Pack) needs to be 
+    rpSKINTYPETOON      = 3, /**<Toon skin rendering.   To use this
+                               * flag the \ref rptoon plugin (part
+                               * of the FX Pack) needs to be
                                * installed.          */
     rpSKINTYPEFORCEENUMSIZEINT = RWFORCEENUMSIZEINT
 };
 typedef enum RpSkinType RpSkinType;
 
-/**
- * \defgroup rpskind3d9 D3D9
- * \ingroup rpskin
- *
- * D3D9 skin pipeline extension.
- */
 
-/**
- * \defgroup rpskind3d9features Features
- * \ingroup rpskind3d9
- *
- * D3D9 skin pipeline features.
- */
-
-/**
- * \defgroup rpskind3d9restrictions Restrictions
- * \ingroup rpskind3d9
- *
- * D3D9 skin pipeline restrictions.
- */
-
-
-/*===========================================================================*
- *--- D3D9 Defines -----------------------------------------------------------*
- *===========================================================================*/
-
-/*===========================================================================*
- *--- D3D9 Global Types ------------------------------------------------------*
- *===========================================================================*/
-
-/**
- * \ingroup rpskind3d9
- * \ref RpSkinD3D9Pipeline rendering pipelines available within
- * the \ref RpSkin plugin. Use \ref RpSkinGetD3D9Pipeline to
- * retrieve the \ref RxPipeline's.
- */
-enum RpSkinD3D9Pipeline
-{
-    rpNASKIND3D9PIPELINE              = 0,
-    rpSKIND3D9PIPELINEGENERIC         = 1,
-    /**<D3D9 generic skin rendering pipeline.                           */
-    rpSKIND3D9PIPELINEMATFX           = 2,
-    /**<D3D9 material effect skin rendering pipeline.                   */
-    rpSKIND3D9PIPELINETOON            = 3,
-    /**<D3D9 toon skin rendering pipeline.                              */
-    rpSKIND3D9PIPELINEMATFXTOON       = 4,
-    /**<D3D9 toon matfx skin rendering pipeline not supported           */
-    rpSKIND3D9PIPELINEMAX,
-    rpSKIND3D9PIPELINEFORCEENUMSIZEINT = RWFORCEENUMSIZEINT
-};
-typedef enum RpSkinD3D9Pipeline RpSkinD3D9Pipeline;
+RpSkin* RpSkinGeometryGetSkin(RpGeometry* geometry);
+RpHAnimHierarchy* RpSkinAtomicGetHAnimHierarchy(const RpAtomic* atomic);

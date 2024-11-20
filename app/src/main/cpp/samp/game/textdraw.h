@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Rect.h"
+
 enum eTextDrawStyle : unsigned char {
 	TEXTDRAW_FONT_GOTHIC,
 	TEXTDRAW_FONT_SUBTITLES,
@@ -35,7 +37,7 @@ typedef struct _TEXT_DRAW_DATA
 	int iTextureSlot;
 	uint8_t byteSelectable;
 	uint16_t wModelID;
-	VECTOR vecRot;
+	CVector vecRot;
 	float fZoom;
 	uint16_t wColor1;
 	uint16_t wColor2;
@@ -71,7 +73,7 @@ typedef struct _TEXT_DRAW_TRANSMIT
 	float fX;
 	float fY;
 	uint16_t wModelID;
-	VECTOR vecRot;
+	CVector vecRot;
 	float fZoom;
 	uint16_t wColor1;
 	uint16_t wColor2;
@@ -117,7 +119,7 @@ private:
 
 public:
 	TEXT_DRAW_DATA m_TextDrawData;
-	RECT m_rectArea;
+	CRect m_rectArea;
 	bool m_bHovered;
 	uint32_t m_dwHoverColor;
 };

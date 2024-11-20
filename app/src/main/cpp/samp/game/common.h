@@ -1,11 +1,84 @@
 ﻿#pragma once
 
+#include <cstdint>
+#include "Vector.h"
+
 #define PADDING(x,y) uint8_t x[y]
+
+#define VER_2_1 true
 
 #define IN_VEHICLE(x) ((x->dwStateFlags & 0x100) >> 8)
 #define IS_CROUCHING(x) ((x->dwStateFlags >> 26) & 1)
 #define IS_FIRING(x) (x & 4)
 #define IS_TARGETING(x) (x & 128)
+
+#define ASSERT assert
+#define nil nullptr
+
+typedef int8_t    int8;
+typedef int16_t   int16;
+typedef int32_t   int32;
+typedef int64_t   int64;
+typedef uint8_t   uint8;
+typedef uint16_t  uint16;
+typedef uint32_t  uint32;
+typedef uint64_t  uint64;
+typedef intptr_t  intptr;
+typedef uintptr_t uintptr;
+
+typedef uint8     bool8;
+typedef uint16    bool16;
+typedef uint32    bool32;
+
+#define VALIDATE_SIZE(struc, size) static_assert(sizeof(struc) == size, "Invalid structure size of " #struc)
+
+VALIDATE_SIZE(bool, 1);
+VALIDATE_SIZE(char, 1);
+VALIDATE_SIZE(short, 2);
+VALIDATE_SIZE(int, 4);
+VALIDATE_SIZE(float, 4);
+VALIDATE_SIZE(long long, 8);
+
+typedef unsigned char byte;
+// Macro for unused function arguments - Use it to avoid compiler warnings of unused arguments
+#define UNUSED(x) (void)(x);
+
+constexpr float E              = 2.71828f;          // e
+constexpr float E_CONST        = 0.577f;            // Euler-Mascheroni constant
+constexpr float FRAC_1_TAU     = 0.159154f;         // 1 / τ
+constexpr float FRAC_1_PI      = 0.318309f;         // 1 / π
+constexpr float FRAC_2_TAU     = 0.318309f;         // 2 / τ
+constexpr float FRAC_2_PI      = 0.636619f;         // 2 / π
+constexpr float FRAC_2_SQRT_PI = 1.12837f;          // 2 / √π
+constexpr float FRAC_4_TAU     = 0.636619f;         // 4 / τ
+constexpr float FRAC_1_SQRT_2  = 0.707106f;         // 1 / √2
+constexpr float FRAC_PI_2      = 1.57079f;          // π / 2
+constexpr float FRAC_PI_3      = 1.04719f;          // π / 3
+constexpr float FRAC_PI_4      = 0.785398f;         // π / 4
+constexpr float FRAC_PI_6      = 0.523598f;         // π / 6
+constexpr float FRAC_PI_8      = 0.392699f;         // π / 8
+constexpr float FRAC_TAU_2     = 3.14159f;          // τ / 2 = π
+constexpr float FRAC_TAU_3     = 2.09439f;          // τ / 3
+constexpr float FRAC_TAU_4     = 1.57079f;          // τ / 4
+constexpr float FRAC_TAU_6     = 1.04719f;          // τ / 6
+constexpr float FRAC_TAU_8     = 0.785398f;         // τ / 8
+constexpr float FRAC_TAU_12    = 0.523598f;         // τ / 12
+constexpr float LN_2           = 0.693147f;         // ln(2)
+constexpr float LN_10          = 2.30258f;          // ln(10)
+constexpr float LOG2_E         = 1.44269f;          // log2(e)
+constexpr float LOG10_E        = 0.434294f;         // log10(e)
+constexpr float LOG10_2        = 0.301029f;         // log10(2)
+constexpr float LOG2_10        = 3.32192f;          // log2(10)
+constexpr float PI             = 3.14159f;          // π
+constexpr float HALF_PI        = PI / 2.0f;         // π / 2
+constexpr float PI_6           = PI / 6.0f;         // π / 6
+constexpr float SQRT_2         = 1.41421f;          // √2
+constexpr float SQRT_3         = 1.73205f;          // √3
+constexpr float TWO_PI         = 6.28318f;          // τ (TAU)
+
+constexpr float COS_45 = SQRT_2; // cos(45deg)
+
+constexpr float sq(float x) { return x * x; }
 
 enum eLights
 {
@@ -90,53 +163,6 @@ enum eComponentStatus
 };
 
 #pragma pack(push, 1)
-typedef struct _RECT
-{
-	float fLeft;
-	float fBottom;
-	float fRight;
-	float fTop;
-} RECT;
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-typedef struct _VECTOR {
-	float X, Y, Z;
-	
-	_VECTOR()
-	{
-		X = Y = Z = 0.0f;
-	}
-
-	_VECTOR(float f)
-	{
-		X = Y = Z = f;
-	}
-	
-	_VECTOR(float x, float y, float z)
-	{
-		X = x;
-		Y = y;
-		Z = z;
-	}
-} VECTOR, *PVECTOR;
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-typedef struct _MATRIX4X4
-{
-	VECTOR right;		// 0-12 	; r11 r12 r13
-	uint32_t  flags;	// 12-16
-	VECTOR up;			// 16-28	; r21 r22 r23
-	float  pad_u;		// 28-32
-	VECTOR at;			// 32-44	; r31 r32 r33
-	float  pad_a;		// 44-48
-	VECTOR pos;			// 48-60
-	float  pad_p;		// 60-64
-} MATRIX4X4, *PMATRIX4X4;
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 typedef struct _ANIMATION_DATA {
 	union {
 		int iValue;
@@ -173,10 +199,10 @@ typedef struct _ENTITY_TYPE
 {
 	// ENTITY STUFF
 	uint32_t vtable; 			// 0-4		;vtable				- 2.0
-	VECTOR vPos;				// 4-16
+	CVector vPos;				// 4-16
 	float fRotZBeforeMat;		// 16-20
-	MATRIX4X4 *mat; 			// 20-24	;mat				- 2.0
-	union {
+	RwMatrix *mat; 			// 20-24	;mat				- 2.0
+    union {
 		uintptr_t pRwObject;
 		uintptr_t pRpClump;
 		uintptr_t pRpAtomic;
@@ -190,8 +216,8 @@ typedef struct _ENTITY_TYPE
 	uint8_t nControlFlags;		// 58-59	;nControlFlags		- 2.0
 	PADDING(_pad95, 9);			// 59-68
 	uint32_t flags;				// 68-72
-	VECTOR vecMoveSpeed;		// 72-84	;vecMoveSpeed		- 2.0
-	VECTOR vecTurnSpeed; 		// 84-96	;vecTurnSpeed		- 2.0
+	CVector vecMoveSpeed;		// 72-84	;vecMoveSpeed		- 2.0
+    CVector vecTurnSpeed; 		// 84-96	;vecTurnSpeed		- 2.0
 	PADDING(_pad96, 88);		// 96-184
 	uintptr_t dwUnkModelRel;	// 184-188	;dwUnkModelRel		- 2.0
 } ENTITY_TYPE;
@@ -204,7 +230,7 @@ typedef struct _AnimBlendFrameData
 {
 	uint8_t bFlags;
 	PADDING(_pad75, 3);
-	VECTOR vOffset;
+	CVector vOffset;
 	uintptr_t pInterpFrame;
 	uint32_t m_nNodeId;
 } AnimBlendFrameData;
@@ -445,7 +471,7 @@ struct BULLET_SYNC
 #pragma pack(push, 1)
 typedef struct _REMOVEBUILDING_DATA {
 	uint32_t dwModel;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fRange;
 } REMOVEBUILDING_DATA;
 #pragma pack(pop)

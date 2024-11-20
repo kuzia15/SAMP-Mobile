@@ -43,9 +43,9 @@ void C3DTextLabelPool::NewLabel(uint16_t wLabelId, TEXT_LABEL* pLabel) {
 		pTextLabel->text = Encoding::cp2utf(pLabel->text);
 
 		pTextLabel->dwColor = pLabel->dwColor;
-		pTextLabel->vecPos.X = pLabel->vecPos.X;
-		pTextLabel->vecPos.Y = pLabel->vecPos.Y;
-		pTextLabel->vecPos.Z = pLabel->vecPos.Z;
+		pTextLabel->vecPos.x = pLabel->vecPos.x;
+		pTextLabel->vecPos.y = pLabel->vecPos.y;
+		pTextLabel->vecPos.z = pLabel->vecPos.z;
 		pTextLabel->fDistance = pLabel->fDistance;
 		pTextLabel->bTestLOS = pLabel->bTestLOS;
 		pTextLabel->playerId = pLabel->playerId;
@@ -82,7 +82,7 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 
             TEXT_LABEL *pTextLabel = m_TextLabels[i];
 
-            VECTOR vecTextPos = pTextLabel->vecPos;
+            CVector vecTextPos = pTextLabel->vecPos;
 
             if (pTextLabel->playerId != INVALID_PLAYER_ID) {
                 if (pTextLabel->playerId == pPlayerPool->GetLocalPlayerID()) continue;
@@ -92,12 +92,12 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
                     if (pPlayer && pPlayer->GetDistanceFromLocalPlayer() < pTextLabel->fDistance) {
                         CPlayerPed *pPlayerPed = pPlayer->GetPlayerPed();
                         if (pPlayerPed && pPlayerPed->IsAdded()) {
-                            VECTOR matBone;
+                            CVector matBone;
                             pPlayerPed->GetBonePosition(8, &matBone);
 
-                            vecTextPos.X = matBone.X + pTextLabel->vecPos.X;
-                            vecTextPos.Y = matBone.Y + pTextLabel->vecPos.Y;
-                            vecTextPos.Z = matBone.Z + 0.23 + pTextLabel->vecPos.Z;
+                            vecTextPos.x = matBone.x + pTextLabel->vecPos.x;
+                            vecTextPos.y = matBone.y + pTextLabel->vecPos.y;
+                            vecTextPos.z = matBone.z + 0.23 + pTextLabel->vecPos.z;
 
                             this->Draw(renderer, pTextLabel, vecTextPos, pTextLabel->text,
                                        pTextLabel->dwColor);
@@ -112,12 +112,12 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 					CVehicle *pVehicle = pVehiclePool->GetAt(pTextLabel->vehicleId);
 					if (pVehicle && pVehicle->IsAdded() &&
 						pVehicle->GetDistanceFromLocalPlayerPed() < pTextLabel->fDistance) {
-						MATRIX4X4 matVehicle;
+						RwMatrix matVehicle;
 						pVehicle->GetMatrix(&matVehicle);
 
-						vecTextPos.X = matVehicle.pos.X + pTextLabel->vecPos.X;
-						vecTextPos.Y = matVehicle.pos.Y + pTextLabel->vecPos.Y;
-						vecTextPos.Z = matVehicle.pos.Z + pTextLabel->vecPos.Z;
+						vecTextPos.x = matVehicle.pos.x + pTextLabel->vecPos.x;
+						vecTextPos.y = matVehicle.pos.y + pTextLabel->vecPos.y;
+						vecTextPos.z = matVehicle.pos.z + pTextLabel->vecPos.z;
 
 						this->Draw(renderer, pTextLabel, vecTextPos, pTextLabel->text,
 								   pTextLabel->dwColor);
@@ -132,12 +132,12 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 	}
 }
 
-void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, VECTOR vecPos, const std::string& text, uint32_t dwColor)
+void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, CVector vecPos, const std::string& text, uint32_t dwColor)
 {
-	VECTOR vPos;
-	vPos.X = vecPos.X;
-	vPos.Y = vecPos.Y;
-	vPos.Z = vecPos.Z;
+	CVector vPos;
+	vPos.x = vecPos.x;
+	vPos.y = vecPos.y;
+	vPos.z = vecPos.z;
 
 	int hitEntity = 0;
     if (label->bTestLOS) {
@@ -147,18 +147,18 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, VECTOR v
 			return;
 		}
 
-        MATRIX4X4 matPlayer;
+        RwMatrix matPlayer;
 		pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetMatrix(&matPlayer);
 
-		VECTOR vec;
-		vec.X = pCam->pos1x;
-		vec.Y = pCam->pos1y;
-		vec.Z = pCam->pos1z;
+		CVector vec;
+		vec.x = pCam->pos1x;
+		vec.y = pCam->pos1y;
+		vec.z = pCam->pos1z;
 
-		//bool isLineOfSightClear = ((bool (*)(VECTOR*, VECTOR*, int, int, int, int, int, int, int))(g_libGTASA + 0x423418 + 1))(&vec, &matPlayer.pos, 1, 0, 0, 1, 0, 0, 0);
+		//bool isLineOfSightClear = ((bool (*)(CVector*, CVector*, int, int, int, int, int, int, int))(g_libGTASA + 0x423418 + 1))(&vec, &matPlayer.pos, 1, 0, 0, 1, 0, 0, 0);
 
 		hitEntity = ScriptCommand(&get_line_of_sight,
-								  vecPos.X, vecPos.Y, vecPos.Z,
+								  vecPos.x, vecPos.y, vecPos.z,
 								  pCam->pos1x, pCam->pos1y, pCam->pos1z,
 								  1, 0, 0, 1, 0);
 		/*if(!isLineOfSightClear)
@@ -170,21 +170,20 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, VECTOR v
 
 	if (!label->bTestLOS || hitEntity) {
 		if (pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetDistanceFromPoint(vecPos) <= label->fDistance) {
-			VECTOR vecOut;
+			CVector vecOut;
 			// CSprite::CalcScreenCoors
-			((void (*)(VECTOR *, VECTOR *, float *, float *, bool, bool)) (g_libGTASA + 0x5C5798 +
-																		   1))(
+			((void (*)(CVector *, CVector *, float *, float *, bool, bool)) (g_libGTASA + (VER_x32 ? 0x005C57E8 + 1 : 0x6E9DF8)))(
 					&vPos, &vecOut, 0, 0, 0, 0);
-			if (vecOut.Z < 1.0f) return;
+			if (vecOut.z < 1.0f) return;
 
 			std::stringstream ss_data(text);
 			std::string s_row;
 			while (std::getline(ss_data, s_row, '\n')) {
 				ImVec2 sz = renderer->calculateTextSize(s_row, UISettings::fontSize() / 2);
-				renderer->drawText(ImVec2(vecOut.X - (sz.x / 2), vecOut.Y),
+				renderer->drawText(ImVec2(vecOut.x - (sz.x / 2), vecOut.y),
 								   __builtin_bswap32(dwColor | (0x000000FF)), s_row, true,
 								   UISettings::fontSize() / 2);
-				vecOut.Y += UISettings::fontSize() / 2;
+				vecOut.y += UISettings::fontSize() / 2;
 			}
 		}
 	}

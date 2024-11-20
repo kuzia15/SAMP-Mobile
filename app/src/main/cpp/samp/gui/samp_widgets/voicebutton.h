@@ -5,6 +5,8 @@
 #include "../../main.h"
 
 #include "../../settings.h"
+#include "util/CUtil.h"
+
 
 extern CSettings* pSettings;
 
@@ -14,14 +16,14 @@ public:
 	VoiceButton() : Button("TALK", UISettings::fontSize() / 2) {
 		m_recording = false;
 		/* 5:3 aspect ratio */
-		//m_texture_micro_on = (RwTexture*)LoadTextureFromDB("samp", "icon_micro_on");
-		//m_texture_micro_off = (RwTexture*)LoadTextureFromDB("samp", "icon_micro_off");
-		m_texture_micro_on = (RwTexture*)LoadTextureFromDB("samp", "voiceactive"); //default
-		//if (Server == 40) m_texture_micro_on = (RwTexture*)LoadTextureFromDB("samp", "voiceactive");
-		//if (Server == 40) m_texture_micro_off = (RwTexture*)LoadTextureFromDB("samp", "voicepassive");
-		m_texture_micro_off = (RwTexture*)LoadTextureFromDB("samp", "voicepassive"); //default
-		//if (Server == 13) m_texture_micro_off = (RwTexture*)LoadTextureFromDB("samp", "icon_micro_on");
-		//if (Server == 13) m_texture_micro_on = (RwTexture*)LoadTextureFromDB("samp", "icon_micro_off");
+		//m_texture_micro_on = (RwTexture*)CUtil::LoadTextureFromDB("samp", "icon_micro_on");
+		//m_texture_micro_off = (RwTexture*)CUtil::LoadTextureFromDB("samp", "icon_micro_off");
+		m_texture_micro_on = (RwTexture*)CUtil::LoadTextureFromDB("samp", "voiceactive"); //default
+		//if (Server == 40) m_texture_micro_on = (RwTexture*)CUtil::LoadTextureFromDB("samp", "voiceactive");
+		//if (Server == 40) m_texture_micro_off = (RwTexture*)CUtil::LoadTextureFromDB("samp", "voicepassive");
+		m_texture_micro_off = (RwTexture*)CUtil::LoadTextureFromDB("samp", "voicepassive"); //default
+		//if (Server == 13) m_texture_micro_off = (RwTexture*)CUtil::LoadTextureFromDB("samp", "icon_micro_on");
+		//if (Server == 13) m_texture_micro_on = (RwTexture*)CUtil::LoadTextureFromDB("samp", "icon_micro_off");
 	}
 
 	virtual void draw(ImGuiRenderer* renderer) override

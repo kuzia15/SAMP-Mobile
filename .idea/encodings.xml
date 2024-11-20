@@ -14,6 +14,8 @@
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/main/gui/widgets/label.cpp" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/main/gui/widgets/layout.cpp" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/cpp/main/vendor/armhook/armhook.h" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/samp/game/Collision/Quaternion.cpp" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/app/src/main/cpp/samp/game/World_Helper.cpp" charset="windows-1251" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

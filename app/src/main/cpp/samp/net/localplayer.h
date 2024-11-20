@@ -43,7 +43,7 @@ typedef struct _PLAYER_SPAWN_INFO
 	uint8_t byteTeam;
 	int iSkin;
 	uint8_t unk;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fRotation;
 	int iSpawnWeapons[3];
 	int iSpawnWeaponsAmmo[3];
@@ -56,14 +56,14 @@ typedef struct _ONFOOT_SYNC_DATA
 	uint16_t lrAnalog;				// +0
 	uint16_t udAnalog;				// +2
 	uint16_t wKeys;					// +4
-	VECTOR vecPos;					// +6
+	CVector vecPos;					// +6
 	CQuaternion quat;				// +18
 	uint8_t byteHealth;				// +34
 	uint8_t byteArmour;				// +35
 	uint8_t byteCurrentWeapon;		// +36
 	uint8_t byteSpecialAction;		// +37
-	VECTOR vecMoveSpeed;			// +38
-	VECTOR vecSurfOffsets;			// +50
+	CVector vecMoveSpeed;			// +38
+	CVector vecSurfOffsets;			// +50
 	uint16_t wSurfID;				// +62
 	uint32_t dwAnimation;			// 64
 } ONFOOT_SYNC_DATA;					// size = 68
@@ -75,7 +75,7 @@ typedef struct _SPECTATOR_SYNC_DATA
 	uint16_t	lrAnalog;
 	uint16_t	udAnalog;
 	uint16_t	wKeys;
-	VECTOR		vecPos;
+	CVector		vecPos;
 } SPECTATOR_SYNC_DATA;
 #pragma pack(pop)
 
@@ -90,8 +90,8 @@ enum eWeaponState
 typedef struct _AIM_SYNC_DATA
 {
 	uint8_t	byteCamMode;
-	VECTOR vecAimf;
-	VECTOR vecAimPos;
+	CVector vecAimf;
+	CVector vecAimPos;
 	float fAimZ;
 	uint8_t byteCamExtZoom : 6;
 	uint8_t byteWeaponState : 2;
@@ -107,8 +107,8 @@ typedef struct _INCAR_SYNC_DATA
 	uint16_t udAnalog;
 	uint16_t wKeys;
 	CQuaternion quat;
-	VECTOR vecPos;
-	VECTOR vecMoveSpeed;
+	CVector vecPos;
+	CVector vecMoveSpeed;
 	float fCarHealth;
 	uint8_t bytePlayerHealth;
 	uint8_t bytePlayerArmour;
@@ -131,7 +131,7 @@ typedef struct _PASSENGER_SYNC_DATA
 	uint16_t lrAnalog;
 	uint16_t udAnalog;
 	uint16_t wKeys;
-	VECTOR vecPos;
+	CVector vecPos;
 } PASSENGER_SYNC_DATA;
 #pragma pack(pop)
 
@@ -140,9 +140,9 @@ typedef struct _BULLET_SYNC_DATA
 {
 	uint8_t byteHitType;
 	PLAYERID PlayerID;
-	VECTOR vecOrigin;
-	VECTOR vecPos;
-	VECTOR vecOffset;
+	CVector vecOrigin;
+	CVector vecPos;
+	CVector vecOffset;
 	uint8_t byteWeaponID;
 } BULLET_SYNC_DATA;
 #pragma pack(pop)
@@ -151,10 +151,10 @@ typedef struct _BULLET_SYNC_DATA
 typedef struct _TRAILER_SYNC_DATA
 {
 	VEHICLEID trailerId;			// +0
-	VECTOR vecPos;			// +2
+	CVector vecPos;			// +2
 	CQuaternion quat;		// +14
-	VECTOR vecMoveSpeed;	// +30
-	VECTOR vecTurnSpeed;	// +42
+	CVector vecMoveSpeed;	// +30
+	CVector vecTurnSpeed;	// +42
 } TRAILER_SYNC_DATA; 		// size = 54
 #pragma pack(pop)
 
@@ -163,11 +163,11 @@ typedef struct _UNOCCUPIED_SYNC_DATA
 {
 	VEHICLEID vehicleId;			// +0
 	uint8_t byteSeatId;		// +2
-	VECTOR vecRoll;			// +3
-	VECTOR vecDirection;	// +15
-	VECTOR vecPos;			// +27
-	VECTOR vecMoveSpeed;	// +39
-	VECTOR vecTurnSpeed;	// +51
+	CVector vecRoll;			// +3
+	CVector vecDirection;	// +15
+	CVector vecPos;			// +27
+	CVector vecMoveSpeed;	// +39
+	CVector vecTurnSpeed;	// +51
 	float fCarHealth;		// +63
 } UNOCCUPIED_SYNC_DATA;		// size = 67
 #pragma pack(pop)
@@ -261,7 +261,7 @@ public:
 
 	uint32_t GetCurrentAnimationIndexFlag();
 
-	void SendBulletSyncData(PLAYERID byteHitID, uint8_t byteHitType, VECTOR vecHitPos);
+	void SendBulletSyncData(PLAYERID byteHitID, uint8_t byteHitType, CVector vecHitPos);
 
 	void GiveActorDamage(PLAYERID wPlayerID, float damage_amount, uint32_t weapon_id, uint32_t bodypart);
 
@@ -327,7 +327,7 @@ private:
 	bool				m_bPerformingStuffAnim;
 
 	struct {
-		VECTOR vecOffsetPos;
+		CVector vecOffsetPos;
 		int dwSurfVehID;
 
 		bool bIsActive;

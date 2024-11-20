@@ -126,7 +126,7 @@ bool CTextDrawPool::onTouchEvent(int type, bool multi, int x, int y)
 			if (pTextDraw->m_TextDrawData.byteSelectable &&
 				pTextDraw->m_TextDrawData.bHasRectArea)
 			{
-				RECT* rect = &pTextDraw->m_rectArea;
+				CRect* rect = &pTextDraw->m_rectArea;
 				if (rect)
 				{
 					if (IsPointInRect(x, y, rect))

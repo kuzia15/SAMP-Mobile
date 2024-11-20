@@ -32,9 +32,9 @@ public:
         return pTexture;
     }
 
-    static void Draw(RwTexture *pTexture, RECT *rect, uint32_t dwColor, float *uv)
+    static void Draw(RwTexture *pTexture, CRect *rect, uint32_t dwColor, float *uv)
     {
         // CSprite2d::Draw
-	    (( void (*)(RwTexture *, RECT *, uint32_t *, float, float, float, float, float, float, float, float))(g_libGTASA+0x5C8F20+1))(pTexture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
+	    (( void (*)(RwTexture *, CRect *, uint32_t *, float, float, float, float, float, float, float, float))(g_libGTASA+0x5C8F20+1))(pTexture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
     }
 };

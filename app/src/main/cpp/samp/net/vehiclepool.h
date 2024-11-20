@@ -7,7 +7,7 @@ typedef struct _NEW_VEHICLE
 {
 	VEHICLEID VehicleID;
 	int iVehicleType;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fRotation;
 	uint8_t byteInteriorColor1;
 	uint8_t byteInreriorColor2;
@@ -99,13 +99,13 @@ public:
 	void LinkToInterior(VEHICLEID VehicleID, uint8_t byteInterior);
 	VEHICLEID FindNearestToLocalPlayerPed();
 public:
-	VECTOR			m_vecSpawnPos[MAX_VEHICLES];
+	CVector			m_vecSpawnPos[MAX_VEHICLES];
 	float 			m_fSpawnRotation[MAX_VEHICLES];
 private:
 	CVehicle* m_pVehicles[MAX_VEHICLES];
 	bool m_bVehicleSlotState[MAX_VEHICLES];
 	VEHICLE_TYPE* m_pGTAVehicles[MAX_VEHICLES];
-	VECTOR m_vecPos[MAX_VEHICLES];
+	CVector m_vecPos[MAX_VEHICLES];
 	bool m_bIsActive[MAX_VEHICLES];
 	bool m_bIsWasted[MAX_VEHICLES];
 	uint8_t			m_bIsMarker[MAX_VEHICLES];

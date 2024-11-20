@@ -1,10 +1,10 @@
 //----------------------------------------------------------------------------------
 // File:            libs\jni\nv_event\nv_event.h
-// Samples Version: Android NVIDIA samples 2
+// Samples Version: Android NVIDIA samples 2 
 // Email:           tegradev@nvidia.com
 // Forum:           http://developer.nvidia.com/tegra/forums/tegra-forums/android-development
 //
-// Copyright 2009-2010 NVIDIAï¿½ Corporation
+// Copyright 2009-2010 NVIDIA® Corporation 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@
 #include <sys/types.h>
 
 #include <mutex>
-#include <list>
 
 /** @file nv_event.h
 Contains a framework for event loop-based applications.  This library replaces
@@ -32,7 +31,7 @@ most or all of the normally-required JNI code for Android NDK applications,
 presenting the application developer with two callbacks into which they can
 write their application.  The framework runs in a natively-created thread,
 allowing the application to implement a classic "event loop and render" structure
-without having to return to Java code to avoid ANR warnings.  The library
+without having to return to Java code to avoid ANR warnings.  The library 
 includes support for input and system event passing as well as JNI initialization
 and exposes basic EGL functionality to native as well.  Put together, the library
 can form the basis of a simple interactive 3D application.  All applications that
@@ -50,21 +49,22 @@ typedef jobject NVEventPlatformAppHandle;
 
 #else // unknown platform
 
-typedef void *NVEventPlatformAppHandle;
+typedef void* NVEventPlatformAppHandle;
 
 #endif
 
+
 enum
 {
-	/** Timeout argument to NVEventGetNextEvent() that indicates the function should
-		block until there is an event pending or the app exits
-		@see NVEventGetNextEvent()
-		*/
+/** Timeout argument to NVEventGetNextEvent() that indicates the function should 
+	block until there is an event pending or the app exits 
+	@see NVEventGetNextEvent()
+	*/
 	NV_EVENT_WAIT_FOREVER = -1
 };
 
 /** Event type values
- */
+*/
 typedef enum NVEventType
 {
 	/** Key up/down events */
@@ -100,7 +100,7 @@ typedef enum NVEventType
 } NVEventType;
 
 /** Touch event actions
- */
+*/
 typedef enum NVTouchEventType
 {
 	/** Pointer has just left the screen */
@@ -112,33 +112,33 @@ typedef enum NVTouchEventType
 	NV_TOUCHACTION_FORCE_32BITS = 0x7fffffff
 } NVTouchEventType;
 
-/** Multitouch event flags
- */
+/** Multitouch event flags 
+*/
 typedef enum NVMultiTouchEventType
 {
 	/** Indicated pointers are leaving the screen */
-	NV_MULTITOUCH_UP = 0x00000001,
+	NV_MULTITOUCH_UP    =   0x00000001,
 	/** Indicated pointers have just touched the screen */
-	NV_MULTITOUCH_DOWN = 0x00000002,
+	NV_MULTITOUCH_DOWN  =   0x00000002,
 	/** Indicated pointers are moving on the screen */
-	NV_MULTITOUCH_MOVE = 0x00000003,
+	NV_MULTITOUCH_MOVE  =   0x00000003,
 	/** Indicated pointers have halted the current gesture
 		app should cancel any actions implied by the gesture */
-	NV_MULTITOUCH_CANCEL = 0x00000004,
-	/** Mask to be AND'ed with the flag value
+	NV_MULTITOUCH_CANCEL =  0x00000004,
+	/** Mask to be AND'ed with the flag value 
 		to get the active pointer bits */
-	NV_MULTITOUCH_POINTER_MASK = 0x0000ff00,
-	/** Number of bits to right-shift the masked value
+	NV_MULTITOUCH_POINTER_MASK =  0x0000ff00,
+	/** Number of bits to right-shift the masked value 
 		to get the active pointer bits */
 	NV_MULTITOUCH_POINTER_SHIFT = 0x00000008,
-	/** Mask to be AND'ed with the flag value
+	/** Mask to be AND'ed with the flag value 
 		to get the event action */
-	NV_MULTITOUCH_ACTION_MASK = 0x000000ff,
+	NV_MULTITOUCH_ACTION_MASK =   0x000000ff,
 	NV_MULTITOUCH_FORCE_32BITS = 0x7fffffff
 } NVMultiTouchEventType;
 
 /** Key event types
- */
+*/
 typedef enum NVKeyEventType
 {
 	/** Key has just been pressed (no repeats) */
@@ -149,7 +149,7 @@ typedef enum NVKeyEventType
 } NVKeyEventType;
 
 /** Key event key codes
- */
+*/
 typedef enum NVKeyCode
 {
 	NV_KEYCODE_NULL = 0,
@@ -231,56 +231,52 @@ typedef enum NVKeyCode
 } NVKeyCode;
 
 /** Single-touch event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventTouch
 {
 	/** The action code */
-	NVTouchEventType m_action;
+    NVTouchEventType   m_action;
 	/** The window-relative X position (in pixels) */
-	float m_x;
+    float   m_x;
 	/** The window-relative Y position (in pixels) */
-	float m_y;
+    float   m_y;
 } NVEventTouch;
-#pragma pack(pop)
 
 /** Multi-touch event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventMultiTouch
 {
 	/** The action flags */
-	NVMultiTouchEventType m_action;
-	/** The window-relative X position of the first pointer (in pixels)
+    NVMultiTouchEventType   m_action;
+	/** The window-relative X position of the first pointer (in pixels) 
 		only valid if bit 0 of the pointer bits is set */
-	float m_x1;
-	/** The window-relative Y position of the first pointer (in pixels)
+    float   m_x1;
+	/** The window-relative Y position of the first pointer (in pixels) 
 		only valid if bit 0 of the pointer bits is set */
-	float m_y1;
-	/** The window-relative X position of the second pointer (in pixels)
+    float   m_y1;
+	/** The window-relative X position of the second pointer (in pixels) 
 		only valid if bit 1 of the pointer bits is set */
-	float m_x2;
-	/** The window-relative Y position of the second pointer (in pixels)
+    float   m_x2;
+	/** The window-relative Y position of the second pointer (in pixels) 
 		only valid if bit 1 of the pointer bits is set */
-	float m_y2;
+    float   m_y2;
 
 	/** The window-relative X position of the first pointer (in pixels)
 		only valid if bit 2 of the pointer bits is set */
-	float m_x3;
+	float   m_x3;
 	/** The window-relative Y position of the first pointer (in pixels)
 		only valid if bit 2 of the pointer bits is set */
-	float m_y3;
+	float   m_y3;
 	/** The window-relative X position of the second pointer (in pixels)
 		only valid if bit 3 of the pointer bits is set */
-	float m_x4;
+	float   m_x4;
 	/** The window-relative Y position of the second pointer (in pixels)
 		only valid if bit 3 of the pointer bits is set */
-	float m_y4;
+	float   m_y4;
 } NVEventMultiTouch;
-#pragma pack(pop)
+
 /** Key down/up event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventKey
 {
 	/** The action flags */
@@ -288,32 +284,29 @@ typedef struct NVEventKey
 	/** The code of the key pressed or released */
 	NVKeyCode m_code;
 } NVEventKey;
-#pragma pack(pop)
+
 /** Translated character event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventChar
 {
 	/** The UNICODE character represented */
 	int32_t m_unichar;
 } NVEventChar;
-#pragma pack(pop)
+
 /** Accelerometer event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventAccel
 {
 	/** Signed X magnitude of the force vector */
-	float m_x;
+    float   m_x;
 	/** Signed Y magnitude of the force vector */
-	float m_y;
+    float   m_y;
 	/** Signed Z magnitude of the force vector */
-	float m_z;
+    float   m_z;
 } NVEventAccel;
-#pragma pack(pop)
+
 /** Windows size change event data
- */
-#pragma pack(push, 1)
+*/
 typedef struct NVEventWindowSize
 {
 	/** New window client area width (in pixels) */
@@ -321,41 +314,31 @@ typedef struct NVEventWindowSize
 	/** New window client area height (in pixels) */
 	int32_t m_h;
 } NVEventWindowSize;
-#pragma pack(pop)
-/** All-encompassing event structure
- */
-#pragma pack(push, 1)
-typedef struct NVEvent
+
+/** All-encompassing event structure 
+*/
+typedef struct NVEvent 
 {
 	/** The type of the event, which also indicates which m_data union holds the data */
-	NVEventType m_type;
+    NVEventType m_type;
 	/** Union containing all possible event type data */
-	union NVEventData
+    union NVEventData 
 	{
 		/** Data for single-touch events */
 		NVEventTouch m_touch;
 		/** Data for multi-touch events */
 		NVEventMultiTouch m_multi;
 		/** Data for key up/down events */
-		NVEventKey m_key;
+        NVEventKey m_key;
 		/** Data for charcter events */
 		NVEventChar m_char;
 		/** Data for accelerometer events */
-		NVEventAccel m_accel;
+        NVEventAccel m_accel;
 		/** Data for window size events */
 		NVEventWindowSize m_size;
-	} m_data;
+    } m_data;
 } NVEvent;
-#pragma pack(pop)
-class NV_Event
-{
-public:
-	static void InsertNewest(NVEvent *ev);
-	static void GetNextEvent(NVEvent *ev);
 
-private:
-	static std::mutex g_EventMutex;
-	static std::list<NVEvent *> g_pEvents;
-};
+bool NVEventGetNextEvent(NVEvent* ev);
 
 #endif

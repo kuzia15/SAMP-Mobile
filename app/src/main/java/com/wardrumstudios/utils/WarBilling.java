@@ -1,29 +1,33 @@
 package com.wardrumstudios.utils;
 
 public class WarBilling extends WarBase {
-    public native void changeConnection(boolean z);
     public native void notifyChange(String str, int i);
+    public native void changeConnection(boolean z);
 
-    public void AddSKU(String id) {
-        System.out.println("**** AddSKU: " + id);
+    public void AddSKU(String str)
+    {
+        System.out.println("**** AddSKU: " + str);
     }
 
-    public boolean InitBilling() {
-        System.out.println("**** InitBilling");
+    public boolean InitBilling()
+    {
+        System.out.println("**** InitBilling()");
         return true;
     }
 
-    public boolean RequestPurchase(String id) {
-        System.out.println("**** RequestPurchase: " + id);
+    public String LocalizedPrice(String str) {
+        System.out.println("**** LocalizedPrice: " + str);
+        return "";
+    }
+
+    public boolean RequestPurchase(String str)
+    {
+        System.out.println("**** RequestPurchase: " + str);
         return true;
     }
 
-    public String LocalizedPrice(String id) {
-        System.out.println("**** LocalizedPrice: " + id);
-        return null;
-    }
-
-    public void SetBillingKey(String key) {
-        System.out.println("**** SetBillingKey: " + key);
+    public void SetBillingKey(String str)
+    {
+        System.out.println("**** SetBillingKey: " + str);
     }
 }

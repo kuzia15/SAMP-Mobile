@@ -3,7 +3,7 @@
 #include "common.h"
 #include "RW/RenderWare.h"
 #include "aimstuff.h"
-#include "camera.h"
+#include "Camera.h"
 #include "playerped.h"
 #include "actor.h"
 #include "vehicle.h"
@@ -16,7 +16,7 @@
 #include "pad.h"
 #include "snapshothelper.h"
 #include "materialtextgenerator.h"
-#include "../vendor/quaternion/quaternion.h"
+#include "../game/Core/Quaternion.h"
 
 class CGame
 {
@@ -44,12 +44,12 @@ public:
 	void DisableTrainTraffic();
 	void UpdateGlobalTimer(uint32_t dwTime);
 	void SetGravity(float fGravity);
-	float FindGroundZForCoord(float fX, float fY);
+	float FindGroundZForCoord(float fX, float fY, float fZ);
 
 	void DrawGangZone(float fPos[], uint32_t dwColor, uint32_t dwUnk);
 	
 	uint32_t CreatePickup(int iModel, int iType, float fX, float fY, float fZ, int* pdwindex);
-	CObject* NewObject(int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDistance);
+	CObject* NewObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance);
 	CPlayerPed* NewPlayer(int iSkin, float fX, float fY, float fZ, float fRotation, bool unk, bool bIsNPC);
 	bool RemovePlayer(CPlayerPed* pPlayer);
 
@@ -69,10 +69,6 @@ public:
 
 
 	static const char* GetDataDirectory();
-
-	CCamera* GetCamera() {
-		return m_pGameCamera;
-	}
 
 	// 0.3.7
 	CPlayerPed* FindPlayerPed() {
@@ -94,8 +90,8 @@ public:
 	int GetLocalMoney();
 	void DisableEnterExits();
 
-	void SetCheckpointInformation(VECTOR* vecPos, VECTOR* vecSize);
-	void SetRaceCheckpointInformation(uint8_t byteType, VECTOR *vecPos, VECTOR* vecNextPos, float fRadius);
+	void SetCheckpointInformation(CVector* vecPos, CVector* vecSize);
+	void SetRaceCheckpointInformation(uint8_t byteType, CVector *vecPos, CVector* vecNextPos, float fRadius);
 	void MakeRaceCheckpoint();
 	void DisableRaceCheckpoint();
 
@@ -110,18 +106,17 @@ public:
 	bool m_bRaceCheckpointsEnabled;
 
 private:
-	CCamera*	m_pGameCamera;
 	CPlayerPed* m_pGamePlayer;
 
 	bool m_bClockEnabled;
 	bool m_bPreloadedVehicleModels[212];
 
-	VECTOR m_vecCheckpointPos;
-	VECTOR m_vecCheckpointExtent;
+	CVector m_vecCheckpointPos;
+	CVector m_vecCheckpointExtent;
 	uint32_t m_dwCheckpointMarker;
 
-	VECTOR m_vecRaceCheckpointPos;
-	VECTOR m_vecRaceCheckpointNextPos;
+	CVector m_vecRaceCheckpointPos;
+	CVector m_vecRaceCheckpointNextPos;
 	uint8_t m_byteRaceType;
 	float m_fRaceCheckpointRadius;
 	uint32_t m_dwRaceCheckpointMarker;

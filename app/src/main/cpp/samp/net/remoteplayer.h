@@ -49,7 +49,7 @@ public:
 	uint32_t GetPlayerColor();
 
 	void Process();
-	bool Spawn(uint8_t byteTeam, int iSkin, VECTOR* vecPos, float fRotation, 
+	bool Spawn(uint8_t byteTeam, int iSkin, CVector* vecPos, float fRotation,
 		uint32_t dwColor, uint8_t byteFightingStyle);
 	void Remove();
 	void HandleDeath();
@@ -81,10 +81,10 @@ public:
 	bool SurfingOnObject();
 
 	void UpdateOnFootTargetPosition();
-	void UpdateOnFootPositionAndSpeed(VECTOR* vecPos, VECTOR* vecMove);
+	void UpdateOnFootPositionAndSpeed(CVector* vecPos, CVector* vecMove);
 
 	void UpdateInCarTargetPosition();
-	void UpdateInCarMatrixAndSpeed(PMATRIX4X4 pMat, VECTOR* pVecPos, VECTOR* pVecMoveSpeed);
+	void UpdateInCarMatrixAndSpeed(RwMatrix* pMat, CVector* pVecPos, CVector* pVecMoveSpeed);
 	void UpdateVehicleRotation();
 
 	void InterpolateAndRotate();
@@ -133,12 +133,12 @@ private:
 	uint8_t			m_byteSeatID;
 	
 	
-	VECTOR			m_vecOnFootTargetPos;
-	VECTOR			m_vecOnFootTargetSpeed;
-	VECTOR			m_vecPositionInaccuracy;
+	CVector			m_vecOnFootTargetPos;
+	CVector			m_vecOnFootTargetSpeed;
+	CVector			m_vecPositionInaccuracy;
 	CQuaternion		m_quat;
-	VECTOR			m_vecInCarTargetPos;
-	VECTOR			m_vecInCarTargetSpeed;
+	CVector			m_vecInCarTargetPos;
+	CVector			m_vecInCarTargetSpeed;
 
 	ONFOOT_SYNC_DATA		m_ofSync;
 	INCAR_SYNC_DATA			m_icSync;
@@ -152,12 +152,12 @@ private:
 	uint32_t		m_dwMarker;
 
 	bool			m_bGlobalMarkerShown;
-	VECTOR			m_vecGlobalMarkerPos;
+	CVector			m_vecGlobalMarkerPos;
 
 	bool 			m_bWasAnimSettedFlag;
 	uint32_t 		m_dwPlayingAnimIndex;
     uint8_t 		m_byteWeaponShotID;
 
-	VECTOR 				m_vecPosOffset;
+	CVector 				m_vecPosOffset;
 
 };

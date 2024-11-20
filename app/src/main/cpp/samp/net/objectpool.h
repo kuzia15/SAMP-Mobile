@@ -8,7 +8,7 @@ public:
 	CObjectPool();
 	~CObjectPool();
 
-	bool New(OBJECTID ObjectID, int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDistance);
+	bool New(OBJECTID ObjectID, int iModel, CVector vecPos, CVector vecRot, float fDrawDistance);
 	bool Delete(OBJECTID ObjectID);
 
 	void Process();

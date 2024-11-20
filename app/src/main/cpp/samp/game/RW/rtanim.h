@@ -1,3 +1,9 @@
+/*
+    Plugin-SDK file
+    Authors: GTA Community. See more here
+    https://github.com/DK22Pac/plugin-sdk
+    Do not delete this comment block. Respect others' work!
+*/
 #pragma once
 
 #define rtANIMSTREAMCURRENTVERSION 0x100
@@ -67,7 +73,7 @@ typedef void (*RtAnimKeyFrameBlendCallBack) (void *voidOut, void *voidIn1,
  * \param voidIn1      Void pointer containing the first input keyframe.
  * \param voidIn2      Void pointer containing the second input keyframe.
  * \param time         \ref RwReal containing the time at which to interpolate.
- * \param customData   Void pointer to the custom data associated with this 
+ * \param customData   Void pointer to the custom data associated with this
  *                     animation
  */
 typedef void (*RtAnimKeyFrameInterpolateCallBack) (void *voidOut, void *voidIn1,
@@ -89,7 +95,7 @@ typedef void (*RtAnimKeyFrameInterpolateCallBack) (void *voidOut, void *voidIn1,
  *                      interpolated keyframe.
  */
 typedef void (*RtAnimKeyFrameAddCallBack) (void *voidOut, void *voidIn1,
-                                                    void *voidIn2);
+                                           void *voidIn2);
 
 /**
  * \ingroup rtanim
@@ -102,7 +108,7 @@ typedef void (*RtAnimKeyFrameAddCallBack) (void *voidOut, void *voidIn1,
  * \param voidStart Void pointer for the start keyframe to take the reciprocal of.
  */
 typedef void (*RtAnimKeyFrameMulRecipCallBack)
-                                            (void *voidFrame, void *voidStart);
+        (void *voidFrame, void *voidStart);
 
 /**
  * \ingroup rtanim
@@ -116,7 +122,7 @@ typedef void (*RtAnimKeyFrameMulRecipCallBack)
  * \return Pointer to the \ref RtAnimAnimation.
  */
 typedef RtAnimAnimation * (*RtAnimKeyFrameStreamReadCallBack)
-                                (RwStream *stream, RtAnimAnimation *animation);
+        (RwStream *stream, RtAnimAnimation *animation);
 
 /**
  * \ingroup rtanim
@@ -130,7 +136,7 @@ typedef RtAnimAnimation * (*RtAnimKeyFrameStreamReadCallBack)
  * \return \ref RwBool, TRUE if successful.
  */
 typedef RwBool (*RtAnimKeyFrameStreamWriteCallBack)
-                       (const RtAnimAnimation *animation, RwStream *stream);
+        (const RtAnimAnimation *animation, RwStream *stream);
 
 /**
  * \ingroup rtanim
@@ -143,7 +149,7 @@ typedef RwBool (*RtAnimKeyFrameStreamWriteCallBack)
  * \return \ref RwInt32 containing the size, in bytes, of the keyframe data.
  */
 typedef RwInt32 (*RtAnimKeyFrameStreamGetSizeCallBack)
-                                        (const RtAnimAnimation *animation);
+        (const RtAnimAnimation *animation);
 
 /**
  * \ingroup rtanim
@@ -163,42 +169,42 @@ typedef struct RtAnimInterpolatorInfo RtAnimInterpolatorInfo;
 struct RtAnimInterpolatorInfo
 {
     RwInt32                             typeID;
-            /**< The ID of the interpolation scheme. */
+    /**< The ID of the interpolation scheme. */
     RwInt32                             interpKeyFrameSize;
-            /**< Size, in bytes, of the interpolated keyframe structure. */
+    /**< Size, in bytes, of the interpolated keyframe structure. */
     //RwInt32                             animKeyFrameSize;
-            /**< Size, in bytes, of the animation keyframe structure. */
+    /**< Size, in bytes, of the animation keyframe structure. */
     RtAnimKeyFrameApplyCallBack         keyFrameApplyCB;
-            /**< Pointer to a function that converts a keyframe to the needed
-             * format. This function is never called from the \ref rtanim
-             * toolkit (as the toolit doesn't know the data layout of the
-             * results) but is stored to ease the creation of overloaded
-             * interpolators. */
+    /**< Pointer to a function that converts a keyframe to the needed
+     * format. This function is never called from the \ref rtanim
+     * toolkit (as the toolit doesn't know the data layout of the
+     * results) but is stored to ease the creation of overloaded
+     * interpolators. */
     RtAnimKeyFrameBlendCallBack         keyFrameBlendCB;
-            /**< Pointer to a function that blends between two
-             *   interpolated keyframes, for the purpose of blending
-             *   between the states of two \ref RtAnimInterpolator objects. */
+    /**< Pointer to a function that blends between two
+     *   interpolated keyframes, for the purpose of blending
+     *   between the states of two \ref RtAnimInterpolator objects. */
     RtAnimKeyFrameInterpolateCallBack   keyFrameInterpolateCB;
-            /**< Pointer to a function that interpolates between two keyframes
-             * for a given time in between. */
+    /**< Pointer to a function that interpolates between two keyframes
+     * for a given time in between. */
     RtAnimKeyFrameAddCallBack           keyFrameAddCB;
-            /**< Pointer to a function that adds two interpolated keyframes
-             *   for the purpose of adding the states of two
-             *   \ref RtAnimInterpolator objects. */
+    /**< Pointer to a function that adds two interpolated keyframes
+     *   for the purpose of adding the states of two
+     *   \ref RtAnimInterpolator objects. */
     RtAnimKeyFrameMulRecipCallBack      keyFrameMulRecipCB;
-            /**< Pointer to a function that multiplies a keyframe by the
-             * reciprocal of another. */
+    /**< Pointer to a function that multiplies a keyframe by the
+     * reciprocal of another. */
     RtAnimKeyFrameStreamReadCallBack    keyFrameStreamReadCB;
-            /**< Pointer to a function that reads the keyframes from a stream
-             * for a given animation. */
+    /**< Pointer to a function that reads the keyframes from a stream
+     * for a given animation. */
     RtAnimKeyFrameStreamWriteCallBack   keyFrameStreamWriteCB;
-            /**< Pointer to a function that writes the keyframes to a stream for
-             *  a given animation. */
+    /**< Pointer to a function that writes the keyframes to a stream for
+     *  a given animation. */
     RtAnimKeyFrameStreamGetSizeCallBack keyFrameStreamGetSizeCB;
-            /**< Pointer to a function that returns the binary stream size of
-             * the keyframes for a given animation. */
+    /**< Pointer to a function that returns the binary stream size of
+     * the keyframes for a given animation. */
     RwInt32                             customDataSize;
-            /**< Amount of custom data required per animation. */
+    /**< Amount of custom data required per animation. */
 };
 
 
@@ -246,18 +252,18 @@ struct RtAnimInterpolatorInfo
 struct RtAnimAnimation
 {
     RtAnimInterpolatorInfo              *interpInfo;
-            /**< Pointer to interpolation scheme information */
+    /**< Pointer to interpolation scheme information */
     RwInt32                             numFrames;
-            /**< Number of keyframes in the animation  */
+    /**< Number of keyframes in the animation  */
     RwInt32                             flags;
-            /**< Specifies details about animation,
-             * relative translation modes etc. */
+    /**< Specifies details about animation,
+     * relative translation modes etc. */
     RwReal                              duration;
-            /**< Duration of animation in seconds */
+    /**< Duration of animation in seconds */
     void                                *pFrames;
-            /**< Pointer to the animation keyframes  */
+    /**< Pointer to the animation keyframes  */
     void                                *customData;
-            /**< Pointer to custom data for this animation */
+    /**< Pointer to custom data for this animation */
 };
 
 /**
@@ -278,9 +284,9 @@ typedef struct RtAnimKeyFrameHeader RtAnimKeyFrameHeader;
 struct RtAnimKeyFrameHeader
 {
     void                                *prevFrame;
-            /**< Previous keyframe for particular hierarchy node */
+    /**< Previous keyframe for particular hierarchy node */
     RwReal                              time;
-            /**< Time at keyframe  */
+    /**< Time at keyframe  */
 };
 
 /**
@@ -306,11 +312,11 @@ typedef struct RtAnimInterpFrameHeader RtAnimInterpFrameHeader;
 struct RtAnimInterpFrameHeader
 {
     RtAnimKeyFrameHeader    *keyFrame1;
-            /**< Pointer to the first of the current pair of keyframes in
-                the associated \ref RtAnimAnimation */
+    /**< Pointer to the first of the current pair of keyframes in
+        the associated \ref RtAnimAnimation */
     RtAnimKeyFrameHeader    *keyFrame2;
-            /**< Pointer to the second of the current pair of keyframes in
-                the associated \ref RtAnimAnimation */
+    /**< Pointer to the second of the current pair of keyframes in
+        the associated \ref RtAnimAnimation */
 };
 
 /**
@@ -340,8 +346,8 @@ typedef struct RtAnimInterpolator RtAnimInterpolator;
  */
 
 typedef RtAnimInterpolator * (*RtAnimCallBack)
-                                        (RtAnimInterpolator *animInstance,
-                                        void *data);
+        (RtAnimInterpolator *animInstance,
+         void *data);
 
 /**
  * \ingroup rtanim
@@ -371,54 +377,82 @@ typedef RtAnimInterpolator * (*RtAnimCallBack)
 struct RtAnimInterpolator
 {
     RtAnimAnimation                   *pCurrentAnim;
-                                /**< Current \ref RtAnimAnimation applied */
+    /**< Current \ref RtAnimAnimation applied */
     RwReal                              currentTime;
-                                /**< Current animation time  */
+    /**< Current animation time  */
     void                                *pNextFrame;
-                                /**< Next animation keyframe to be played  */
+    /**< Next animation keyframe to be played  */
     RtAnimCallBack                    pAnimCallBack;
-                                /**< Animation callback function pointer  */
+    /**< Animation callback function pointer  */
     void                                *pAnimCallBackData;
-                                /**< Animation callback function user data  */
+    /**< Animation callback function user data  */
     RwReal                              animCallBackTime;
-                                /**< Trigger time for callback function  */
+    /**< Trigger time for callback function  */
     RtAnimCallBack                    pAnimLoopCallBack;
-                                /**< Animation loop callback function pointer */
+    /**< Animation loop callback function pointer */
     void                                *pAnimLoopCallBackData;
-                                /**< Animation loop callback function data  */
+    /**< Animation loop callback function data  */
     RwInt32                             maxInterpKeyFrameSize;
-                                /**< Maximum size of interpolated keyframes 
-                                 * usable on this animation (set at creation
-                                 * time) */
+    /**< Maximum size of interpolated keyframes
+     * usable on this animation (set at creation
+     * time) */
     RwInt32                             currentInterpKeyFrameSize;
-                                /**< Size of interpolated keyframes in the current
-                                 * animation scheme */
+    /**< Size of interpolated keyframes in the current
+     * animation scheme */
     RwInt32                             currentAnimKeyFrameSize;
-                                /**< Size of animation keyframes in the current
-                                 * animation scheme */
+    /**< Size of animation keyframes in the current
+     * animation scheme */
     RwInt32                             numNodes;
-                                /**< Number of nodes driven by the animation */
+    /**< Number of nodes driven by the animation */
     RwBool                              isSubInterpolator;
-                                /**< Internal use */
+    /**< Internal use */
     RwInt32                             offsetInParent;
-                                /**< Internal use */
+    /**< Internal use */
     RtAnimInterpolator           *parentAnimation;
-                                /**< Internal use */
+    /**< Internal use */
 
     RtAnimKeyFrameApplyCallBack       keyFrameApplyCB;
-                                /**< Internal use */
+    /**< Internal use */
     RtAnimKeyFrameBlendCallBack       keyFrameBlendCB;
-                                /**< Internal use */
+    /**< Internal use */
     RtAnimKeyFrameInterpolateCallBack keyFrameInterpolateCB;
-                                /**< Internal use */
+    /**< Internal use */
     RtAnimKeyFrameAddCallBack         keyFrameAddCB;
-                                /**< Internal use */
+    /**< Internal use */
 };
 
 /* Access to array of interpolated frames occupying a block of memory
  * after the end of the RtAnimInterpolator structure.
  */
-#define rtANIMGETINTERPFRAME( anim, nodeIndex )                              \
-        ( (void *)( ( (RwUInt8 *)&(anim[1]) +                                  \
-                      ((nodeIndex) *                                           \
-                       anim->currentInterpKeyFrameSize) ) ) )
+#define rtANIMGETINTERPFRAME(anim, nodeIndex) \
+                            ( (void *)( ( (RwUInt8 *)&(anim[1]) + ((nodeIndex) *anim->currentInterpKeyFrameSize) ) ) )
+
+
+void RtAnimAnimationFreeListCreateParams(RwInt32 blockSize, RwInt32 numBlocksToPrealloc); // 0x7CCC80
+RwBool RtAnimInitialize(); // 0x7CCCA0
+RwBool RtAnimRegisterInterpolationScheme(RtAnimInterpolatorInfo* interpolatorInfo); // 0x7CCD40
+RtAnimInterpolatorInfo* RtAnimGetInterpolatorInfo(RwInt32 typeID); // 0x7CCDE0
+RtAnimAnimation* RtAnimAnimationCreate(RwInt32 typeID, RwInt32 numFrames, RwInt32 flags, RwReal duration); // 0x7CCE40
+RwBool RtAnimAnimationDestroy(RtAnimAnimation* animation); // 0x7CCF10
+RtAnimAnimation* RtAnimAnimationRead(const RwChar* filename); // 0x7CCF30
+RwBool RtAnimAnimationWrite(const RtAnimAnimation* animation, const RwChar* filename); // 0x7CD160
+RtAnimAnimation* RtAnimAnimationStreamRead(RwStream* stream); // 0x7CD220
+RwBool RtAnimAnimationStreamWrite(const RtAnimAnimation* animation, RwStream* stream); // 0x7CD410
+RwInt32 RtAnimAnimationStreamGetSize(const RtAnimAnimation* animation); // 0x7CD4D0
+RwUInt32 RtAnimAnimationGetNumNodes(const RtAnimAnimation* animation); // 0x7CD4F0
+RtAnimInterpolator* RtAnimInterpolatorCreate(RwInt32 numNodes, RwInt32 maxInterpKeyFrameSize); // 0x7CD520
+void RtAnimInterpolatorDestroy(RtAnimInterpolator* anim); // 0x7CD590
+RwBool RtAnimInterpolatorSetCurrentAnim(RtAnimInterpolator* animI, RtAnimAnimation* anim); // 0x7CD5A0
+RwBool RtAnimInterpolatorSetKeyFrameCallBacks(RtAnimInterpolator* anim, RwInt32 keyFrameTypeID); // 0x7CD660
+void RtAnimInterpolatorSetAnimLoopCallBack(RtAnimInterpolator* anim, RtAnimCallBack callBack, void* data); // 0x7CD6F0
+void RtAnimInterpolatorSetAnimCallBack(RtAnimInterpolator* anim, RtAnimCallBack callBack, RwReal time, void* data); // 0x7CD710
+RwBool RtAnimInterpolatorCopy(RtAnimInterpolator* outAnim, RtAnimInterpolator* inAnim); // 0x7CD730
+RwBool RtAnimInterpolatorSubAnimTime(RtAnimInterpolator* anim, RwReal time); // 0x7CD760
+RwBool RtAnimInterpolatorAddAnimTime(RtAnimInterpolator* anim, RwReal time); // 0x7CD8D0
+RwBool RtAnimInterpolatorSetCurrentTime(RtAnimInterpolator* anim, RwReal time); // 0x7CDAB0
+RwBool RtAnimAnimationMakeDelta(RtAnimAnimation* animation, RwInt32 numNodes, RwReal time); // 0x7CDB00
+RwBool RtAnimInterpolatorBlend(RtAnimInterpolator* outAnim, RtAnimInterpolator* inAnim1, RtAnimInterpolator* inAnim2, RwReal alpha); // 0x7CDBF0
+RwBool RtAnimInterpolatorAddTogether(RtAnimInterpolator* outAnim, RtAnimInterpolator* inAnim1, RtAnimInterpolator* inAnim2); // 0x7CDC50
+RtAnimInterpolator* RtAnimInterpolatorCreateSubInterpolator(RtAnimInterpolator* parentAnim, RwInt32 startNode, RwInt32 numNodes, RwInt32 maxInterpKeyFrameSize); // 0x7CDCB0
+RwBool RtAnimInterpolatorBlendSubInterpolator(RtAnimInterpolator* outAnim, RtAnimInterpolator* inAnim1, RtAnimInterpolator* inAnim2, RwReal alpha); // 0x7CDCF0
+RwBool RtAnimInterpolatorAddSubInterpolator(RtAnimInterpolator* outAnim, RtAnimInterpolator* mainAnim, RtAnimInterpolator* subAnim); // 0x7CDEF0

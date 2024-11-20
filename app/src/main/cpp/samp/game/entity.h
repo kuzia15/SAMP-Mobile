@@ -12,14 +12,14 @@ public:
 
 	bool IsAdded();
 
-	void GetMatrix(PMATRIX4X4 Matrix);
-	void SetMatrix(MATRIX4X4 Matrix);
+	void GetMatrix(RwMatrix* Matrix);
+	void SetMatrix(RwMatrix Matrix);
 	
-	void GetMoveSpeedVector(PVECTOR Vector);
-	void SetMoveSpeedVector(VECTOR Vector);
+	void GetMoveSpeedVector(CVector* Vector);
+	void SetMoveSpeedVector(CVector Vector);
 	
-	void GetTurnSpeedVector(PVECTOR Vector);
-	void SetTurnSpeedVector(VECTOR Vector);
+	void GetTurnSpeedVector(CVector* Vector);
+	void SetTurnSpeedVector(CVector Vector);
 	
 	unsigned int GetModelIndex();
 	void SetModelIndex(unsigned int uiModel);
@@ -27,7 +27,7 @@ public:
 	virtual void TeleportTo(float x, float y, float z);
 	float GetDistanceFromLocalPlayerPed();
 	float GetDistanceFromCamera();
-	float GetDistanceFromPoint(VECTOR Vector);
+	float GetDistanceFromPoint(CVector Vector);
 
 	uintptr_t GetRWObject();
 	
@@ -36,7 +36,7 @@ public:
 
 	void SetGravityProcessing(bool state);
 
-	void UpdateMatrix(MATRIX4X4 mat);
+	void UpdateMatrix(RwMatrix mat);
 	void UpdateRwMatrixAndFrame();
 
 	void Render();

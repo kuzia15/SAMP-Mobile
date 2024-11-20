@@ -4,6 +4,7 @@
 #include "net/netgame.h"
 #include "gui/gui.h"
 #include "playertags.h"
+#include "util/CUtil.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -11,16 +12,17 @@ extern CNetGame* pNetGame;
 CPlayerTags::CPlayerTags()
 {
 	FLog("Loading AFK icon..");
-	m_pAFKIconTexture = (RwTexture*)LoadTextureFromDB("samp", "afk_icon");
-	m_pMicroIconTexture = (RwTexture*)LoadTextureFromDB("samp", "icon_micro");
+	m_pAFKIconTexture = CUtil::LoadTextureFromDB("samp", "afk_icon");
+    FLog("Loading AFK icon1..");
+	m_pMicroIconTexture = CUtil::LoadTextureFromDB("samp", "icon_micro");
 }
 
 CPlayerTags::~CPlayerTags() {}
 
 void CPlayerTags::Render(ImGuiRenderer* renderer)
 {
-	VECTOR vecPos;
-	MATRIX4X4 matLocal, matPlayer;
+	CVector vecPos;
+	RwMatrix matLocal, matPlayer;
 	int dwHitEntity;
 	char szNickBuf[64];
 
@@ -46,16 +48,16 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 							pRemotePlayer->m_pCurrentVehicle->IsRCVehicle())
 						{
 							pRemotePlayer->m_pCurrentVehicle->GetMatrix(&matPlayer);
-							vecPos.X = matPlayer.pos.X;
-							vecPos.Y = matPlayer.pos.Y;
-							vecPos.Z = matPlayer.pos.Z;
+							vecPos.x = matPlayer.pos.x;
+							vecPos.y = matPlayer.pos.y;
+							vecPos.z = matPlayer.pos.z;
 						}
 						else
 						{*/
 							if (!pPlayerPed->IsAdded()) continue;
-							vecPos.X = 0.0f;
-							vecPos.Y = 0.0f;
-							vecPos.Z = 0.0f;
+							vecPos.x = 0.0f;
+							vecPos.y = 0.0f;
+							vecPos.z = 0.0f;
 							pPlayerPed->GetBonePosition(8, &vecPos);
 						//}
 
@@ -64,7 +66,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 
 						if (pNetGame->m_pNetSet->bNameTagLOS)
 						{
-							dwHitEntity = ScriptCommand(&get_line_of_sight, vecPos.X, vecPos.Y, vecPos.Z,
+							dwHitEntity = ScriptCommand(&get_line_of_sight, vecPos.x, vecPos.y, vecPos.z,
 								pCam->pos1x, pCam->pos1y, pCam->pos1z, 1, 0, 0, 1, 0);
 						}
 
@@ -86,23 +88,23 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 	}
 }
 
-void CPlayerTags::Draw(ImGuiRenderer* renderer, VECTOR* vec, const char* szNick, uint32_t dwColor, float fDist, float fHealth, float fArmour, bool bAfk, bool bMicro)
+void CPlayerTags::Draw(ImGuiRenderer* renderer, CVector* vec, const char* szNick, uint32_t dwColor, float fDist, float fHealth, float fArmour, bool bAfk, bool bMicro)
 {
-	VECTOR vecTagPos;
+	CVector vecTagPos;
 
-	vecTagPos.X = vec->X;
-	vecTagPos.Y = vec->Y;
-	vecTagPos.Z = vec->Z;
-	vecTagPos.Z += 0.25f + (fDist * 0.0475f);
+	vecTagPos.x = vec->x;
+	vecTagPos.y = vec->y;
+	vecTagPos.z = vec->z;
+	vecTagPos.z += 0.25f + (fDist * 0.0475f);
 
-	VECTOR vecOut;
+	CVector vecOut;
 	// CSprite::CalcScreenCoors
-	((void (*)(VECTOR*, VECTOR*, float*, float*, bool, bool))(g_libGTASA + 0x5C5798 + 1))(&vecTagPos, &vecOut, 0, 0, 0, 0);
+	((void (*)(CVector*, CVector*, float*, float*, bool, bool))(g_libGTASA + (VER_x32 ? 0x005C57E8 + 1 : 0x6E9DF8)))(&vecTagPos, &vecOut, 0, 0, 0, 0);
 
-	if (vecOut.Z < 1.0f) return;
+	if (vecOut.z < 1.0f) return;
 
 	// name (id)
-	ImVec2 pos = ImVec2(vecOut.X, vecOut.Y);
+	ImVec2 pos = ImVec2(vecOut.x, vecOut.y);
 	//pos.x -= ImGui::CalcTextSize(szNick).x / 2;
 	//ImGuiEx::AddOutlinedText(ImGui::GetBackgroundDrawList(), pos, __builtin_bswap32(dwColor | (0x000000FF)), true, szNick);
 	pos.x -= renderer->calculateTextSize(szNick, UISettings::fontSize() / 2).x / 2;
@@ -111,8 +113,8 @@ void CPlayerTags::Draw(ImGuiRenderer* renderer, VECTOR* vec, const char* szNick,
 
 	// Health bar
 	if (fHealth < 0.0f) return;
-	vecOut.X = (float)((int)vecOut.X);
-	vecOut.Y = (float)((int)vecOut.Y);
+	vecOut.x = (float)((int)vecOut.x);
+	vecOut.y = (float)((int)vecOut.y);
 
 	ImColor HealthBarBDRColor = ImColor(0x00, 0x64, 0x95, 0xED);
 	ImColor HealthBarColor = ImColor(0xB9, 0x22, 0x28, 0xFF);
@@ -135,11 +137,11 @@ void CPlayerTags::Draw(ImGuiRenderer* renderer, VECTOR* vec, const char* szNick,
 	ImVec2 HealthBar2;
 
 	// top left
-	HealthBarBDR1.x = vecOut.X - ((fWidth / 2) + fOutline);
-	HealthBarBDR1.y = vecOut.Y + ((UISettings::fontSize() / 2) * 1.2f);
+	HealthBarBDR1.x = vecOut.x - ((fWidth / 2) + fOutline);
+	HealthBarBDR1.y = vecOut.y + ((UISettings::fontSize() / 2) * 1.2f);
 	// bottom right
-	HealthBarBDR2.x = vecOut.X + ((fWidth / 2) + fOutline);
-	HealthBarBDR2.y = vecOut.Y + ((UISettings::fontSize() / 2) * 1.2f) + fHeight;
+	HealthBarBDR2.x = vecOut.x + ((fWidth / 2) + fOutline);
+	HealthBarBDR2.y = vecOut.y + ((UISettings::fontSize() / 2) * 1.2f) + fHeight;
 
 	// top left
 	HealthBarBG1.x = HealthBarBDR1.x + fOutline;
@@ -158,7 +160,7 @@ void CPlayerTags::Draw(ImGuiRenderer* renderer, VECTOR* vec, const char* szNick,
 
 	fHealth *= fWidth / 100.0f;
 	fHealth -= (fWidth / 2);
-	HealthBar2.x = vecOut.X + fHealth;
+	HealthBar2.x = vecOut.x + fHealth;
 
 	float offsetY = 13.0f;//fHeight / 3;
 
@@ -194,7 +196,7 @@ void CPlayerTags::Draw(ImGuiRenderer* renderer, VECTOR* vec, const char* szNick,
 
 		fArmour *= fWidth / 100.0f;
 		fArmour -= (fWidth / 2);
-		HealthBar2.x = vecOut.X + fArmour;
+		HealthBar2.x = vecOut.x + fArmour;
 
 		ImGui::GetBackgroundDrawList()->AddRectFilled(HealthBarBDR1, HealthBarBDR2, HealthBarBDRColor);
 		ImGui::GetBackgroundDrawList()->AddRectFilled(HealthBarBG1, HealthBarBG2, HealthBarBGColor);

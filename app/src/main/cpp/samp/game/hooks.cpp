@@ -1,6 +1,6 @@
 #include <GLES2/gl2.h>
 #include "../main.h"
-#include "../vendor/armhook/armhook.h"
+#include "../vendor/armhook/patch.h"
 #include "game.h"
 #include "../net/netgame.h"
 #include "../gui/gui.h"
@@ -53,210 +53,37 @@ PLAYERID FindActorIDFromGtaPtr(PED_TYPE* pPed)
 	return INVALID_PLAYER_ID;
 }
 
-static size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream)
-{
-	size_t written = fwrite(ptr, size, nmemb, (FILE*)stream);
-	return written;
-}
+/* =============================================================================== */
 
 /* =============================================================================== */
 
-int(*OS_FileOpen)(uint32_t r0, uintptr_t handle, char* name, int r3);
-int OS_FileOpen_hook(int r0, uintptr_t handle, char* name, int r3)
-{
-	char path[0xff] = { 0 };
-	const char* pszStorage = (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
-
-	//============ [Create Tracks] ==============//
-	/*int c;
-	FILE* fp;
-	char ts2[255];
-	sprintf(ts2, "%s/tracks2.dat", pszStorage);
-	//Check File//
-	fp = fopen(ts2, "r");
-	if (!fp)
-	{
-		fp = fopen(ts2, "w");
-		char str[20] = "0";
-		if (fp)
-		{
-			for (int i = 0; i < strlen(str); i++)
-				putc(str[i], fp);
-		}
-		fclose(fp);
-	}
-	fclose(fp);
-	//------//
-	int c2;
-	FILE* fp2;
-	char ts4[255];
-	sprintf(ts4, "%s/tracks4.dat", pszStorage);
-	//Check File//
-	fp2 = fopen(ts4, "r");
-	if (!fp2)
-	{
-		fp2 = fopen(ts4, "w");
-		char str2[20] = "0";
-		if (fp2)
-		{
-			for (int i = 0; i < strlen(str2); i++)
-				putc(str2[i], fp2);
-		}
-		fclose(fp2);
-	}
-	fclose(fp2);*/
-	//=============================//
-
-	FLog("OS_FileOpen: %s", name);
-
-	if (!strncmp(name, "data\\script\\mainV1.scm", 22)) {
-		FLog("Loading mainV1.scm..");
-		sprintf(path, "SAMP\\main.scm");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "DATA\\SCRIPT\\SCRIPTV1.IMG", 24))
-	{
-		FLog("Loading scriptV1.img..");
-		sprintf(path, "SAMP\\script.img");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "DATA\\GTA.DAT", 12))
-	{
-		FLog("Loading gta.dat..");
-		sprintf(path, "SAMP\\gta.dat");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "DATA\\PEDS.IDE", 13))
-	{
-		FLog("Loading peds.ide..");
-		sprintf(path, "SAMP\\peds.ide");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "DATA\\TIMECYC.DAT", 16))//15
-	{
-		FLog("Loading timecyc.dat..");
-		sprintf(path, "SAMP\\timecyc.dat");
-		name = path;
-		goto ret;
-	}
-
-    if (!strncmp(name, "DATA\\HANDLING.CFG", 18)) {
-        FLog("Loading handling.cfg..");
-        sprintf(path, "SAMP\\handling.cfg");
-        name = path;
-        goto ret;
-    }
-
-	//
-	/*if (!strncmp(name, "data\\paths\\tracks2.dat", 22))
-	{
-		FLog("Loading tracks2.dat...");
-		sprintf(path, "tracks2.dat");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "data\\paths\\tracks4.dat", 22))
-	{
-		FLog("Loading tracks4.dat...");
-		sprintf(path, "tracks4.dat");
-		name = path;
-		goto ret;
-	}*/
-
-	/*if (!strncmp(name, "DATA\\paths\\tracks2.dat", 20))
-	{
-		FLog("Loading tracks2.dat...");
-		sprintf(path, "SAMP\\tracks2.dat");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "DATA\\paths\\tracks4.dat", 20))
-	{
-		FLog("Loading tracks4.dat...");
-		sprintf(path, "SAMP\\tracks4.dat");
-		name = path;
-		goto ret;
-	}*/
-
-	/*if (!strncmp(name, "data\\paths\\tracks2.dat", 21))
-	{
-		FLog("Loading tracks2.dat...");
-		sprintf(path, "SAMP\\tracks2.dat");
-		name = path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "data\\paths\\tracks4.dat", 21))
-	{
-		FLog("Loading tracks4.dat...");
-		sprintf(path, "SAMP\\tracks4.dat");
-		name = path;
-		goto ret;
-	}*/
-
-	/*if (!strncmp(name, "data\\paths\\tracks2.dat", 21))
-	{
-		FLog("Loading tracks2.dat...");
-		const char* SpszStorage = CGame::GetDataDirectory();
-		char track2path[255] = { 0 };
-		sprintf(track2path, "%stracks2.dat", SpszStorage);
-		name = track2path;
-		goto ret;
-	}
-
-	if (!strncmp(name, "data\\paths\\tracks4.dat", 21))
-	{
-		FLog("Loading tracks4.dat...");
-		const char* SpszStorage = CGame::GetDataDirectory();
-		char track4path[255] = { 0 };
-		sprintf(track4path, "%stracks4.dat", SpszStorage);
-		name = track4path;
-		goto ret;
-	}*/
-
-	ret:
-	return OS_FileOpen(r0, handle, name, r3);
-}
-
-/* =============================================================================== */
-
-void(*CStream_InitImageList)();
-void CStream_InitImageList_hook()
+void CStream_InitImageList()
 {
 	FLog("Initializing ImageList..");
 
-	*(char*)(g_libGTASA + 0x792DA8) = 0;
-	*(int*)	(g_libGTASA + 0x792DA4) = 0;
-	*(int*)	(g_libGTASA + 0x792DD4) = 0;
-	*(int*)	(g_libGTASA + 0x792E04) = 0;
-	*(char*)(g_libGTASA + 0x792DD8) = 0;
-	*(int*)	(g_libGTASA + 0x792E34) = 0;
-	*(char*)(g_libGTASA + 0x792E08) = 0;
-	*(int*)	(g_libGTASA + 0x792E64) = 0;
-	*(char*)(g_libGTASA + 0x792E38) = 0;
-	*(int*)	(g_libGTASA + 0x792E94) = 0;
-	*(char*)(g_libGTASA + 0x792E68) = 0;
-	*(int*)	(g_libGTASA + 0x792EC4) = 0;
-	*(char*)(g_libGTASA + 0x792E98) = 0;
-	*(int*)	(g_libGTASA + 0x792EF4) = 0;
-	*(char*)(g_libGTASA + 0x792EC8) = 0;
+    char* ms_files = (char*)(g_libGTASA+(VER_x32?0x792EC8:0x972BEC));
+    ms_files[0] = 0;
+    *(uint32_t*)&ms_files[44] = 0;
+    ms_files[48] = 0;
+    *(uint32_t*)&ms_files[92] = 0;
+    ms_files[96] = 0;
+    *(uint32_t*)&ms_files[140] = 0;
+    ms_files[144] = 0;
+    *(uint32_t*)&ms_files[188] = 0;
+    ms_files[192] = 0;
+    *(uint32_t*)&ms_files[236] = 0;
+    ms_files[240] = 0;
+    *(uint32_t*)&ms_files[284] = 0;
+    ms_files[288] = 0;
+    *(uint32_t*)&ms_files[332] = 0;
+    ms_files[336] = 0;
+    *(uint32_t*)&ms_files[380] = 0;
 
-	// CStreaming::AddImageToList
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\SAMPCOL.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\GTA3.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\GTA_INT.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\SAMP.IMG", 1);
-	return;
+	// CStreaming::AddImageToList x32 2CF7D0
+	((uintptr_t(*)(const char*, int))(g_libGTASA + (VER_x32 ? 0x2CF7D0 + 1:0x39155C)))("TEXDB\\SAMPCOL.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + (VER_x32 ? 0x2CF7D0 + 1:0x39155C)))("TEXDB\\GTA3.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + (VER_x32 ? 0x2CF7D0 + 1:0x39155C)))("TEXDB\\GTA_INT.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + (VER_x32 ? 0x2CF7D0 + 1:0x39155C)))("TEXDB\\SAMP.IMG", 1);
 }
 
 void InitGui();
@@ -265,8 +92,9 @@ uint32_t CGame__InitialiseRenderWare_hook()
 {
 	FLog("Loading SAMP texture database..");
 	uint32_t result = CGame__InitialiseRenderWare();
+
 	// TextureDatabaseRuntime::Load()
-	((void(*)(const char*, int, int))(g_libGTASA + /*0x1BF244*/0x1EA864 + 1))("samp", 0, 5);
+	((void(*)(const char*, int, int))(g_libGTASA + (VER_x32 ? 0x1EA864 + 1:0x28771C)))("samp", 0, 5);
 	/*((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gui", 0, 5);//gui
 	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gtasa", 0, 5);//gtasa
 	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("game", 0, 5);//game
@@ -287,180 +115,20 @@ void Render2dStuff_hook()
 	return;
 }
 
-/* =============================================================================== */
-
-void(*DisplayScreen)();
-void DisplayScreen_hook()
-{
-	RwCamera *camera = *(RwCamera**)(g_libGTASA + /*0x95B064*/0x9FC93C);
-
-	if (RwCameraBeginUpdate(camera))
-	{
-		// DefinedState2d
-		((void(*)())(g_libGTASA + /*0x5590B0*/0x5D0C64 + 1))();
-		// CSprite2d::InitPerFrame()
-		((void(*)())(g_libGTASA + /*0x5519C8*/0x5C89A8 + 1))();
-		RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)rwTEXTUREADDRESSCLAMP);
-		// emu_GammaSet()
-		((void(*)(bool))(g_libGTASA + /*0x198010*/0x1C07D0 + 1))(false);
-
-		// CLoadingScreen::m_PercentLoaded
-		float fPercentLoaded = *(float*)(g_libGTASA + /*0x8F08C0*/0x9920C0);
-
-		pUI->splashscreen()->setProgressBarValue(fPercentLoaded / 100.0f);
-		pUI->render();
-
-		RwCameraEndUpdate(camera);
-		RwCameraShowRaster(camera, 0, 0);
-	}
-}
-/* =============================================================================== */
-
-struct _ATOMIC_MODEL
-{
-	uintptr_t func_tbl;
-	char data[56];
-};
-
-extern struct _ATOMIC_MODEL *ATOMIC_MODELS;
-uintptr_t(*CModelInfo_AddAtomicModel)(int iModel);
-uintptr_t CModelInfo_AddAtomicModel_hook(int iModel)
-{
-	uint32_t iCount = *(uint32_t*)(g_libGTASA + /*0x7802C4*/0x820738);
-	//FLog("[Model %d] atomics count: %d",iModel, iCount);
-	_ATOMIC_MODEL *model = &ATOMIC_MODELS[iCount];
-	*(uint32_t*)(g_libGTASA + /*0x7802C4*/0x820738) = iCount + 1;
-
-	((void(*)(_ATOMIC_MODEL*))(*(uintptr_t*)(model->func_tbl + 0x1C)))(model);
-	_ATOMIC_MODEL **ms_modelInfoPtrs = (_ATOMIC_MODEL**)(g_libGTASA + /*0x87BF48*/0x91DCB8);
-	ms_modelInfoPtrs[iModel] = model;
-	return (uintptr_t)model;
-
-	return CModelInfo_AddAtomicModel(iModel);
-}
-
-void (*CModelInfo_Initialise)(uintptr_t thiz);
-void CModelInfo_Initialise_hook(uintptr_t thiz)
-{
-	FLog("CModelInfo::Initialise hooked");
-
-	uintptr_t ms_modelInfoPtrs = g_libGTASA + 0x87BF48;
-	memset((void*)ms_modelInfoPtrs, 0, sizeof(uintptr_t) * 20000);
-
-	*(uint32_t*)(g_libGTASA + 0x7802C4) = 0;
-	*(uint32_t*)(g_libGTASA + 0x843E9C) = 0;
-	*(uint32_t*)(g_libGTASA + 0x845430) = 0;
-	*(uint32_t*)(g_libGTASA + 0x875B54) = 0;
-	*(uint32_t*)(g_libGTASA + 0x77E9C0) = 0;
-	*(uint32_t*)(g_libGTASA + 0x83F948) = 0;
-	*(uint32_t*)(g_libGTASA + 0x8409B4) = 0;
-	*(uint32_t*)(g_libGTASA + 0x8409F4) = 0;
-	*(uint32_t*)(g_libGTASA + 0x843194) = 0;
-	*(uint32_t*)(g_libGTASA + 0x8431D8) = 0;
-
-	struct ModelInfoHelper {
-		static uintptr_t AddAtomicModel(int iModel) {
-			return CModelInfo_AddAtomicModel_hook(iModel);
-		};
-
-		static void SetColModel(uintptr_t thiz, uintptr_t colModel, bool unk) {
-			return ((void(*)(uintptr_t, uintptr_t, bool))(g_libGTASA + 0x335650 + 1))(thiz, colModel, unk);
-		}
-
-		static void SetTexDictionary(uintptr_t thiz, const char* name, const char* type) {
-			return ((void(*)(uintptr_t, const char*, const char*))(g_libGTASA + 0x3355C0 + 1))(thiz, name, type);
-		}
-	};
-
-	uintptr_t modelInfo = 0;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(374);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F44C8, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(375);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F4498, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(376);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F4468, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(377);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F4438, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(378);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F4408, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(379);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F43D8, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(380);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F43A8, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	modelInfo = ModelInfoHelper::AddAtomicModel(381);
-	ModelInfoHelper::SetColModel(modelInfo, g_libGTASA + 0x6F4378, false);
-	ModelInfoHelper::SetTexDictionary(modelInfo, "generic", "txd");
-	*(float*)(modelInfo + 0x30) = 80.0f;
-
-	return;
-}
-
-#pragma pack(push, 1)
-typedef struct _PED_MODEL
-{
-	uintptr_t 	vtable;
-	uint8_t		data[88];
-} PED_MODEL; // SIZE = 92
-#pragma pack(pop)
-
-PED_MODEL PedsModels[315];
-int PedsModelsCount = 0;
-
-PED_MODEL* (*CModelInfo_AddPedModel)(int id);
-PED_MODEL* CModelInfo_AddPedModel_hook(int id)
-{
-	//FLog("Loading skin model %d", id);
-
-	PED_MODEL* model = &PedsModels[PedsModelsCount];
-	memset(model, 0, sizeof(PED_MODEL));
-	model->vtable = (uintptr_t)(g_libGTASA + /*0x5C6E90*/0x667658);
-
-	// CClumpModelInfo::CClumpModelInit()
-	((uintptr_t(*)(PED_MODEL*))(*(void**)(model->vtable + 0x1C)))(model);
-
-	*(PED_MODEL**)(g_libGTASA + /*0x87BF48*/0x91DCB8 + (id * 4)) = model; // CModelInfo::ms_modelInfoPtrs
-
-	PedsModelsCount++;
-	return model;
-}
-
-void(*CPools_Initialise)(void);
-void CPools_Initialise_hook(void)
+void CPools_Initialise(void)
 {
 	FLog("GTA pools initializing..");
 
 	struct PoolAllocator {
 
-		struct Pool {
-			void *objects;
-			uint8_t *flags;
-			uint32_t count;
-			uint32_t top;
-			uint32_t bInitialized;
-		};
-		static_assert(sizeof(Pool) == 0x14);
+        struct Pool {
+            void* objects;
+            uint8_t* flags;
+            uint32_t count;
+            uint32_t top;
+            uint32_t bInitialized;
+        };
+        static_assert(sizeof(Pool) == (VER_x32 ? 0x14 : 0x20));
 
 		static Pool* Allocate(size_t count, size_t size) {
 
@@ -516,23 +184,23 @@ void CPools_Initialise_hook(void)
 	// 15104 / 64 = 236
 	static auto ms_pPedAttractorPool		= PoolAllocator::Allocate(200,		236);	// 64
 
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93E0*/0x95AC38) = ms_pPtrNodeSingleLinkPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93DC*/0x95AC3C) = ms_pPtrNodeDoubleLinkPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D8*/0x95AC40) = ms_pEntryInfoNodePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D4*/0x95AC44) = ms_pPedPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D0*/0x95AC48) = ms_pVehiclePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93CC*/0x95AC4C) = ms_pBuildingPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C8*/0x95AC50) = ms_pObjectPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C4*/0x95AC54) = ms_pDummyPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C0*/0x95AC58) = ms_pColModelPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93BC*/0x95AC5C) = ms_pTaskPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B8*/0x95AC60) = ms_pEventPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B4*/0x95AC64) = ms_pPointRoutePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B0*/0x95AC68) = ms_pPatrolRoutePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93AC*/0x95AC6C) = ms_pNodeRoutePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A8*/0x95AC70) = ms_pTaskAllocatorPool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A4*/0x95AC74) = ms_pPedIntelligencePool;
-	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A0*/0x95AC78) = ms_pPedAttractorPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93E0*/(VER_x32 ? 0x95AC38 : 0xBC3BA0)) = ms_pPtrNodeSingleLinkPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93DC*/(VER_x32 ? 0x95AC3C : 0xBC3BA8)) = ms_pPtrNodeDoubleLinkPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D8*/(VER_x32 ? 0x95AC40 : 0xBC3BB0)) = ms_pEntryInfoNodePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D4*/(VER_x32 ? 0x95AC44 : 0xBC3BB8)) = ms_pPedPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93D0*/(VER_x32 ? 0x95AC48 : 0xBC3BC0)) = ms_pVehiclePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93CC*/(VER_x32 ? 0x95AC4C : 0xBC3BC8)) = ms_pBuildingPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C8*/(VER_x32 ? 0x95AC50 : 0xBC3BD0)) = ms_pObjectPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C4*/(VER_x32 ? 0x95AC54 : 0xBC3BD8)) = ms_pDummyPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93C0*/(VER_x32 ? 0x95AC58 : 0xBC3BE0)) = ms_pColModelPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93BC*/(VER_x32 ? 0x95AC5C : 0xBC3BE8)) = ms_pTaskPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B8*/(VER_x32 ? 0x0095AC60 : 0xBC3BF0)) = ms_pEventPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B4*/(VER_x32 ? 0x0095AC64 : 0xBC3BF8)) = ms_pPointRoutePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93B0*/(VER_x32 ? 0x0095AC68 : 0xBC3C00)) = ms_pPatrolRoutePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93AC*/(VER_x32 ? 0x0095AC6C : 0xBC3C08)) = ms_pNodeRoutePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A8*/(VER_x32 ? 0x0095AC70 : 0xBC3C10)) = ms_pTaskAllocatorPool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A4*/(VER_x32 ? 0x0095AC74 : 0xBC3C18)) = ms_pPedIntelligencePool;
+	*(PoolAllocator::Pool**)(g_libGTASA + /*0x8B93A0*/(VER_x32 ? 0x0095AC78 : 0xBC3C20)) = ms_pPedAttractorPool;
 }
 
 /* =============================================================================== */
@@ -542,7 +210,7 @@ int CRadar__SetCoordBlip_hook(int r0, float X, float Y, float Z, int r4, int r5,
 {
 	if(pNetGame && !strncmp(name, "CODEWAY", 7))
 	{
-		float fFindZ = pGame->FindGroundZForCoord(X, Y) + 1.5f;
+		float fFindZ = pGame->FindGroundZForCoord(X, Y, Z) + 1.5f;
 
 		if(pNetGame->GetGameState() != GAMESTATE_CONNECTED) return 0;
 
@@ -561,20 +229,20 @@ int CRadar__SetCoordBlip_hook(int r0, float X, float Y, float Z, int r4, int r5,
 void(*CRadar_DrawRadarGangOverlay)(uint32_t unk);
 void CRadar_DrawRadarGangOverlay_hook(uint32_t unk)
 {
-	if (pNetGame)
+	/*if (pNetGame)
 	{
 		CGangZonePool *pGangZonePool = pNetGame->GetGangZonePool();
 		if (pGangZonePool) {
 			pGangZonePool->Draw(unk);
 		}
-	}
+	}*/
 }
 
 /* =============================================================================== */
 
 #pragma pack(push, 1)
 typedef struct {
-	VECTOR 		vecPosObject;
+	CVector 		vecPosObject;
 	PADDING(_pad1, 16);
 	uint16_t 	wModelIndex;
 } stLoadObjectInstance;
@@ -613,66 +281,6 @@ extern "C" void pickup_pickedup()
 		CPickupPool *pPickups = pNetGame->GetPickupPool();
 		pPickups->PickedUp(((dwParam1 - (g_libGTASA + /*0x70E264*/0x7AFD70)) / 0x20));
 	}
-}
-
-extern "C" void pickup_orig()
-{
-	ARMHook::writeMemory(g_libGTASA + 0x31E08C, (uintptr_t)"\x9A\xF8\x1C\x00\x13\x28\x00\xF2\x8F\x80\x01\x21", 12);
-}
-
-__attribute__((naked)) void PickupPickUp_hook()
-{
-	// calculate and save ret address
-/*	__asm__ volatile("push {lr}\n\t"
-		"push {r0}\n\t"
-		"blx get_lib\n\t"
-		"add r0, #0x2D0000\n\t"
-		"add r0, #0x009A00\n\t"
-		"add r0, #1\n\t"
-		"mov r1, r0\n\t"
-		"pop {r0}\n\t"
-		"pop {lr}\n\t"
-		"push {r1}\n\t");
-*/
-	__asm__ volatile(
-			"push {lr}\t\n"
-			"push {r0}\t\n"
-			"blx get_lib\t\n"
-			"add r0, #0x310000\n\t"
-			"add r0, #0x00E000\n\t"
-			"add r0, #0x00008D\n\t"
-			"mov r1, r0\n\t"
-			"pop {r0}\n\t"
-			"pop {lr}\n\t"
-			"push {r1}\n\t");
-
-	// 
-	__asm__ volatile("push {r0-r11, lr}\n\t"
-					 "mov %0, r10" : "=r" (dwParam1));
-	__asm__ volatile("blx pickup_pickedup\n\t");
-	__asm__ volatile("blx pickup_orig\n\t");
-	__asm__ volatile("pop {r0-r11, lr}\n\t");
-	__asm__ volatile("pop {pc}");
-
-	// restore
-	/*__asm__ volatile("ldrb r1, [r4, #0x1C]\n\t"
-		"sub.w r2, r1, #0xD\n\t"
-		"sub.w r2, r1, #8\n\t"
-		"cmp r1, #6\n\t"
-		"pop {pc}\n\t");
-		*/
-}
-
-extern "C" void pickup_setuphook()
-{
-	ARMHook::codeInject(g_libGTASA + /*0x2D99F4*/0x31E08C, (uintptr_t)PickupPickUp_hook, 1);
-}
-
-void (*CPickup_Update)(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3);
-void CPickup_Update_hook(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
-{
-	pickup_setuphook();
-	CPickup_Update(r0, r1, r2, r3);
 }
 
 void (*CPlaceable_InitMatrixArray)(void);
@@ -797,41 +405,6 @@ bool NotifyEnterVehicle(VEHICLE_TYPE *_pVehicle)
 	return true;
 }
 
-extern "C" bool TaskEnterVehicle(uintptr_t pVehicle, uintptr_t a2)
-{
-	FLog("TaskEnterVehicle");
-
-	if(!NotifyEnterVehicle((VEHICLE_TYPE*)pVehicle)) {
-		return false;
-	}
-
-	// CTask::operator new
-	uintptr_t pTask = ((uintptr_t (*)(void))(g_libGTASA + 0x4D6A01))();
-
-	// CTaskComplexEnterCarAsDriver::CTaskComplexEnterCarAsDriver
-	((void (__fastcall *)(uintptr_t, uintptr_t))(g_libGTASA + 0x4F6F71))(pTask, pVehicle);
-
-	// CTaskManager::SetTask
-	((int (__fastcall *)(uintptr_t, uintptr_t, int, int))(g_libGTASA + 0x53390B))(a2, pTask, 3, 0);
-
-	return true;
-}
-
-void __attribute__((naked)) TaskEnterVehicle_hook(uintptr_t thiz, uintptr_t pVehicle)
-{
-	// 2.0
-	__asm__ volatile("push {r1-r11, lr}\n\t"
-					 "mov r0, r8\n\t"
-					 "adds r1, r6, #4\n\t"
-					 "blx TaskEnterVehicle\n\t"
-					 "pop {r1-r11, lr}\n\t"
-					 "blx get_lib\n\t"
-					 "add r0, #0x400000\n\t"
-					 "add r0, #0xAC00\n\t"
-					 "add r0, #0x41\n\t"
-					 "mov pc, r0\n\t");
-}
-
 void (*CTaskComplexLeaveCar)(uintptr_t** thiz, VEHICLE_TYPE* pVehicle, int iTargetDoor, int iDelayTime, bool bSensibleLeaveCar, bool bForceGetOut);
 void CTaskComplexLeaveCar_hook(uintptr_t** thiz, VEHICLE_TYPE* pVehicle, int iTargetDoor, int iDelayTime, bool bSensibleLeaveCar, bool bForceGetOut)
 {
@@ -843,7 +416,7 @@ void CTaskComplexLeaveCar_hook(uintptr_t** thiz, VEHICLE_TYPE* pVehicle, int iTa
 	{
 		if (pNetGame)
 		{
-			if (GamePool_FindPlayerPed()->pVehicle == (uint32_t)pVehicle)
+			if ((VEHICLE_TYPE*)GamePool_FindPlayerPed()->pVehicle == pVehicle)
 			{
 				CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
 				VEHICLEID VehicleID = pVehiclePool->FindIDFromGtaPtr((VEHICLE_TYPE*)GamePool_FindPlayerPed()->pVehicle);
@@ -855,9 +428,9 @@ void CTaskComplexLeaveCar_hook(uintptr_t** thiz, VEHICLE_TYPE* pVehicle, int iTa
 					{
 						if (pVehicle->IsATrainPart())
 						{
-							MATRIX4X4 mat;
+							RwMatrix mat;
 							pVehicle->GetMatrix(&mat);
-							pLocalPlayer->GetPlayerPed()->RemoveFromVehicleAndPutAt(mat.pos.X + 2.5f, mat.pos.Y + 2.5f, mat.pos.Z);
+							pLocalPlayer->GetPlayerPed()->RemoveFromVehicleAndPutAt(mat.pos.x + 2.5f, mat.pos.y + 2.5f, mat.pos.z);
 						}
 						else
 						{
@@ -874,11 +447,22 @@ void CTaskComplexLeaveCar_hook(uintptr_t** thiz, VEHICLE_TYPE* pVehicle, int iTa
 
 /* =============================================================================== */
 
-uint32_t(*CHudColours__GetIntColour)(uint32_t index);
-uint32_t CHudColours__GetIntColour_hook(uint32_t index)
+uint32_t CRadar__GetRadarTraceColor(uint32_t color, uint8_t bright, uint8_t friendly)
 {
-	return TranslateColorCodeToRGBA(index);
+    return TranslateColorCodeToRGBA(color);
 }
+
+#if VER_x32
+uint32_t CHudColours__GetIntColour(uint32 colour_id)
+{
+	return TranslateColorCodeToRGBA(colour_id);
+}
+#else
+uint32_t CHudColours__GetIntColour(uintptr* thiz, uint8 colour_id)
+{
+    return TranslateColorCodeToRGBA(colour_id);
+}
+#endif
 
 /* =============================================================================== */
 
@@ -1115,13 +699,13 @@ void CPed__ProcessControl_hook(PED_TYPE* thiz)
 
 		// CPed::UpdatePosition nulled from CPed::ProcessControl
 		//NOP(g_libGTASA + 0x439B7A, 2);
-		ARMHook::makeNOP(g_libGTASA + 0x4A2A22, 2);
+		CHook::NOP(g_libGTASA + 0x4A2A22, 2);
 
 		// call original
 		CPed__ProcessControl(thiz);
 		// restore
 		//WriteMemory(g_libGTASA + 0x439B7A, (uintptr_t)"\xFA\xF7\x1D\xF8", 4);
-		ARMHook::writeMemory(g_libGTASA + 0x4A2A22, (uintptr_t)"\xF0\xF4\x42\xEB", 4);
+		CHook::WriteMemory(g_libGTASA + 0x4A2A22, (uintptr_t)"\xF0\xF4\x42\xEB", 4);
 
         GameSetLocalPlayerSkills();
 		*pbyteCameraMode = byteSavedCameraMode;
@@ -1136,13 +720,13 @@ void CPed__ProcessControl_hook(PED_TYPE* thiz)
 
 		// Apply the original code to set ped rot from Cam
 		//WriteMemory(g_libGTASA + 0x4BED92, (uintptr_t)"\x10\x60", 2);
-		ARMHook::writeMemory(g_libGTASA + 0x539BA6, (uintptr_t)"\xC4\xF8\x60\x55", 4);
+		CHook::WriteMemory(g_libGTASA + 0x539BA6, (uintptr_t)"\xC4\xF8\x60\x55", 4);
 
 		(*CPed__ProcessControl)(thiz);
 
 		// Reapply the no ped rots from Cam patch
 		//WriteMemory(g_libGTASA + 0x4BED92, (uintptr_t)"\x00\x46", 2);
-		ARMHook::makeNOP(g_libGTASA + 0x539BA6, 2);
+		CHook::NOP(g_libGTASA + 0x539BA6, 2);
 	}
 
     return;
@@ -1178,8 +762,8 @@ uint32_t CPed__GetWeaponSkill_hook(PED_TYPE *thiz)
 
 float fSavedBikeLean;
 float dwSavedBikeUnk;
-MATRIX4X4 *matSavedMatrix;
-VECTOR vecSavedMoveSpeed;
+RwMatrix *matSavedMatrix;
+CVector vecSavedMoveSpeed;
 
 void AllVehicles__ProcessControl_hook(uintptr_t thiz)
 {
@@ -1310,8 +894,8 @@ void AllVehicles__ProcessControl_hook(uintptr_t thiz)
 		// restore matrix pos Z and vecmovespeed Z
 		if(call_addr == 0x56BE50 || call_addr == 0x568B14 || call_addr == 0x571238)
 		{
-			pVehicle->entity.vecMoveSpeed.Z = vecSavedMoveSpeed.Z;
-			pVehicle->entity.mat->pos.Z = matSavedMatrix->pos.Z;
+			pVehicle->entity.vecMoveSpeed.z = vecSavedMoveSpeed.z;
+			pVehicle->entity.mat->pos.z = matSavedMatrix->pos.z;
 		}
 
 		// restore bike lean.
@@ -1381,20 +965,20 @@ extern BULLET_DATA* g_pCurrentBulletData;
 
 extern int g_iLagCompensationMode;
 
-void SendBulletSync(VECTOR* vecOrigin, VECTOR* a2, VECTOR* vecPos, ENTITY_TYPE** ppEntity)
+void SendBulletSync(CVector* vecOrigin, CVector* a2, CVector* vecPos, ENTITY_TYPE** ppEntity)
 {
-    MATRIX4X4 mat1, mat2;
+    RwMatrix mat1, mat2;
 
     static BULLET_DATA bulletData;
     memset(&bulletData, 0, sizeof(BULLET_DATA));
 
-    bulletData.vecOrigin.X = vecOrigin->X;
-    bulletData.vecOrigin.Y = vecOrigin->Y;
-    bulletData.vecOrigin.Z = vecOrigin->Z;
+    bulletData.vecOrigin.x = vecOrigin->x;
+    bulletData.vecOrigin.y = vecOrigin->y;
+    bulletData.vecOrigin.z = vecOrigin->z;
 
-    bulletData.vecPos.X = vecPos->X;
-    bulletData.vecPos.Y = vecPos->Y;
-    bulletData.vecPos.Z = vecPos->Z;
+    bulletData.vecPos.x = vecPos->x;
+    bulletData.vecPos.y = vecPos->y;
+    bulletData.vecPos.z = vecPos->z;
 
     if (ppEntity)
     {
@@ -1403,18 +987,18 @@ void SendBulletSync(VECTOR* vecOrigin, VECTOR* a2, VECTOR* vecPos, ENTITY_TYPE**
         {
             if (g_iLagCompensationMode != 0)
             {
-                bulletData.vecOffset.X = vecPos->X - pEntity->mat->pos.X;
-                bulletData.vecOffset.Y = vecPos->Y - pEntity->mat->pos.Y;
-                bulletData.vecOffset.Z = vecPos->Z - pEntity->mat->pos.Z;
+                bulletData.vecOffset.x = vecPos->x - pEntity->mat->pos.x;
+                bulletData.vecOffset.y = vecPos->y - pEntity->mat->pos.y;
+                bulletData.vecOffset.z = vecPos->z - pEntity->mat->pos.z;
             }
             else
             {
-                memset(&mat1, 0, sizeof(MATRIX4X4));
-                memset(&mat2, 0, sizeof(MATRIX4X4));
+                memset(&mat1, 0, sizeof(RwMatrix));
+                memset(&mat2, 0, sizeof(RwMatrix));
                 // RwMatrixOrthoNormalize
-                ((void (*)(MATRIX4X4*, MATRIX4X4*))(g_libGTASA + 0x1E34A0 + 1))(&mat2, pEntity->mat);
+                ((void (*)(RwMatrix*, RwMatrix*))(g_libGTASA + 0x1E34A0 + 1))(&mat2, pEntity->mat);
                 // RwMatrixInvert
-                ((void (*)(MATRIX4X4*, MATRIX4X4*))(g_libGTASA + 0x1E3A28 + 1))(&mat1, &mat2);
+                ((void (*)(RwMatrix*, RwMatrix*))(g_libGTASA + 0x1E3A28 + 1))(&mat1, &mat2);
                 ProjectMatrix(&bulletData.vecOffset, &mat1, vecPos);
             }
 
@@ -1427,10 +1011,10 @@ void SendBulletSync(VECTOR* vecOrigin, VECTOR* a2, VECTOR* vecPos, ENTITY_TYPE**
 
 extern bool g_customFire;
 /* 0.3.7 */
-uint32_t(*CWeapon_FireInstantHit)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, VECTOR* vecOrigin, VECTOR* muzzlePosn, ENTITY_TYPE* targetEntity,
-								  VECTOR* target, VECTOR* originForDriveBy, bool arg6, bool muzzle);
-uint32_t CWeapon_FireInstantHit_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, VECTOR* vecOrigin, VECTOR* muzzlePosn, ENTITY_TYPE* targetEntity,
-									 VECTOR* target, VECTOR* originForDriveBy, bool arg6, bool muzzle)
+uint32_t(*CWeapon_FireInstantHit)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, CVector* vecOrigin, CVector* muzzlePosn, ENTITY_TYPE* targetEntity,
+								  CVector* target, CVector* originForDriveBy, bool arg6, bool muzzle);
+uint32_t CWeapon_FireInstantHit_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, CVector* vecOrigin, CVector* muzzlePosn, ENTITY_TYPE* targetEntity,
+									 CVector* target, CVector* originForDriveBy, bool arg6, bool muzzle)
 {
 	uintptr_t dwRetAddr = 0;
 	__asm__ volatile ("mov %0, lr" : "=r" (dwRetAddr));
@@ -1470,8 +1054,8 @@ uint32_t CWeapon_FireInstantHit_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEn
                                   target, originForDriveBy, arg6, muzzle);
 }
 
-uint32_t(*CWorld_ProcessLineOfSight)(VECTOR*, VECTOR*, VECTOR*, ENTITY_TYPE**, bool, bool, bool, bool, bool, bool, bool, bool);
-uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTOR* vecPos, ENTITY_TYPE** ppEntity,
+uint32_t(*CWorld_ProcessLineOfSight)(CVector*, CVector*, CVector*, ENTITY_TYPE**, bool, bool, bool, bool, bool, bool, bool, bool);
+uint32_t CWorld_ProcessLineOfSight_hook(CVector* vecOrigin, CVector* vecEnd, CVector* vecPos, ENTITY_TYPE** ppEntity,
 										bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, bool b8)
 {
 	uintptr_t dwRetAddr = 0;
@@ -1488,7 +1072,7 @@ uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTO
 	{
 		LOGI("CWorld_ProcessLineOfSight iLagCompensationMode: %d", g_iLagCompensationMode);
 		ENTITY_TYPE* pEntity = nullptr;
-		static VECTOR vecPosPlusOffset = { 0.0f, 0.0f, 0.0f };
+		static CVector vecPosPlusOffset = { 0.0f, 0.0f, 0.0f };
 
 		if (g_iLagCompensationMode != 2)
 		{
@@ -1497,24 +1081,24 @@ uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTO
 				if (g_pCurrentBulletData)
 				{
 					pEntity = g_pCurrentBulletData->pEntity;
-					if (pEntity && pEntity->vtable != (g_libGTASA + 0x667D14)) // CPlaceable
+					if (pEntity && pEntity->vtable != (g_libGTASA + (VER_x32 ? 0x667D14:0x830098))) // CPlaceable
 					{
 						if (pEntity->mat)
 						{
 							if (g_iLagCompensationMode)
 							{
-								vecPosPlusOffset.X = pEntity->mat->pos.X + g_pCurrentBulletData->vecOffset.X;
-								vecPosPlusOffset.Y = pEntity->mat->pos.Y + g_pCurrentBulletData->vecOffset.Y;
-								vecPosPlusOffset.Z = pEntity->mat->pos.Z + g_pCurrentBulletData->vecOffset.Z;
+								vecPosPlusOffset.x = pEntity->mat->pos.x + g_pCurrentBulletData->vecOffset.x;
+								vecPosPlusOffset.y = pEntity->mat->pos.y + g_pCurrentBulletData->vecOffset.y;
+								vecPosPlusOffset.z = pEntity->mat->pos.z + g_pCurrentBulletData->vecOffset.z;
 							}
 							else
 							{
 								ProjectMatrix(&vecPosPlusOffset, pEntity->mat, &g_pCurrentBulletData->vecOffset);
 							}
 
-							vecEnd->X = vecPosPlusOffset.X - vecOrigin->X + vecPosPlusOffset.X;
-							vecEnd->Y = vecPosPlusOffset.Y - vecOrigin->Y + vecPosPlusOffset.Y;
-							vecEnd->Z = vecPosPlusOffset.Z - vecOrigin->Z + vecPosPlusOffset.Z;
+							vecEnd->x = vecPosPlusOffset.x - vecOrigin->x + vecPosPlusOffset.x;
+							vecEnd->y = vecPosPlusOffset.y - vecOrigin->y + vecPosPlusOffset.y;
+							vecEnd->z = vecPosPlusOffset.z - vecOrigin->z + vecPosPlusOffset.z;
 						}
 					}
 				}
@@ -1539,15 +1123,15 @@ uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTO
 				{
 					if (g_pCurrentBulletData->pEntity == nullptr)
 					{
-						PED_TYPE* pLocalPed = GamePool_FindPlayerPed();
+                        PED_TYPE* pLocalPed = GamePool_FindPlayerPed();
 						if (*ppEntity == (ENTITY_TYPE*)GamePool_FindPlayerPed() ||
 							IN_VEHICLE(pLocalPed) && *ppEntity == (ENTITY_TYPE*)pLocalPed->pVehicle)
 						{
 							result = 0;
 							*ppEntity = nullptr;
-							vecPos->X = 0.0f;
-							vecPos->Y = 0.0f;
-							vecPos->Z = 0.0f;
+							vecPos->x = 0.0f;
+							vecPos->y = 0.0f;
+							vecPos->z = 0.0f;
 							return result;
 						}
 					}
@@ -1564,8 +1148,8 @@ uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTO
 	return CWorld_ProcessLineOfSight(vecOrigin, vecEnd, vecPos, ppEntity, b1, b2, b3, b4, b5, b6, b7, b8);
 }
 // 0.3.7
-uint32_t(*CWeapon_FireSniper)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, VECTOR* target);
-uint32_t CWeapon_FireSniper_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, VECTOR* target)
+uint32_t(*CWeapon_FireSniper)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, CVector* target);
+uint32_t CWeapon_FireSniper_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, CVector* target)
 {
 	if (pFiringEntity == GamePool_FindPlayerPed())
 	{
@@ -1581,12 +1165,12 @@ uint32_t CWeapon_FireSniper_hook(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity
 	return true;
 }
 // 0.3.7
-bool(*CBulletInfo_AddBullet)(CEntity* creator, int weaponType, VECTOR pos, VECTOR velocity);
-bool CBulletInfo_AddBullet_hook(CEntity* creator, int weaponType, VECTOR pos, VECTOR velocity)
+bool(*CBulletInfo_AddBullet)(ENTITY_TYPE* creator, int weaponType, CVector pos, CVector velocity);
+bool CBulletInfo_AddBullet_hook(ENTITY_TYPE* creator, int weaponType, CVector pos, CVector velocity)
 {
-	velocity.X *= 50.0f;
-	velocity.Y *= 50.0f;
-	velocity.Z *= 50.0f;
+	velocity.x *= 50.0f;
+	velocity.y *= 50.0f;
+	velocity.z *= 50.0f;
 
 	CBulletInfo_AddBullet(creator, weaponType, pos, velocity);
 
@@ -1598,7 +1182,7 @@ bool CBulletInfo_AddBullet_hook(CEntity* creator, int weaponType, VECTOR pos, VE
 #pragma pack(push, 1)
 struct CPedDamageResponseCalculator
 {
-	PED_TYPE* m_pDamager;
+    PED_TYPE* m_pDamager;
 	float m_fDamageFactor;
 	int m_pedPieceType;
 	int m_weaponType;
@@ -1607,12 +1191,12 @@ struct CPedDamageResponseCalculator
 // 0.3.7
 bool ComputeDamageResponse(CPedDamageResponseCalculator* calculator, PED_TYPE* pPed)
 {
-	PED_TYPE* pGamePed = GamePool_FindPlayerPed();
+    PED_TYPE* pGamePed = GamePool_FindPlayerPed();
 	bool isLocalPed = false;
 
 	if (!pNetGame) return false;
 
-	PED_TYPE* pDamager = calculator->m_pDamager;
+    PED_TYPE* pDamager = calculator->m_pDamager;
 	if (pDamager != pGamePed && (pPed && pPed->entity.vtable == (g_libGTASA + 0x668AA4))) /* CCivilianPed */
 		return true;
 
@@ -1721,20 +1305,20 @@ float *ms_fAspectRatio;
 void (*DrawCrosshair)(uintptr_t* thiz);
 void DrawCrosshair_hook(uintptr_t* thiz)
 {
-	float save1 = *CCamera::m_f3rdPersonCHairMultX;
-	*CCamera::m_f3rdPersonCHairMultX = 0.530f - (*ms_fAspectRatio - ar43) * 0.01125f;
+	float save1 = CCamera::m_f3rdPersonCHairMultX;
+	CCamera::m_f3rdPersonCHairMultX = 0.530f - (*ms_fAspectRatio - ar43) * 0.01125f;
 
-	float save2 = *CCamera::m_f3rdPersonCHairMultY;
-	*CCamera::m_f3rdPersonCHairMultY = 0.400f + (*ms_fAspectRatio - ar43) * 0.03600f;
+	float save2 = CCamera::m_f3rdPersonCHairMultY;
+	CCamera::m_f3rdPersonCHairMultY = 0.400f + (*ms_fAspectRatio - ar43) * 0.03600f;
 
 	DrawCrosshair(thiz);
 
-	*CCamera::m_f3rdPersonCHairMultX = save1;
-	*CCamera::m_f3rdPersonCHairMultY = save2;
+	CCamera::m_f3rdPersonCHairMultX = save1;
+	CCamera::m_f3rdPersonCHairMultY = save2;
 }
 
-VECTOR& (*FindPlayerSpeed)(int a1);
-VECTOR& FindPlayerSpeed_hook(int a1)
+CVector& (*FindPlayerSpeed)(int a1);
+CVector& FindPlayerSpeed_hook(int a1)
 {
 	uintptr_t dwRetAddr = 0;
 	__asm__ volatile ("mov %0, lr":"=r" (dwRetAddr));
@@ -1749,7 +1333,7 @@ VECTOR& FindPlayerSpeed_hook(int a1)
 			   pPlayerPed->IsInVehicle() &&
 			   pPlayerPed->IsAPassenger())
 			{
-				VECTOR vec = _VECTOR(-1.0f);
+				CVector vec = CVector(-1.0f);
 				return vec;
 			}
 		}
@@ -1951,46 +1535,25 @@ int CPed_UpdatePosition_hook(PED_TYPE* a1)
 	return result;
 }
 
-int (*RpClumpForAllAtomics)(int a1);
-int RpClumpForAllAtomics_hook(int a1)
-{
-	int result; // r0
-
-	if ( a1 )
-		result = RpClumpForAllAtomics(a1);
-	else
-		result = 0;
-	return result;
-}
-
 void (*CCamera__Process)(uintptr_t thiz);
 void CCamera__Process_hook(uintptr_t thiz)
 {
-	if(pGame->GetCamera())
-		pGame->GetCamera()->Update();
+	//if(pGame->GetCamera())
+		//pGame->GetCamera()->Update();
 
 	CCamera__Process(thiz);
 }
 
-extern char* WORLD_PLAYERS;
-uint32_t (*CWorld__FindPlayerSlotWithPedPointer)(unsigned int a1);
-uint32_t CWorld__FindPlayerSlotWithPedPointer_hook(unsigned int a1)
-{
-	uint32_t result = 0;
-
-	uint32_t *dwWorldPlayers = (uint32_t*)WORLD_PLAYERS;
-	while(*dwWorldPlayers != a1)
-	{
-        ++result;
-		dwWorldPlayers += 101;
-		if(result > 210)
-			return 0;
-	}
-
-	return result;
-}
-
 #include "java/jniutil.h"
+#include "game/Models/ModelInfo.h"
+#include "MatrixLink.h"
+#include "MatrixLinkList.h"
+#include "game/Collision/Collision.h"
+#include "TxdStore.h"
+#include "util/CUtil.h"
+#include "Coronas.h"
+#include "multitouch.h"
+
 extern CJavaWrapper* pJavaWrapper;
 void (*MainMenuScreen__OnExit)();
 void MainMenuScreen__OnExit_hook()
@@ -2045,16 +1608,6 @@ void rqVertexBufferDelete_hook(unsigned int **result)
 	buffer[2] = 0;
 	if ( buffer )
 		(*(void (**)(uint32_t *))(*buffer + 4))(buffer);
-}
-
-int (*rqSetAlphaTest)(char **a1);
-int rqSetAlphaTest_hook(char **a1)
-{
-	if ( ((int (*)(const char *))(g_libGTASA + 0x19E2CC))("glAlphaFuncQCOM") )
-		return rqSetAlphaTest(a1);
-	char *result = *a1 + 8;
-	*a1 = result;
-	return (int)result;
 }
 
 void rotate_ped_if_local(unsigned int *a1, unsigned int *a2)
@@ -2198,7 +1751,7 @@ void (*CStreaming_Init2)();
 void CStreaming_Init2_hook()
 {
 	CStreaming_Init2();
-	ARMHook::unprotect(g_libGTASA + 0x685FA0);
+	CHook::UnFuck(g_libGTASA + 0x685FA0);
 	*(uint32_t *)(g_libGTASA + 0x685FA0) *= 3;
 }
 
@@ -2243,117 +1796,115 @@ void CRadar_ClearBlip_hook(uint32_t a2)
 
 void InstallHuaweiCrashFixHooks()
 {
-	ARMHook::installPLTHook(g_libGTASA + 0x677498, (uintptr_t)rqVertexBufferSelect_hook, (uintptr_t*)&rqVertexBufferSelect);
-	ARMHook::installPLTHook(g_libGTASA + 0x679B14, (uintptr_t)rqVertexBufferDelete_hook, (uintptr_t*)&rqVertexBufferDelete);
-	ARMHook::installPLTHook(g_libGTASA + 0x677B6C, (uintptr_t)rqSetAlphaTest_hook, (uintptr_t*)&rqSetAlphaTest);
+	CHook::InstallPLT(g_libGTASA + 0x677498, (uintptr_t)rqVertexBufferSelect_hook, (uintptr_t*)&rqVertexBufferSelect);
+	CHook::InstallPLT(g_libGTASA + 0x679B14, (uintptr_t)rqVertexBufferDelete_hook, (uintptr_t*)&rqVertexBufferDelete);
+	//CHook::InstallPLT(g_libGTASA + 0x677B6C, (uintptr_t)rqSetAlphaTest_hook, (uintptr_t*)&rqSetAlphaTest);
 }
 
 void InstallCrashFixHooks()
 {
 	// some crashfixes
-	ARMHook::installPLTHook(g_libGTASA + 0x66F5AC, (uintptr_t)CCustomRoadsignMgr_RenderRoadsignAtomic_hook, (uintptr_t*)&CCustomRoadsignMgr_RenderRoadsignAtomic);
-	ARMHook::installPLTHook(g_libGTASA + 0x67332C, (uintptr_t)_RwTextureDestroy_hook, (uintptr_t*)&_RwTextureDestroy);
-	ARMHook::installPLTHook(g_libGTASA + 0x671458, (uintptr_t)CPed_UpdatePosition_hook, (uintptr_t*)&CPed_UpdatePosition);
-	ARMHook::installPLTHook(g_libGTASA + 0x675490, (uintptr_t)RwFrameAddChild_hook, (uintptr_t*)&RwFrameAddChild);
-	ARMHook::installPLTHook(g_libGTASA + 0x672D14, (uintptr_t)CTextureDatabaseRuntime__GetEntry_hook, (uintptr_t*)&CTextureDatabaseRuntime__GetEntry);
-	//ARMHook::installPLTHook(g_libGTASA + 0x66FBD0, (uintptr_t)RpClumpForAllAtomics_hook, (uintptr_t*)&RpClumpForAllAtomics);
-	ARMHook::installPLTHook(g_libGTASA + 0x6730F0, (uintptr_t)rpMaterialListDeinitialize_hook, (uintptr_t*)&rpMaterialListDeinitialize);
-	//ARMHook::installPLTHook(g_libGTASA + 0x6778B0, (uintptr_t)rxOpenGLDefaultAllInOneRenderCB_hook, (uintptr_t*)&rxOpenGLDefaultAllInOneRenderCB);
-	//ARMHook::installPLTHook(g_libGTASA + 0x677CB4, (uintptr_t)CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, (uintptr_t*)&CCustomBuildingDNPipeline__CustomPipeRenderCB);
-	//ARMHook::installPLTHook(g_libGTASA + 0x66F9E8, (uintptr_t)EmuShader_Select_hook, (uintptr_t*)&EmuShader_Select);
-	ARMHook::installPLTHook(g_libGTASA + 0x6750D4, (uintptr_t)CAnimManager_UncompressAnimation_hook, (uintptr_t*)&CAnimManager_UncompressAnimation);
-	//ARMHook::installPLTHook(g_libGTASA + 0x670E1C, (uintptr_t)CStreaming__MakeSpaceFor_hook, (uintptr_t*)&CStreaming__MakeSpaceFor);
-	ARMHook::installPLTHook(g_libGTASA + 0x6700D0, (uintptr_t)CStreaming_Init2_hook, (uintptr_t*)&CStreaming_Init2);
+	CHook::InstallPLT(g_libGTASA + 0x66F5AC, (uintptr_t)CCustomRoadsignMgr_RenderRoadsignAtomic_hook, (uintptr_t*)&CCustomRoadsignMgr_RenderRoadsignAtomic);
+	CHook::InstallPLT(g_libGTASA + 0x67332C, (uintptr_t)_RwTextureDestroy_hook, (uintptr_t*)&_RwTextureDestroy);
+	CHook::InstallPLT(g_libGTASA + 0x671458, (uintptr_t)CPed_UpdatePosition_hook, (uintptr_t*)&CPed_UpdatePosition);
+	CHook::InstallPLT(g_libGTASA + 0x675490, (uintptr_t)RwFrameAddChild_hook, (uintptr_t*)&RwFrameAddChild);
+	CHook::InstallPLT(g_libGTASA + 0x672D14, (uintptr_t)CTextureDatabaseRuntime__GetEntry_hook, (uintptr_t*)&CTextureDatabaseRuntime__GetEntry);
+	//CHook::InstallPLT(g_libGTASA + 0x66FBD0, (uintptr_t)RpClumpForAllAtomics_hook, (uintptr_t*)&RpClumpForAllAtomics);
+	CHook::InstallPLT(g_libGTASA + 0x6730F0, (uintptr_t)rpMaterialListDeinitialize_hook, (uintptr_t*)&rpMaterialListDeinitialize);
+	//CHook::InstallPLT(g_libGTASA + 0x6778B0, (uintptr_t)rxOpenGLDefaultAllInOneRenderCB_hook, (uintptr_t*)&rxOpenGLDefaultAllInOneRenderCB);
+	//CHook::InstallPLT(g_libGTASA + 0x677CB4, (uintptr_t)CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, (uintptr_t*)&CCustomBuildingDNPipeline__CustomPipeRenderCB);
+	//CHook::InstallPLT(g_libGTASA + 0x66F9E8, (uintptr_t)EmuShader_Select_hook, (uintptr_t*)&EmuShader_Select);
+	CHook::InstallPLT(g_libGTASA + 0x6750D4, (uintptr_t)CAnimManager_UncompressAnimation_hook, (uintptr_t*)&CAnimManager_UncompressAnimation);
+	//CHook::InstallPLT(g_libGTASA + 0x670E1C, (uintptr_t)CStreaming__MakeSpaceFor_hook, (uintptr_t*)&CStreaming__MakeSpaceFor);
+	CHook::InstallPLT(g_libGTASA + 0x6700D0, (uintptr_t)CStreaming_Init2_hook, (uintptr_t*)&CStreaming_Init2);
 }
 
 void InstallWeaponFireHooks()
 {
-	ARMHook::installPLTHook(g_libGTASA + 0x6716D0, (uintptr_t)CWeapon_FireInstantHit_hook, (uintptr_t*)&CWeapon_FireInstantHit);
-	ARMHook::installPLTHook(g_libGTASA + 0x671F10, (uintptr_t)CWorld_ProcessLineOfSight_hook, (uintptr_t*)&CWorld_ProcessLineOfSight);
-	ARMHook::installPLTHook(g_libGTASA + 0x670A10, (uintptr_t)CWeapon_FireSniper_hook, (uintptr_t*)&CWeapon_FireSniper);
-	ARMHook::installPLTHook(g_libGTASA + 0x66EAC4, (uintptr_t)CBulletInfo_AddBullet_hook, (uintptr_t*)&CBulletInfo_AddBullet);
+	CHook::InstallPLT(g_libGTASA + 0x6716D0, (uintptr_t)CWeapon_FireInstantHit_hook, (uintptr_t*)&CWeapon_FireInstantHit);
+	CHook::InstallPLT(g_libGTASA + 0x671F10, (uintptr_t)CWorld_ProcessLineOfSight_hook, (uintptr_t*)&CWorld_ProcessLineOfSight);
+	CHook::InstallPLT(g_libGTASA + 0x670A10, (uintptr_t)CWeapon_FireSniper_hook, (uintptr_t*)&CWeapon_FireSniper);
+	CHook::InstallPLT(g_libGTASA + 0x66EAC4, (uintptr_t)CBulletInfo_AddBullet_hook, (uintptr_t*)&CBulletInfo_AddBullet);
 }
 
 void InstallSAMPHooks()
 {
-	ARMHook::installPLTHook(g_libGTASA + 0x677EA0, (uintptr_t)MainMenuScreen__OnExit_hook, (uintptr_t*)&MainMenuScreen__OnExit);
+	CHook::InstallPLT(g_libGTASA + 0x677EA0, (uintptr_t)MainMenuScreen__OnExit_hook, (uintptr_t*)&MainMenuScreen__OnExit);
 	// samp main loop
-	ARMHook::installPLTHook(g_libGTASA + 0x67589C, (uintptr_t)Render2dStuff_hook, (uintptr_t*)&Render2dStuff);
+	//CHook::InstallPLT(g_libGTASA + 0x67589C, (uintptr_t)Render2dStuff_hook, (uintptr_t*)&Render2dStuff);
 	// imgui
-	ARMHook::installPLTHook(g_libGTASA + 0x6710C4, (uintptr_t)Idle_hook, (uintptr_t*)&Idle);
-	ARMHook::installPLTHook(g_libGTASA + 0x675DE4, (uintptr_t)AND_TouchEvent_hook, (uintptr_t*)&AND_TouchEvent);
+	CHook::InstallPLT(g_libGTASA + 0x6710C4, (uintptr_t)Idle_hook, (uintptr_t*)&Idle);
+	//CHook::InstallPLT(g_libGTASA + 0x675DE4, (uintptr_t)AND_TouchEvent_hook, (uintptr_t*)&AND_TouchEvent);
 	// splashscreen
-	ARMHook::installHook(g_libGTASA + 0x43AF28, (uintptr_t)DisplayScreen_hook, (uintptr_t*)&DisplayScreen);
+	//ARMHook::installHook(g_libGTASA + 0x43AF28, (uintptr_t)DisplayScreen_hook, (uintptr_t*)&DisplayScreen);
 	// gangzones
-	ARMHook::installPLTHook(g_libGTASA + 0x67196C, (uintptr_t)CRadar_DrawRadarGangOverlay_hook, (uintptr_t*)&CRadar_DrawRadarGangOverlay);
+	//CHook::InstallPLT(g_libGTASA + 0x67196C, (uintptr_t)CRadar_DrawRadarGangOverlay_hook, (uintptr_t*)&CRadar_DrawRadarGangOverlay);
 	// radar
-	ARMHook::installPLTHook(g_libGTASA+0x675914, (uintptr_t)CRadar__SetCoordBlip_hook, (uintptr_t*)&CRadar__SetCoordBlip);
+	//CHook::InstallPLT(g_libGTASA+0x675914, (uintptr_t)CRadar__SetCoordBlip_hook, (uintptr_t*)&CRadar__SetCoordBlip);
 	// removebuilding
-	ARMHook::installPLTHook(g_libGTASA + 0x675E6C, (uintptr_t)CFileLoader__LoadObjectInstance_hook, (uintptr_t*)&CFileLoader__LoadObjectInstance);
-	// pickup
-	ARMHook::installPLTHook(g_libGTASA + 0x66EC10, (uintptr_t)CPickup_Update_hook, (uintptr_t*)& CPickup_Update);
+	CHook::InstallPLT(g_libGTASA + 0x675E6C, (uintptr_t)CFileLoader__LoadObjectInstance_hook, (uintptr_t*)&CFileLoader__LoadObjectInstance);
 	// obj material
-	ARMHook::installHook(g_libGTASA + 0x454EF0, (uintptr_t)CObject_Render_hook, (uintptr_t*)& CObject_Render);
+	//ARMHook::installHook(g_libGTASA + 0x454EF0, (uintptr_t)CObject_Render_hook, (uintptr_t*)& CObject_Render);
 	// textdraw models
-	ARMHook::installPLTHook(g_libGTASA + 0x66FE58, (uintptr_t)CGame_Process_hook, (uintptr_t*)& CGame_Process);
+	CHook::InstallPLT(g_libGTASA + 0x66FE58, (uintptr_t)CGame_Process_hook, (uintptr_t*)& CGame_Process);
 	// enter vehicle as driver
-	ARMHook::codeInject(g_libGTASA + 0x40AC28, (uintptr_t)TaskEnterVehicle_hook, 0);
-    //ARMHook::installPLTHook(g_libGTASA+0x6733F0, (uintptr_t)TaskEnterVehicle_hook, (uintptr_t*)&TaskEnterVehicle);
+	//ARMHook::codeInject(g_libGTASA + 0x40AC28, (uintptr_t)TaskEnterVehicle_hook, 0);
+    //CHook::InstallPLT(g_libGTASA+0x6733F0, (uintptr_t)TaskEnterVehicle_hook, (uintptr_t*)&TaskEnterVehicle);
 	// radar color
-	ARMHook::installPLTHook(g_libGTASA + 0x673950, (uintptr_t)CHudColours__GetIntColour_hook, (uintptr_t*)& CHudColours__GetIntColour);
+	//CHook::InstallPLT(g_libGTASA + 0x673950, (uintptr_t)CHudColours__GetIntColour_hook, (uintptr_t*)& CHudColours__GetIntColour);
 	// exit vehicle
-	ARMHook::installPLTHook(g_libGTASA + 0x671984, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
-    ARMHook::installPLTHook(g_libGTASA + 0x675320, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
+	CHook::InstallPLT(g_libGTASA + 0x671984, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
+    CHook::InstallPLT(g_libGTASA + 0x675320, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
     // attach obj to ped
-	ARMHook::installPLTHook(g_libGTASA + 0x675C68, (uintptr_t)CWorld_ProcessPedsAfterPreRender_Hook, (uintptr_t*)&CWorld_ProcessPedsAfterPreRender);
+	CHook::InstallPLT(g_libGTASA + 0x675C68, (uintptr_t)CWorld_ProcessPedsAfterPreRender_Hook, (uintptr_t*)&CWorld_ProcessPedsAfterPreRender);
 	// game pause
-	ARMHook::installPLTHook(g_libGTASA + 0x672644, (uintptr_t)CTimer_StartUserPause_hook, (uintptr_t*)&CTimer_StartUserPause);
-	ARMHook::installPLTHook(g_libGTASA + 0x67056C, (uintptr_t)CTimer_EndUserPause_hook, (uintptr_t*)&CTimer_EndUserPause);
+	CHook::InstallPLT(g_libGTASA + 0x672644, (uintptr_t)CTimer_StartUserPause_hook, (uintptr_t*)&CTimer_StartUserPause);
+	CHook::InstallPLT(g_libGTASA + 0x67056C, (uintptr_t)CTimer_EndUserPause_hook, (uintptr_t*)&CTimer_EndUserPause);
 	// aim
-	ARMHook::installPLTHook(g_libGTASA + 0x66969C, (uintptr_t)CTaskSimpleUseGun_SetPedPosition_hook, (uintptr_t*)&CTaskSimpleUseGun_SetPedPosition);
+	CHook::InstallPLT(g_libGTASA + 0x66969C, (uintptr_t)CTaskSimpleUseGun_SetPedPosition_hook, (uintptr_t*)&CTaskSimpleUseGun_SetPedPosition);
 	// CPlayerPed::ProcessControl
-	ARMHook::installPLTHook(g_libGTASA + 0x6692B4, (uintptr_t)CPed__ProcessControl_hook, (uintptr_t*)&CPed__ProcessControl);
+	CHook::InstallPLT(g_libGTASA + 0x6692B4, (uintptr_t)CPed__ProcessControl_hook, (uintptr_t*)&CPed__ProcessControl);
 	// all vehicles ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCA1C*/0x66D6B4, (uintptr_t)AllVehicles__ProcessControl_hook); // CAutomobile::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCD74*/0x66DA5C, (uintptr_t)AllVehicles__ProcessControl_hook); // CBoat::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCB44*/0x66D82C, (uintptr_t)AllVehicles__ProcessControl_hook); // CBike::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CD0DC*/0x66DDC0, (uintptr_t)AllVehicles__ProcessControl_hook); // CPlane::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCE8C*/0x66DB70, (uintptr_t)AllVehicles__ProcessControl_hook); // CHeli::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCC5C*/0x66D944, (uintptr_t)AllVehicles__ProcessControl_hook); // CBmx::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CCFB4*/0x66DC98, (uintptr_t)AllVehicles__ProcessControl_hook); // CMonsterTruck::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CD204*/0x66DEE8, (uintptr_t)AllVehicles__ProcessControl_hook); // CQuadBike::ProcessControl
-	ARMHook::installMethodHook(g_libGTASA + /*0x5CD454*/0x66E138, (uintptr_t)AllVehicles__ProcessControl_hook); // CTrain::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCA1C*/0x66D6B4, (uintptr_t)AllVehicles__ProcessControl_hook); // CAutomobile::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCD74*/0x66DA5C, (uintptr_t)AllVehicles__ProcessControl_hook); // CBoat::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCB44*/0x66D82C, (uintptr_t)AllVehicles__ProcessControl_hook); // CBike::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CD0DC*/0x66DDC0, (uintptr_t)AllVehicles__ProcessControl_hook); // CPlane::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCE8C*/0x66DB70, (uintptr_t)AllVehicles__ProcessControl_hook); // CHeli::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCC5C*/0x66D944, (uintptr_t)AllVehicles__ProcessControl_hook); // CBmx::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CCFB4*/0x66DC98, (uintptr_t)AllVehicles__ProcessControl_hook); // CMonsterTruck::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CD204*/0x66DEE8, (uintptr_t)AllVehicles__ProcessControl_hook); // CQuadBike::ProcessControl
+	CHook::InstallPLT(g_libGTASA + /*0x5CD454*/0x66E138, (uintptr_t)AllVehicles__ProcessControl_hook); // CTrain::ProcessControl
 	// ComputeDamageResponse
-	ARMHook::installPLTHook(g_libGTASA + 0x66F0EC, (uintptr_t)CPedDamageResponseCalculator__ComputeDamageResponse_hook, (uintptr_t*)&CPedDamageResponseCalculator__ComputeDamageResponse);
+	CHook::InstallPLT(g_libGTASA + 0x66F0EC, (uintptr_t)CPedDamageResponseCalculator__ComputeDamageResponse_hook, (uintptr_t*)&CPedDamageResponseCalculator__ComputeDamageResponse);
 
 	// Crosshair Fix
 	ms_fAspectRatio = (float*)(g_libGTASA+0xA26A90);
-	ARMHook::installPLTHook(g_libGTASA + 0x672880, (uintptr_t)DrawCrosshair_hook, (uintptr_t*)&DrawCrosshair);
+	CHook::InstallPLT(g_libGTASA + 0x672880, (uintptr_t)DrawCrosshair_hook, (uintptr_t*)&DrawCrosshair);
 
 	// fix radar in passenger
-	ARMHook::installPLTHook(g_libGTASA+0x671BBC, (uintptr_t)FindPlayerSpeed_hook, (uintptr_t*)&FindPlayerSpeed);
+	CHook::InstallPLT(g_libGTASA+0x671BBC, (uintptr_t)FindPlayerSpeed_hook, (uintptr_t*)&FindPlayerSpeed);
 
 	// fix texture loading
-	ARMHook::installPLTHook(g_libGTASA + 0x676034, (uintptr_t)CTxdStore__TxdStoreFindCB_hook, (uintptr_t*)&CTxdStore__TxdStoreFindCB);
+	CHook::InstallPLT(g_libGTASA + 0x676034, (uintptr_t)CTxdStore__TxdStoreFindCB_hook, (uintptr_t*)&CTxdStore__TxdStoreFindCB);
 
 	// interpolate camera fix
-	ARMHook::installPLTHook(g_libGTASA + 0x6717BC, (uintptr_t)CCamera__Process_hook, (uintptr_t*)&CCamera__Process);
+	CHook::InstallPLT(g_libGTASA + 0x6717BC, (uintptr_t)CCamera__Process_hook, (uintptr_t*)&CCamera__Process);
 
 	// for surfing
-	//ARMHook::installPLTHook(g_libGTASA + 0x66EAE8, (uintptr_t)CWorld_ProcessAttachedEntities_Hook, (uintptr_t*)&CWorld_ProcessAttachedEntities);
+	//CHook::InstallPLT(g_libGTASA + 0x66EAE8, (uintptr_t)CWorld_ProcessAttachedEntities_Hook, (uintptr_t*)&CWorld_ProcessAttachedEntities);
 
-	//ARMHook::installPLTHook(g_libGTASA + 0x67193C, (uintptr_t)player_control_zelda_hook, (uintptr_t*)&player_control_zelda);
+	//CHook::InstallPLT(g_libGTASA + 0x67193C, (uintptr_t)player_control_zelda_hook, (uintptr_t*)&player_control_zelda);
 
-	ARMHook::installHook(g_libGTASA + 0x4DD5E8, (uintptr_t)CTaskSimpleUseGun__SetMoveAnim_hook, (uintptr_t*)&CTaskSimpleUseGun__SetMoveAnim);
+	//ARMHook::installHook(g_libGTASA + 0x4DD5E8, (uintptr_t)CTaskSimpleUseGun__SetMoveAnim_hook, (uintptr_t*)&CTaskSimpleUseGun__SetMoveAnim);
 
     // hueta ne rabotaet no pust budet (tipo ne kak v 1.08)
-	ARMHook::installPLTHook(g_libGTASA + 0x674280, (uintptr_t) CVehicleModelInfo__SetupCommonData_hook, (uintptr_t*)&CVehicleModelInfo__SetupCommonData);
-	ARMHook::installPLTHook(g_libGTASA + 0x06D008, (uintptr_t) CAEVehicleAudioEntity__GetVehicleAudioSettings_hook, (uintptr_t*)&CAEVehicleAudioEntity__GetVehicleAudioSettings);
+	CHook::InstallPLT(g_libGTASA + 0x674280, (uintptr_t) CVehicleModelInfo__SetupCommonData_hook, (uintptr_t*)&CVehicleModelInfo__SetupCommonData);
+	CHook::InstallPLT(g_libGTASA + 0x06D008, (uintptr_t) CAEVehicleAudioEntity__GetVehicleAudioSettings_hook, (uintptr_t*)&CAEVehicleAudioEntity__GetVehicleAudioSettings);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x66FF0C, (uintptr_t)CRadar_ClearBlip_hook, (uintptr_t*)&CRadar_ClearBlip);
+	CHook::InstallPLT(g_libGTASA + 0x66FF0C, (uintptr_t)CRadar_ClearBlip_hook, (uintptr_t*)&CRadar_ClearBlip);
 
 	// skills
-	ARMHook::installPLTHook(g_libGTASA + 0x6749D0, (uintptr_t)CPed__GetWeaponSkill_hook, (uintptr_t*)&CPed__GetWeaponSkill);
+	CHook::InstallPLT(g_libGTASA + 0x6749D0, (uintptr_t)CPed__GetWeaponSkill_hook, (uintptr_t*)&CPed__GetWeaponSkill);
 
     //InstallHuaweiCrashFixHooks();
 	InstallCrashFixHooks();
@@ -2363,39 +1914,222 @@ void InstallSAMPHooks()
 
 void InstallWidgetHooks()
 {
-	ARMHook::installPLTHook(g_libGTASA+0x66F660, (uintptr_t)CWidget_hook, (uintptr_t*)&CWidget);
-	ARMHook::installPLTHook(g_libGTASA+0x66FBCC, (uintptr_t)CWidget__Update_hook, (uintptr_t*)&CWidget__Update);
-	ARMHook::installPLTHook(g_libGTASA+0x672A0C, (uintptr_t)CWidget__SetEnabled_hook, (uintptr_t*)&CWidget__SetEnabled);
-	ARMHook::installPLTHook(g_libGTASA+0x674388, (uintptr_t)CTouchInterface__IsTouched_hook, (uintptr_t*)&CTouchInterface__IsTouched);
-	ARMHook::installPLTHook(g_libGTASA+0x66F6E0, (uintptr_t)CTouchInterface__IsReleased_hook, (uintptr_t*)&CTouchInterface__IsReleased);
+	CHook::InstallPLT(g_libGTASA+0x66F660, (uintptr_t)CWidget_hook, (uintptr_t*)&CWidget);
+	CHook::InstallPLT(g_libGTASA+0x66FBCC, (uintptr_t)CWidget__Update_hook, (uintptr_t*)&CWidget__Update);
+	CHook::InstallPLT(g_libGTASA+0x672A0C, (uintptr_t)CWidget__SetEnabled_hook, (uintptr_t*)&CWidget__SetEnabled);
+	CHook::InstallPLT(g_libGTASA+0x674388, (uintptr_t)CTouchInterface__IsTouched_hook, (uintptr_t*)&CTouchInterface__IsTouched);
+	CHook::InstallPLT(g_libGTASA+0x66F6E0, (uintptr_t)CTouchInterface__IsReleased_hook, (uintptr_t*)&CTouchInterface__IsReleased);
 }
 
 void InstallGlobalHooks()
 {
 	//ARMHook::installHook(g_libGTASA + 0x22F2E8, (uintptr_t) mpg123_param_hook, (uintptr_t*)&mpg123_param);
-	//ARMHook::installPLTHook(g_libGTASA + 0x671B20, (uintptr_t)LIB_PointerGetButton_hook, (uintptr_t*)& LIB_PointerGetButton);
-	ARMHook::installPLTHook(g_libGTASA + 0x670268, (uintptr_t)CWorld__FindPlayerSlotWithPedPointer_hook, (uintptr_t*)&CWorld__FindPlayerSlotWithPedPointer);
+	//CHook::InstallPLT(g_libGTASA + 0x671B20, (uintptr_t)LIB_PointerGetButton_hook, (uintptr_t*)& LIB_PointerGetButton);
+	//CHook::InstallPLT(g_libGTASA + 0x670268, (uintptr_t)CWorld__FindPlayerSlotWithPedPointer_hook, (uintptr_t*)&CWorld__FindPlayerSlotWithPedPointer);
 	//
-	ARMHook::installHook(g_libGTASA + 0x26BF20, (uintptr_t)ANDRunThread_hook, (uintptr_t*)& ANDRunThread);
+	//ARMHook::installHook(g_libGTASA + 0x26BF20, (uintptr_t)ANDRunThread_hook, (uintptr_t*)& ANDRunThread);
 	// filesystem
-	ARMHook::installPLTHook(g_libGTASA + 0x6753A4, (uintptr_t)OS_FileOpen_hook, (uintptr_t*)&OS_FileOpen);
+	//CHook::InstallPLT(g_libGTASA + 0x6753A4, (uintptr_t)OS_FileOpen_hook, (uintptr_t*)&OS_FileOpen);
 	// custom ZIP archive
-	ARMHook::installPLTHook(g_libGTASA + 0x66FF40, (uintptr_t)CFileMgr_Initialise_hook, (uintptr_t*)&CFileMgr_Initialise);
+	//CHook::InstallPLT(g_libGTASA + 0x66FF40, (uintptr_t)CFileMgr_Initialise_hook, (uintptr_t*)&CFileMgr_Initialise);
 	// SAMP IMG archive
-	ARMHook::installPLTHook(g_libGTASA + 0x674C68, (uintptr_t)CStream_InitImageList_hook, (uintptr_t*)&CStream_InitImageList);
+	//CHook::InstallPLT(g_libGTASA + 0x674C68, (uintptr_t)CStream_InitImageList_hook, (uintptr_t*)&CStream_InitImageList);
 	// SAMP textures
-	ARMHook::installPLTHook(g_libGTASA + 0x66F2D0, (uintptr_t)CGame__InitialiseRenderWare_hook, (uintptr_t*)&CGame__InitialiseRenderWare);
+	//CHook::InstallPLT(g_libGTASA + 0x66F2D0, (uintptr_t)CGame__InitialiseRenderWare_hook, (uintptr_t*)&CGame__InitialiseRenderWare);
 	// increase Atomic models pool
-	ARMHook::installPLTHook(g_libGTASA + 0x67579C, (uintptr_t)CModelInfo_AddAtomicModel_hook, (uintptr_t*)&CModelInfo_AddAtomicModel);
+	//CHook::InstallPLT(g_libGTASA + 0x67579C, (uintptr_t)CModelInfo_AddAtomicModel_hook, (uintptr_t*)&CModelInfo_AddAtomicModel);
 	// ped models pool
-	ARMHook::installPLTHook(g_libGTASA + 0x675D98, (uintptr_t)CModelInfo_AddPedModel_hook, (uintptr_t*)&CModelInfo_AddPedModel);
+	//CHook::InstallPLT(g_libGTASA + 0x675D98, (uintptr_t)CModelInfo_AddPedModel_hook, (uintptr_t*)&CModelInfo_AddPedModel);
 	// game pools
-	ARMHook::installPLTHook(g_libGTASA + 0x672468, (uintptr_t)CPools_Initialise_hook, (uintptr_t*)&CPools_Initialise);
+	//CHook::InstallPLT(g_libGTASA + 0x672468, (uintptr_t)CPools_Initialise_hook, (uintptr_t*)&CPools_Initialise);
 	// placeable matrix alloc
-	ARMHook::installPLTHook(g_libGTASA + 0x675554, (uintptr_t)CPlaceable_InitMatrixArray_hook, (uintptr_t*)& CPlaceable_InitMatrixArray);
+	//CHook::InstallPLT(g_libGTASA + 0x675554, (uintptr_t)CPlaceable_InitMatrixArray_hook, (uintptr_t*)& CPlaceable_InitMatrixArray);
 	// render objects 3000+- pos
-	ARMHook::installPLTHook(g_libGTASA + 0x673794, (uintptr_t)CRenderer_RenderEverythingBarRoads_hook, (uintptr_t*)&CRenderer_RenderEverythingBarRoads);
+	CHook::InstallPLT(g_libGTASA + 0x673794, (uintptr_t)CRenderer_RenderEverythingBarRoads_hook, (uintptr_t*)&CRenderer_RenderEverythingBarRoads);
 
 	InstallSAMPHooks();
 	InstallWidgetHooks();
+}
+
+void ReadSettingFile();
+void (*NvUtilInit)();
+void NvUtilInit_hook()
+{
+    FLog("NvUtilInit");
+
+    NvUtilInit();
+
+    g_pszStorage = (char*)(g_libGTASA + (VER_x32 ? 0x6D687C : 0x8B46A8)); // StorageRootBuffer
+
+    ReadSettingFile();
+}
+
+struct stFile
+{
+    int isFileExist;
+    FILE *f;
+};
+
+char lastFile[123];
+
+stFile* NvFOpen(const char* r0, const char* r1, int r2, int r3)
+{
+    strcpy(lastFile, r1);
+
+    static char path[255]{};
+    memset(path, 0, sizeof(path));
+
+    sprintf(path, "%s%s", g_pszStorage, r1);
+
+    // ----------------------------
+    if(!strncmp(r1+12, "mainV1.scm", 10))
+    {
+        sprintf(path, "%sSAMP/main.scm", g_pszStorage);
+        FLog("Loading %s", path);
+    }
+    // ----------------------------
+    if(!strncmp(r1+12, "SCRIPTV1.IMG", 12))
+    {
+        sprintf(path, "%sSAMP/script.img", g_pszStorage);
+        FLog("Loading script.img..");
+    }
+    // ----------------------------
+    if(!strncmp(r1, "DATA/PEDS.IDE", 13))
+    {
+        sprintf(path, "%sSAMP/peds.ide", g_pszStorage);
+        FLog("Loading peds.ide..");
+    }
+    // ----------------------------
+    if(!strncmp(r1, "DATA/VEHICLES.IDE", 17))
+    {
+        sprintf(path, "%sSAMP/vehicles.ide", g_pszStorage);
+        FLog("Loading vehicles.ide..");
+    }
+
+    if (!strncmp(r1, "DATA/GTA.DAT", 12))
+    {
+        sprintf(path, "%sSAMP/gta.dat", g_pszStorage);
+        FLog("Loading gta.dat..");
+    }
+
+    if (!strncmp(r1, "DATA/HANDLING.CFG", 17))
+    {
+        sprintf(path, "%sSAMP/handling.cfg", g_pszStorage);
+        FLog("Loading handling.cfg..");
+    }
+
+    if (!strncmp(r1, "DATA/WEAPON.DAT", 15))
+    {
+        sprintf(path, "%sSAMP/weapon.dat", g_pszStorage);
+        FLog("Loading weapon.dat..");
+    }
+
+#if VER_x32
+    auto *st = (stFile*)malloc(8);
+#else
+    auto *st = (stFile*)malloc(0x10);
+#endif
+    st->isFileExist = false;
+
+    FLog("%s", path);
+    FILE *f  = fopen(path, "rb");
+
+    if(f)
+    {
+        st->isFileExist = true;
+        st->f = f;
+        return st;
+    }
+    else
+    {
+        FLog("NVFOpen hook | Error: file not found (%s)", path);
+        free(st);
+        return nullptr;
+    }
+}
+
+bool g_bPlaySAMP = false;
+
+void MainMenu_OnStartSAMP()
+{
+    if(g_bPlaySAMP) return;
+
+    //InitInMenu();
+    pGame->StartGame();
+
+    // StartGameScreen::OnNewGameCheck()
+    (( void (*)())(g_libGTASA + (VER_x32 ? 0x002A7270 + 1 : 0x365EA0)))();
+
+    g_bPlaySAMP = true;
+}
+
+unsigned int (*MainMenuScreen__Update)(uintptr_t thiz, float a2);
+unsigned int MainMenuScreen__Update_hook(uintptr_t thiz, float a2)
+{
+    unsigned int ret = MainMenuScreen__Update(thiz, a2);
+    MainMenu_OnStartSAMP();
+    return ret;
+}
+
+void (*StartGameScreen__OnNewGameCheck)();
+void StartGameScreen__OnNewGameCheck_hook()
+{
+    // отключить кнопку начать игру
+    if(g_bPlaySAMP)
+        return;
+
+    StartGameScreen__OnNewGameCheck();
+}
+
+void InjectHooks()
+{
+#if !VER_x32 // mb all.. wtf crash x64?
+    CHook::RET("_ZN11CPlayerInfo14LoadPlayerSkinEv");
+    CHook::RET("_ZN11CPopulation10InitialiseEv");
+#endif
+    CModelInfo::injectHooks(); //
+    CMatrixLink::InjectHooks(); //
+    CMatrixLinkList::InjectHooks(); //
+    CMatrix::InjectHooks(); //
+    CCollision::InjectHooks(); //
+    CTxdStore::InjectHooks();
+    CVehicleModelInfo::InjectHooks();
+    CPlaceable::InjectHooks();
+    CCoronas::InjectHooks();
+    //CPathFind::InjectHooks();
+}
+
+void InstallSpecialHooks()
+{
+    InjectHooks();
+    CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x6785FC : 0x84EC20), &StartGameScreen__OnNewGameCheck_hook, &StartGameScreen__OnNewGameCheck);
+
+    CHook::InlineHook("_Z10NvUtilInitv", &NvUtilInit_hook, &NvUtilInit);
+
+    //CHook::RET("_ZN12CCutsceneMgr16LoadCutsceneDataEPKc"); // LoadCutsceneData
+    //CHook::RET("_ZN12CCutsceneMgr10InitialiseEv");			// CCutsceneMgr::Initialise
+
+    CHook::Redirect("_Z7NvFOpenPKcS0_bb", &NvFOpen);
+
+    CHook::InlineHook("_ZN14MainMenuScreen6UpdateEf", &MainMenuScreen__Update_hook, &MainMenuScreen__Update);
+
+    CHook::Redirect("_ZN10CStreaming13InitImageListEv", &CStream_InitImageList);
+    CHook::Redirect("_ZN6CPools10InitialiseEv", &CPools_Initialise);
+
+    CHook::InlineHook("_ZN5CGame20InitialiseRenderWareEv", &CGame__InitialiseRenderWare_hook, &CGame__InitialiseRenderWare);
+
+    MultiTouch::initialize();
+}
+
+void InstallHooks()
+{
+    CHook::InlineHook("_Z13Render2dStuffv", &Render2dStuff_hook, &Render2dStuff);
+    CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);
+
+    CHook::Redirect("_ZN11CHudColours12GetIntColourEh", &CHudColours__GetIntColour); // dangerous
+    CHook::Redirect("_ZN6CRadar19GetRadarTraceColourEjhh", &CRadar__GetRadarTraceColor); // dangerous
+    CHook::InlineHook("_ZN6CRadar12SetCoordBlipE9eBlipType7CVectorj12eBlipDisplayPc", &CRadar__SetCoordBlip_hook, &CRadar__SetCoordBlip);
+    CHook::InlineHook("_ZN6CRadar20DrawRadarGangOverlayEb", &CRadar_DrawRadarGangOverlay_hook, &CRadar_DrawRadarGangOverlay);
+
+    CHook::Redirect("_Z10GetTexturePKc", &CUtil::GetTexture);
 }

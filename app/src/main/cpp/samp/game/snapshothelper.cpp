@@ -35,7 +35,7 @@ void CSnapShotHelper::SetUpScene()
 	m_frame = ((uintptr_t(*)())(g_libGTASA + 0x1D822C + 1))();
 
 	// RwFrameTranslate
-	VECTOR v = { 0.0f, 0.0f, 50.0f };
+	CVector v = { 0.0f, 0.0f, 50.0f };
 	RwFrameTranslate(m_frame, &v, 1);
 
 	// RwFrameRotate
@@ -72,7 +72,7 @@ void CSnapShotHelper::SetUpScene()
 }
 
 // 0.3.7
-uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom)
+uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom)
 {
 	FLog("Object snapshot: %d", iModel);
 
@@ -99,10 +99,10 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 
 	float fRadius = GetModelColSphereRadius(iModel);
 
-	VECTOR vec;
-	vec.X = 0.0f;
-	vec.Y = 0.0f;
-	vec.Z = 0.0f;
+	CVector vec;
+	vec.x = 0.0f;
+	vec.y = 0.0f;
+	vec.z = 0.0f;
 
 	fZoom = (-0.1f - fRadius * 2.25f) * fZoom;
 	GetModelColSphereVecCenter(iModel, &vec);
@@ -110,23 +110,23 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 	uintptr_t parent = *(uintptr_t*)(atomic + 4);
 	if (parent)
 	{
-		vec.X = -vec.X;
-		vec.Y = fZoom;
-		vec.Z = 50.0f - vec.Z;
+		vec.x = -vec.x;
+		vec.y = fZoom;
+		vec.z = 50.0f - vec.z;
 		RwFrameTranslate(parent, &vec, 1);
 		if (iModel == 18631) {
 			RwFrameRotate(parent, 2, 180.0f);
 		}
 		else
 		{
-			if (vecRot->X != 0.0f) {
-				RwFrameRotate(parent, 0, vecRot->X);
+			if (vecRot->x != 0.0f) {
+				RwFrameRotate(parent, 0, vecRot->x);
 			}
-			if (vecRot->Y != 0.0f) {
-				RwFrameRotate(parent, 1, vecRot->Y);
+			if (vecRot->y != 0.0f) {
+				RwFrameRotate(parent, 1, vecRot->y);
 			}
-			if (vecRot->Z != 0.0f) {
-				RwFrameRotate(parent, 2, vecRot->Z);
+			if (vecRot->z != 0.0f) {
+				RwFrameRotate(parent, 2, vecRot->z);
 			}
 		}
 	}
@@ -161,7 +161,7 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 	return bufferTexture;
 }
 // 0.3.7
-uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom)
+uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom)
 {
 	FLog("Ped snapshot: %d", iModel);
 
@@ -180,15 +180,15 @@ uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, VECTO
 	pPed->SetGravityProcessing(false);
 	pPed->SetCollisionChecking(false);
 
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	pPed->GetMatrix(&mat);
 
-	if (vecRot->X != 0.0f)
-		RwMatrixRotate(&mat, 0, vecRot->X);
-	if (vecRot->Y != 0.0f)
-		RwMatrixRotate(&mat, 1, vecRot->Y);
-	if (vecRot->Z != 0.0f)
-		RwMatrixRotate(&mat, 2, vecRot->Z);
+	if (vecRot->x != 0.0f)
+		RwMatrixRotate(&mat, 0, vecRot->x);
+	if (vecRot->y != 0.0f)
+		RwMatrixRotate(&mat, 1, vecRot->y);
+	if (vecRot->z != 0.0f)
+		RwMatrixRotate(&mat, 2, vecRot->z);
 
 	pPed->UpdateMatrix(mat);
 
@@ -231,7 +231,7 @@ uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, VECTO
 	return bufferTexture;
 }
 
-uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom, uint32_t dwColor1, uint32_t dwColor2)
+uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom, uint32_t dwColor1, uint32_t dwColor2)
 {
 	FLog("Vehicle snapshot: %d", iModel);
 
@@ -263,17 +263,17 @@ uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, V
 		pVehicle->SetColor(dwColor1, dwColor2);
 	}
 
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	pVehicle->GetMatrix(&mat);
 
-	if (vecRot->X != 0.0f) {
-		RwMatrixRotate(&mat, 0, vecRot->X);
+	if (vecRot->x != 0.0f) {
+		RwMatrixRotate(&mat, 0, vecRot->x);
 	}
-	if (vecRot->Y != 0.0f) {
-		RwMatrixRotate(&mat, 1, vecRot->Y);
+	if (vecRot->y != 0.0f) {
+		RwMatrixRotate(&mat, 1, vecRot->y);
 	}
-	if (vecRot->Z != 0.0f) {
-		RwMatrixRotate(&mat, 2, vecRot->Z);
+	if (vecRot->z != 0.0f) {
+		RwMatrixRotate(&mat, 2, vecRot->z);
 	}
 
 	pVehicle->UpdateMatrix(mat);
@@ -309,7 +309,7 @@ uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, V
 }
 
 /*
-uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom)
+uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom)
 {
 	if (iModel == 1373 || iModel == 3118 || iModel == 3552 || iModel == 3553)
 		iModel = 18631;
@@ -327,7 +327,7 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 
 	float fRadius = GetModelColSphereRadius(iModel);
 
-	VECTOR vecCenter = { 0.0f, 0.0f, 0.0f };
+	CVector vecCenter = { 0.0f, 0.0f, 0.0f };
 	GetModelColSphereVecCenter(iModel, &vecCenter);
 
 	uintptr_t parent = *(uintptr_t*)(pRwObject + 4);
@@ -335,16 +335,16 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 	if (parent == 0) return 0;
 	// RwFrameTranslate
 	float v[3] = {
-		-vecCenter.X,
+		-vecCenter.x,
 		(-0.1f - fRadius * 2.25f) * fZoom,
-		50.0f - vecCenter.Z };
+		50.0f - vecCenter.z };
 
 	// RwFrameTranslate
 	((void(*)(uintptr_t, float*, int))(g_libGTASA + 0x1D8694 + 1))(parent, v, 1);
 
 	if (iModel == 18631)
 		{
-			// RwFrameRotate X
+			// RwFrameRotate x
 			v[0] = 0.0f;
 			v[1] = 0.0f;
 			v[2] = 1.0f;
@@ -352,31 +352,31 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, VE
 		}
 	else
 	{
-		if (vecRot->X != 0.0f)
+		if (vecRot->x != 0.0f)
 		{
-			// RwFrameRotate X
+			// RwFrameRotate x
 			v[0] = 1.0f;
 			v[1] = 0.0f;
 			v[2] = 0.0f;
-			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->X, 1);
+			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->x, 1);
 		}
 
-		if (vecRot->Y != 0.0f)
+		if (vecRot->y != 0.0f)
 		{
-			// RwFrameRotate Y
+			// RwFrameRotate y
 			v[0] = 0.0f;
 			v[1] = 1.0f;
 			v[2] = 0.0f;
-			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->Y, 1);
+			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->y, 1);
 		}
 
-		if (vecRot->Z != 0.0f)
+		if (vecRot->z != 0.0f)
 		{
-			// RwFrameRotate Z
+			// RwFrameRotate z
 			v[0] = 0.0f;
 			v[1] = 0.0f;
 			v[2] = 1.0f;
-			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->Z, 1);
+			((void(*)(uintptr_t, float*, float, int))(g_libGTASA + 0x1D87A8 + 1))(parent, v, vecRot->z, 1);
 		}
 	}
 

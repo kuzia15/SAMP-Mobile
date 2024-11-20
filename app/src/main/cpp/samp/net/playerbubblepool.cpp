@@ -141,38 +141,38 @@ void CPlayerBubblePool::Draw(ImGuiRenderer* renderer)
                         if (pPlayerPed && pPlayerPed->IsAdded()) {
                             if (pPlayerPed->GetDistanceFromCamera() <=
                                 m_pPlayerBubble[i]->fDistance) {
-                                VECTOR VecPos;
-                                VecPos.X = 0.0f;
-                                VecPos.Y = 0.0f;
-                                VecPos.Z = 0.0f;
+                                CVector VecPos;
+                                VecPos.x = 0.0f;
+                                VecPos.y = 0.0f;
+                                VecPos.z = 0.0f;
 
                                 pPlayerPed->GetBonePosition(8, &VecPos);
 
-                                VECTOR TagPos;
-                                TagPos.X = VecPos.X;
-                                TagPos.Y = VecPos.Y;
-                                TagPos.Z = VecPos.Z;
+                                CVector TagPos;
+                                TagPos.x = VecPos.x;
+                                TagPos.y = VecPos.y;
+                                TagPos.z = VecPos.z;
 
                                 float fTextHeight =
                                         ((m_pPlayerBubble[i]->dwLineCount * 0.0125f) + 0.065f) +
                                         (m_pPlayerBubble[i]->dwLineCount * 0.0125f);
-                                TagPos.Z +=
+                                TagPos.z +=
                                         pPlayerPed->GetDistanceFromCamera() * fTextHeight + 0.2f;
 
-                                VECTOR Out;
+                                CVector Out;
 
                                 // CSprite::CalcScreenCoors
-                                //(( void (*)(VECTOR*, VECTOR*, float*, float*, bool, bool))(g_GTASAAdr+0x54EEC0+1))(&TagPos, &Out, 0, 0, 0, 0);
+                                //(( void (*)(CVector*, CVector*, float*, float*, bool, bool))(g_GTASAAdr+0x54EEC0+1))(&TagPos, &Out, 0, 0, 0, 0);
                                 // CSprite::CalcScreenCoors
-                                ((void (*)(VECTOR *, VECTOR *, float *, float *, bool, bool)) (
-                                        g_libGTASA + 0x5C5798 + 1))(&TagPos, &Out, 0, 0, 0, 0);
+                                ((void (*)(CVector *, CVector *, float *, float *, bool, bool)) (
+                                        g_libGTASA + (VER_x32 ? 0x005C57E8 + 1 : 0x6E9DF8)))(&TagPos, &Out, 0, 0, 0, 0);
 
-                                if (Out.Z < 1.0f) {
+                                if (Out.z < 1.0f) {
                                     return;
                                 }
 
-                                //ImVec2 pos = ImVec2(Out.X, Out.Y - (pGUI->GetFontSize() * 1.67));
-                                ImVec2 pos = ImVec2(Out.X, Out.Y - (UISettings::fontSize() * 1.0));
+                                //ImVec2 pos = ImVec2(Out.x, Out.y - (pGUI->GetFontSize() * 1.67));
+                                ImVec2 pos = ImVec2(Out.x, Out.y - (UISettings::fontSize() * 1.0));
                                 //pos.x -= ImGui::CalcTextSize(m_pPlayerBubble[i]->szText).x / 2;
                                 pos.x -= renderer->calculateTextSize(m_pPlayerBubble[i]->szText,
                                                                      UISettings::fontSize() / 2).x /

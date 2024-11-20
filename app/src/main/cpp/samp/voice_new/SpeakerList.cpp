@@ -24,7 +24,7 @@ bool SpeakerList::Init() noexcept
 
     try
     {
-        SpeakerList::tSpeakerIcon = (RwTexture*)LoadTextureFromDB("samp", "speaker");
+        SpeakerList::tSpeakerIcon = (RwTexture*)CUtil::LoadTextureFromDB("samp", "speaker");
     }
     catch (const std::exception& exception)
     {
@@ -104,12 +104,12 @@ void SpeakerList::Render()
                             }
                             if(playerStream.second.GetType() == StreamType::LocalStreamAtPlayer)
                             {
-                                VECTOR VecPos;
+                                CVector VecPos;
 
                                 if(!pPlayerPed->IsAdded()) continue;
-                                VecPos.X = 0.0f;
-                                VecPos.Y = 0.0f;
-                                VecPos.Z = 0.0f;
+                                VecPos.x = 0.0f;
+                                VecPos.y = 0.0f;
+                                VecPos.z = 0.0f;
                                 pPlayerPed->GetBonePosition(8, &VecPos);
 
                                 if(pPlayerPed->GetDistanceFromLocalPlayerPed() < 60.0f)
@@ -157,22 +157,22 @@ void SpeakerList::Render()
     }
 }
 
-void SpeakerList::Draw(VECTOR* vec, float fDist)
+void SpeakerList::Draw(CVector* vec, float fDist)
 {
-	VECTOR TagPos;
+	CVector TagPos;
 
-	TagPos.X = vec->X;
-	TagPos.Y = vec->Y;
-	TagPos.Z = vec->Z;
-	TagPos.Z += 0.25f + (fDist * 0.0475f);
+	TagPos.x = vec->x;
+	TagPos.y = vec->y;
+	TagPos.z = vec->z;
+	TagPos.z += 0.25f + (fDist * 0.0475f);
 
-	VECTOR Out;
+	CVector Out;
 	// CSprite::CalcScreenCoors
-    ((void (*)(VECTOR*, VECTOR*, float*, float*, bool, bool))(g_libGTASA + 0x5C5798 + 1))(&TagPos, &Out, 0, 0, 0, 0);
-	if(Out.Z < 1.0f)
+    ((void (*)(CVector*, CVector*, float*, float*, bool, bool))(g_libGTASA + (VER_x32 ? 0x005C57E8 + 1 : 0x6E9DF8)))(&TagPos, &Out, 0, 0, 0, 0);
+	if(Out.z < 1.0f)
 		return;
 
-    ImVec2 pos = ImVec2(Out.X, Out.Y);
+    ImVec2 pos = ImVec2(Out.x, Out.y);
 	pos.x -= PluginConfig::kDefValSpeakerIconSize / 2;
     pos.y -= pUI->GetFontSize();
 

@@ -352,9 +352,9 @@ void RequestClass(RPCParameters *rpcParams)
 	Log::addParameter("SpawnInfo.iSpawnWeapons", SpawnInfo.iSpawnWeapons);
 	Log::addParameter("SpawnInfo.iSpawnWeaponsAmmo", SpawnInfo.iSpawnWeaponsAmmo);
 	Log::addParameter("SpawnInfo.unk", SpawnInfo.unk);
-	Log::addParameter("SpawnInfo.vecPos.X", SpawnInfo.vecPos.X);
-	Log::addParameter("SpawnInfo.vecPos.Y", SpawnInfo.vecPos.Y);
-	Log::addParameter("SpawnInfo.vecPos.Z", SpawnInfo.vecPos.Z);
+	Log::addParameter("SpawnInfo.vecPos.x", SpawnInfo.vecPos.x);
+	Log::addParameter("SpawnInfo.vecPos.y", SpawnInfo.vecPos.y);
+	Log::addParameter("SpawnInfo.vecPos.z", SpawnInfo.vecPos.z);
 
 	if (byteRequestOutcome) {
 		pLocalPlayer->SetSpawnInfo(&SpawnInfo);
@@ -488,7 +488,7 @@ void ConnectionRejected(RPCParameters *rpcParams)
 	case REJECT_REASON_BAD_NICKNAME:
 		if (pUI) pUI->chat()->addInfoMessage("CONNECTION REJECTED: Unacceptable NickName");
 		if (pUI) pUI->chat()->addInfoMessage("Please choose another nick between and 3-20 characters");
-		if (pUI) pUI->chat()->addInfoMessage("Please use only a-z, A-Z, 0-9");
+		if (pUI) pUI->chat()->addInfoMessage("Please use only a-z, A-z, 0-9");
 		if (pUI) pUI->chat()->addInfoMessage("Use /quit to exit or press ESC and select Quit Game");
 		pNetGame->SetGameState(GAMESTATE_WAIT_CONNECT);
 		break;
@@ -586,7 +586,7 @@ void WorldPlayerAdd(RPCParameters *rpcParams)
 	PLAYERID playerId;
 	uint8_t byteTeam;
 	int iSkin;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fRotation;
 	uint32_t dwColor;
 	uint8_t byteFightingStyle;
@@ -595,9 +595,9 @@ void WorldPlayerAdd(RPCParameters *rpcParams)
 	bsData.Read(playerId);
 	bsData.Read(byteTeam);
 	bsData.Read(iSkin);
-	bsData.Read(vecPos.X);
-	bsData.Read(vecPos.Y);
-	bsData.Read(vecPos.Z);
+	bsData.Read(vecPos.x);
+	bsData.Read(vecPos.y);
+	bsData.Read(vecPos.z);
 	bsData.Read(fRotation);
 	bsData.Read(dwColor);
 	bsData.Read(byteFightingStyle);
@@ -606,9 +606,9 @@ void WorldPlayerAdd(RPCParameters *rpcParams)
 	Log::addParameter("playerId", playerId);
 	Log::addParameter("byteTeam", byteTeam);
 	Log::addParameter("iSkin", iSkin);
-	Log::addParameter("vecPos.X", vecPos.X);
-	Log::addParameter("vecPos.Y", vecPos.Y);
-	Log::addParameter("vecPos.Z", vecPos.Z);
+	Log::addParameter("vecPos.x", vecPos.x);
+	Log::addParameter("vecPos.y", vecPos.y);
+	Log::addParameter("vecPos.z", vecPos.z);
 	Log::addParameter("fRotation", fRotation);
 	Log::addParameter("dwColor", dwColor);
 	Log::addParameter("byteFightingStyle", byteFightingStyle);
@@ -726,9 +726,9 @@ void WorldVehicleAdd(RPCParameters* rpcParams)
 	Log::addParameter("VehicleInfo.fHealth", VehicleInfo.fHealth);
 	Log::addParameter("VehicleInfo.fRotation", VehicleInfo.fRotation);
 	Log::addParameter("VehicleInfo.iVehicleType", VehicleInfo.iVehicleType);
-	Log::addParameter("VehicleInfo.vecPos.X", VehicleInfo.vecPos.X);
-	Log::addParameter("VehicleInfo.vecPos.Y", VehicleInfo.vecPos.Y);
-	Log::addParameter("VehicleInfo.vecPos.Z", VehicleInfo.vecPos.Z);
+	Log::addParameter("VehicleInfo.vecPos.x", VehicleInfo.vecPos.x);
+	Log::addParameter("VehicleInfo.vecPos.y", VehicleInfo.vecPos.y);
+	Log::addParameter("VehicleInfo.vecPos.z", VehicleInfo.vecPos.z);
 	Log::addParameter("VehicleInfo.VehicleID", VehicleInfo.VehicleID);
 
 	Log::addParameter("VehicleModinfo.byteModSlots", VehicleInfo.byteModSlots);
@@ -817,12 +817,12 @@ void WorldVehicleRemove(RPCParameters* rpcParams)
 
 		if (MyVehicleID == VehicleID)
 		{
-			MATRIX4X4 matPlayer;
+			RwMatrix matPlayer;
 			pPlayerPed->GetMatrix(&matPlayer);
 			pPlayerPed->RemoveFromVehicleAndPutAt(
-				matPlayer.pos.X,
-				matPlayer.pos.Y,
-				matPlayer.pos.Z);
+				matPlayer.pos.x,
+				matPlayer.pos.y,
+				matPlayer.pos.z);
 		}
 	}
 
@@ -878,7 +878,7 @@ void TimerUpdate(RPCParameters *rpcParams)
 	bsData.Read(dwTime);
 	Log::addParameter("dwTime", dwTime);
 
-	pGame->UpdateGlobalTimer(dwTime);
+	//pGame->UpdateGlobalTimer(dwTime);
 }
 // 0.3.7
 void ScmEvent(RPCParameters *rpcParams)
@@ -987,9 +987,9 @@ void Create3DTextLabel(RPCParameters* rpcParams)
 	RakNet::BitStream bsData(Data, (iBitLength / 8) + 1, false);
 	bsData.Read(wLabelId);
 	bsData.Read(label.dwColor);
-	bsData.Read(label.vecPos.X);
-	bsData.Read(label.vecPos.Y);
-	bsData.Read(label.vecPos.Z);
+	bsData.Read(label.vecPos.x);
+	bsData.Read(label.vecPos.y);
+	bsData.Read(label.vecPos.z);
 	bsData.Read(label.fDistance);
 	bsData.Read(label.bTestLOS);
 	bsData.Read(label.playerId);
@@ -1029,18 +1029,18 @@ void SetCheckpoint(RPCParameters* rpcParams)
 	unsigned char* Data = reinterpret_cast<unsigned char*>(rpcParams->input);
 	int iBitLength = rpcParams->numberOfBitsOfData;
 
-	VECTOR vecPos;
+	CVector vecPos;
 	float fSize;
 	RakNet::BitStream bsData(Data, (iBitLength / 8) + 1, false);
-	bsData.Read(vecPos.X);
-	bsData.Read(vecPos.Y);
-	bsData.Read(vecPos.Z);
+	bsData.Read(vecPos.x);
+	bsData.Read(vecPos.y);
+	bsData.Read(vecPos.z);
 	bsData.Read(fSize);
 
-	VECTOR vecSize;
-	vecSize.X = fSize;
-	vecSize.Y = fSize;
-	vecSize.Z = fSize;
+	CVector vecSize;
+	vecSize.x = fSize;
+	vecSize.y = fSize;
+	vecSize.z = fSize;
 
 	pGame->SetCheckpointInformation(&vecPos, &vecSize);
 	pGame->m_bCheckpointsEnabled = true;
@@ -1061,17 +1061,17 @@ void SetRaceCheckpoint(RPCParameters* rpcParams)
 	int iBitLength = rpcParams->numberOfBitsOfData;
 
 	uint8_t byteType;
-	VECTOR vecPos;
-	VECTOR vecNextPos;
+	CVector vecPos;
+	CVector vecNextPos;
 	float fRadius;
 	RakNet::BitStream bsData(Data, (iBitLength / 8) + 1, false);
 	bsData.Read(byteType);
-	bsData.Read(vecPos.X);
-	bsData.Read(vecPos.Y);
-	bsData.Read(vecPos.Z);
-	bsData.Read(vecNextPos.X);
-	bsData.Read(vecNextPos.Y);
-	bsData.Read(vecNextPos.Z);
+	bsData.Read(vecPos.x);
+	bsData.Read(vecPos.y);
+	bsData.Read(vecPos.z);
+	bsData.Read(vecNextPos.x);
+	bsData.Read(vecNextPos.y);
+	bsData.Read(vecNextPos.z);
 	bsData.Read(fRadius);
 
 	pGame->SetRaceCheckpointInformation(byteType, &vecPos, &vecNextPos, fRadius);

@@ -15,7 +15,7 @@
 // voice
 #include "voice_new/Plugin.h"
 
-#include "vendor/armhook/armhook.h"
+#include "vendor/armhook/patch.h"
 #include "vendor/str_obfuscator/str_obfuscator.hpp"
 
 #include "settings.h"
@@ -27,6 +27,8 @@ Peerapol Unarak
 */
 
 JavaVM* javaVM;
+
+char* g_pszStorage = nullptr;
 
 UI* pUI = nullptr;
 CGame *pGame = nullptr;
@@ -49,8 +51,10 @@ uintptr_t g_libGTASA = 0x00;
 uintptr_t g_libSAMP = 0x00;
 
 void ApplyGlobalPatches();
+void ApplyPatches_level0();
 void ApplyMultiTouchPatches();
 void InstallGlobalHooks();
+void InstallSpecialHooks();
 void InitRenderWareFunctions();
 void FLog(const char* fmt, ...);
 //void MyLog(const char* fmt, ...);
@@ -60,8 +64,8 @@ int work = 0;
 void ReadSettingFile()
 {
 	/*char path[255] = { 0 };
-	//sprintf(path, "%ssamp.set", pGame->GetDataDirectory());
-	sprintf(path, "%sNickName.ini", pGame->GetDataDirectory());
+	//sprintf(path, "%ssamp.set", g_pszStorage);
+	sprintf(path, "%sNickName.ini", g_pszStorage);
 
 	FILE* fp = fopen(path, "r");
 	if (fp == NULL) return;
@@ -92,33 +96,6 @@ int hashing(const char* str) {
 	return hashing;
 }
 
-void SkipRockStarLegal()
-{
-	uintptr_t adr = ARMHook::getLibraryAddress("libSCAnd.so");
-	if (adr == 0) return;
-
-	ARMHook::unprotect(adr + /*0x20C670*/0x31C149);
-	*(bool*)(adr + /*0x20C670*/0x31C149) = true;
-}
-
-void* Init(void*)
-{
-	SkipRockStarLegal(); //Skip LegalScreenShown
-
-	while (true)
-	{
-		if (*(int*)(g_libGTASA + 0xA987C8) == 7) {
-			pGame->StartGame();
-			break;
-		}
-		else {
-			usleep(500);
-		}
-	}
-
-	pthread_exit(0);
-}
-
 void DoDebugLoop()
 {
 	// ...
@@ -128,49 +105,16 @@ void DoDebugStuff()
 {
 	// ...
 
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	pGame->FindPlayerPed()->GetMatrix(&mat);
 	
 	for (int i = 0; i < 100; i++)
 	{
-		CPlayerPed* ped = pGame->NewPlayer(i, mat.pos.X + i, mat.pos.Y, mat.pos.Z, 0.0f, false, false);
+		CPlayerPed* ped = pGame->NewPlayer(i, mat.pos.x + i, mat.pos.y, mat.pos.z, 0.0f, false, false);
 		//ped->SetCollisionChecking(false);
 		//ped->SetGravityProcessing(false);
 	}
 }
-
-void printAddressBacktrace(const unsigned address, void* pc, void* lr)
-{
-	char filename[0xFF];
-	sprintf(filename, "/proc/%d/maps", getpid());
-	FILE* m_fp = fopen(filename, "rt");
-	if (m_fp == nullptr)
-	{
-		FLog("ERROR: can't open file %s", filename);
-		return;
-	}
-		Dl_info info_pc, info_lr;
-		memset(&info_pc, 0, sizeof(Dl_info));
-		memset(&info_lr, 0, sizeof(Dl_info));
-		dladdr(pc, &info_pc);
-		dladdr(lr, &info_lr);
-
-		rewind(m_fp);
-		char buffer[2048] = { 0 };
-		while (fgets(buffer, sizeof(buffer), m_fp))
-		{
-			const auto start_address = strtoul(buffer, nullptr, 16);
-			const auto end_address = strtoul(strchr(buffer, '-') + 1, nullptr, 16);
-
-			if (start_address <= address && end_address > address)
-			{
-				if (*(strchr(buffer, ' ') + 3) == 'x')
-					FLog("Call: %X (GTA: %X PC: %s LR: %s) (SAMP: %X) (libc: %X)", address, address - g_libGTASA, info_pc.dli_sname, info_lr.dli_sname, address - ARMHook::getLibraryAddress("libSAMP.so"), address - ARMHook::getLibraryAddress("libc.so"));
-				break;
-			}
-		}
-}
-
 struct sigaction act_old;
 struct sigaction act1_old;
 struct sigaction act2_old;
@@ -189,7 +133,7 @@ void handler(int signum, siginfo_t *info, void* contextPtr)
 
 	if(info->si_signo == SIGSEGV)
 	{
-		FLog("SIGSEGV | Fault address: 0x%X", info->si_addr);
+		FLog("SIGSEGV | Fault address: 0x%x", info->si_addr);
 
 		PRINT_CRASH_STATES(context);
 
@@ -210,7 +154,7 @@ void handler1(int signum, siginfo_t *info, void* contextPtr)
 
 	if(info->si_signo == SIGABRT)
 	{
-		FLog("SIGABRT | Fault address: 0x%X", info->si_addr);
+		FLog("SIGABRT | Fault address: 0x%x", info->si_addr);
 
 		PRINT_CRASH_STATES(context);
 
@@ -231,7 +175,7 @@ void handler2(int signum, siginfo_t *info, void* contextPtr)
 
 	if(info->si_signo == SIGFPE)
 	{
-		FLog("SIGFPE | Fault address: 0x%X", info->si_addr);
+		FLog("SIGFPE | Fault address: 0x%x", info->si_addr);
 
 		PRINT_CRASH_STATES(context);
 
@@ -252,7 +196,7 @@ void handler3(int signum, siginfo_t *info, void* contextPtr)
 
 	if(info->si_signo == SIGBUS)
 	{
-		FLog("SIGBUS | Fault address: 0x%X", info->si_addr);
+		FLog("SIGBUS | Fault address: 0x%x", info->si_addr);
 
 		PRINT_CRASH_STATES(context);
 
@@ -267,8 +211,8 @@ void DoInitStuff()
 	if (bGameInited == false)
 	{
 		pPlayerTags = new CPlayerTags();
-		pSnapShotHelper = new CSnapShotHelper();
-		pMaterialTextGenerator = new MaterialTextGenerator();
+		//pSnapShotHelper = new CSnapShotHelper();
+		//pMaterialTextGenerator = new MaterialTextGenerator();
 		pAudioStream = new CAudioStream();
 		pAudioStream->Initialize();
 
@@ -295,8 +239,9 @@ void DoInitStuff()
 
 		if (bDebug)
 		{
-			pGame->GetCamera()->Restore();
-			pGame->GetCamera()->SetBehindPlayer();
+            CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+            //TheCamera.Restore();
+            CCamera::SetBehindPlayer();
 			pGame->DisplayHUD(true);
 			pGame->EnableClock(false);
 
@@ -312,13 +257,14 @@ void DoInitStuff()
 
 		pNetGame = new CNetGame(pSettings->Get().szHost, pSettings->Get().iPort, pSettings->Get().szNickName, pSettings->Get().szPassword/*g_pass*/);/*cryptor::create("H0ND4").decrypt()*//*""*/
 		bNetworkInited = true;
+
+        FLog("DoInitStuff end");
 	}
 }
 
 extern "C" {
 	JNIEXPORT void JNICALL Java_com_samp_mobile_game_SAMP_initializeSAMP(JNIEnv *pEnv, jobject thiz)
 	{
-		ReadSettingFile();
 		pJavaWrapper = new CJavaWrapper(pEnv, thiz);
 	}
 	JNIEXPORT void JNICALL Java_com_samp_mobile_game_SAMP_onInputEnd(JNIEnv *pEnv, jobject thiz, jbyteArray str)
@@ -360,15 +306,18 @@ void MainLoop()
 
 	DoInitStuff();
 
+    FLog("MainLoop go on");
+
 	if (bDebug) {
 		DoDebugLoop();
 	}
 
 	if (pNetGame) {
+        FLog("MainLoop process");
 		pNetGame->Process();
 
-		CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-		if(pTextDrawPool) pTextDrawPool->Draw();
+		//CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+		//if(pTextDrawPool) pTextDrawPool->Draw();
 	}
 
 	if (pAudioStream) {
@@ -383,38 +332,41 @@ void InitGui()
 	Plugin::OnPluginLoad();
 	Plugin::OnSampLoad();
 
-	std::string font_path = string_format("%sfonts/%s", pGame->GetDataDirectory(), FONT_NAME);
+	std::string font_path = string_format("%sfonts/%s", g_pszStorage, FONT_NAME);
 	pUI = new UI(ImVec2(RsGlobal->maximumWidth, RsGlobal->maximumHeight), font_path.c_str());
 	pUI->initialize();
 	pUI->performLayout();
 }
 
 #include "game/multitouch.h"
+#include "armhook/patch.h"
+#include "util/CUtil.h"
+
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
 	javaVM = vm;
 	LOGI("SA-MP library loaded! Build time: " __DATE__ " " __TIME__);
 
-	g_libGTASA = ARMHook::getLibraryAddress("libGTASA.so");
+	g_libGTASA = CUtil::FindLib("libGTASA.so");
 	if (g_libGTASA == 0x00) {
 		LOGE("libGTASA.so address was not found! ");
 		return JNI_VERSION_1_6;
 	}
 
-	g_libSAMP = ARMHook::getLibraryAddress("libSAMP.so");
+	g_libSAMP = CUtil::FindLib("libsamp.so");
 	if (g_libSAMP == 0x00) {
-		LOGE("libSAMP.so address was not found! ");
+		LOGE("libsamp.so address was not found! ");
 		return JNI_VERSION_1_6;
 	}
 
 	firebase::crashlytics::Initialize();
 
-	uintptr_t libgtasa = ARMHook::getLibraryAddress("libGTASA.so");
-	uintptr_t libsamp = ARMHook::getLibraryAddress("libSAMP.so");
-	uintptr_t libc = ARMHook::getLibraryAddress("libc.so");
+	uintptr_t libgtasa = CUtil::FindLib("libGTASA.so");
+	uintptr_t libsamp = CUtil::FindLib("libsamp.so");
+	uintptr_t libc = CUtil::FindLib("libc.so");
 
 	FLog("libGTASA.so: 0x%x", libgtasa);
-	FLog("libSAMP.so: 0x%x", libsamp);
+	FLog("libsamp.so: 0x%x", libsamp);
 	FLog("libc.so: 0x%x", libc);
 
 	char str[100];
@@ -423,27 +375,23 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	firebase::crashlytics::SetCustomKey("libGTASA.so", str);
 	
 	sprintf(str, "0x%x", libsamp);
-	firebase::crashlytics::SetCustomKey("libSAMP.so", str);
+	firebase::crashlytics::SetCustomKey("libsamp.so", str);
 
 	sprintf(str, "0x%x", libc);
 	firebase::crashlytics::SetCustomKey("libc.so", str);
 
-	LOGI("Loading bass library..");
-
-	ARMHook::initializeTrampolines(g_libGTASA +/*0x180044*/0x1A9E0C, 1024);
-
-	InstallGlobalHooks();
-	ApplyGlobalPatches();
+	CHook::InitHookStuff();
+	InstallSpecialHooks();
+	ApplyPatches_level0();
     InitRenderWareFunctions();
-	MultiTouch::initialize();
 
 	pGame = new CGame();
 
 	//pVoice = new CVoice();
 	//pVoice->Initialize(VOICE_FREQUENCY, CODEC_FREQUENCY, VOICE_SENDRRATE);
 
-	pthread_t thread;
-	pthread_create(&thread, 0, Init, 0);
+	//pthread_t thread;
+	//pthread_create(&thread, 0, Init, 0);
 
 	struct sigaction act;
 	act.sa_sigaction = handler;
@@ -472,14 +420,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	return JNI_VERSION_1_6;
 }
 
-// never called on Android :(
-void JNI_OnUnload(JavaVM *vm, void *reserved)
-{
-	FLog("SA-MP library unloaded!");
-
-	ARMHook::uninitializeTrampolines();
-}
-
 uint32_t GetTickCount()
 {
 	struct timeval tv;
@@ -497,7 +437,7 @@ void FLog(const char* fmt, ...)
 	if (flLog == nullptr && pszStorage != nullptr)
 	{
 		sprintf(buffer, "%s/samp_log.txt", pszStorage);
-		LOGI("buffer: %s", buffer);
+		//LOGI("buffer: %s", buffer);
 		flLog = fopen(buffer, "a");
 	}
 
@@ -555,7 +495,7 @@ void MyLog(const char* fmt, ...)
 	if (flLog == nullptr && pszStorage != nullptr)
 	{
 		sprintf(buffer, "%s/samp_log.txt", pszStorage);
-		LOGI("buffer: %s", buffer);
+		//LOGI("buffer: %s", buffer);
 		flLog = fopen(buffer, "a");
 	}
 
@@ -583,7 +523,7 @@ void MyLog2(const char* fmt, ...)
 	if (flLog == nullptr && pszStorage != nullptr)
 	{
 		sprintf(buffer, "%s/samp_log.txt", pszStorage);
-		LOGI("buffer: %s", buffer);
+		//LOGI("buffer: %s", buffer);
 		flLog = fopen(buffer, "a");
 	}
 

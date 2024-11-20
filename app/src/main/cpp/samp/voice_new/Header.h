@@ -143,7 +143,7 @@ namespace SV
     {
         uint32_t stream;
         float distance;
-        VECTOR position;
+        CVector position;
         uint32_t color;
         char name[];
     };
@@ -166,7 +166,7 @@ namespace SV
     struct UpdateLPStreamPositionPacket
     {
         uint32_t stream;
-        VECTOR position;
+        CVector position;
     };
 
     struct DeleteStreamPacket

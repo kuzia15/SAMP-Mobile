@@ -28,7 +28,7 @@ public:
     static void Hide() noexcept;
 
     static void Render();
-    static void Draw(VECTOR* vec, float fDist);
+    static void Draw(CVector* vec, float fDist);
 
 public:
     static void OnSpeakerPlay(const Stream& stream, uint16_t speaker) noexcept;

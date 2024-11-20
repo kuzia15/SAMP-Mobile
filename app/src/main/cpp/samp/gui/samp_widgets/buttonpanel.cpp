@@ -52,7 +52,7 @@ ButtonPanel::ButtonPanel()
 				pTextDrawPool->SetSelectState(false, 0);
 			}
 		}});
-	m_bAlt->setCallback([m_bAlt]() {
+	/*m_bAlt->setCallback([m_bAlt]() {
 		if(m_bAlt->visible())
 			LocalPlayerKeys.bKeys[ePadKeys::KEY_WALK] = true;
 	});
@@ -69,7 +69,7 @@ ButtonPanel::ButtonPanel()
 	m_bD->setCallback([]() { LocalPlayerKeys.bKeys[ePadKeys::KEY_SUBMISSION] = true; });
 	m_bUSE->setCallback([]() { LocalPlayerKeys.bKeys[ePadKeys::KEY_ANALOG_LEFT] = true; });
 	m_b2->setCallback([m_b2]() { if(m_b2->visible()) LocalPlayerKeys.bKeys[ePadKeys::KEY_SUBMISSION] = true; });
-
+*/
 	this->addChild(m_bClose);
 	this->addChild(m_bTab);
 	this->addChild(m_bEsc);

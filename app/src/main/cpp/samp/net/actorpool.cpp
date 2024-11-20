@@ -30,9 +30,9 @@ void CActorPool::New(NEW_ACTOR* pNewActor)
 	}
 
 	CActor* pActor = new CActor(pNewActor->iSkin,
-		pNewActor->vecPos.X,
-		pNewActor->vecPos.Y,
-		pNewActor->vecPos.Z,
+		pNewActor->vecPos.x,
+		pNewActor->vecPos.y,
+		pNewActor->vecPos.z,
 		pNewActor->fAngle);
 
 	m_pActors[pNewActor->ActorID] = pActor;

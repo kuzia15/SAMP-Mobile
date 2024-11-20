@@ -7,7 +7,7 @@ typedef struct _TEXT_LABEL
 {
 	std::string text;
 	uint32_t dwColor;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fDistance;
 	uint8_t bTestLOS;
 	PLAYERID playerId;
@@ -38,6 +38,6 @@ private:
 	TEXT_LABEL	*m_TextLabels[MAX_TEXT_LABELS];
 	bool		m_bSlotUsed[MAX_TEXT_LABELS];
 
-    void Draw(ImGuiRenderer *renderer, TEXT_LABEL *label, VECTOR vecPos, const std::string &text,
+    void Draw(ImGuiRenderer *renderer, TEXT_LABEL *label, CVector vecPos, const std::string &text,
               uint32_t dwColor);
 };

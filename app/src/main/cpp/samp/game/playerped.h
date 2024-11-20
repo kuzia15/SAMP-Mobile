@@ -19,9 +19,9 @@ typedef struct _NEW_ATTACHED_OBJECT
 {
 	int iModel;
 	int iBoneID;
-	VECTOR vecOffset;
-	VECTOR vecRot;
-	VECTOR vecScale;
+	CVector vecOffset;
+	CVector vecRot;
+	CVector vecScale;
 	uint32_t dwMaterialColor1;
 	uint32_t dwMaterialColor2;
 
@@ -31,9 +31,9 @@ typedef struct _NEW_ATTACHED_OBJECT
 #pragma pack(push, 1)
 typedef struct _BULLET_DATA
 {
-	VECTOR vecOrigin;
-	VECTOR vecPos;
-	VECTOR vecOffset;
+	CVector vecOrigin;
+	CVector vecPos;
+	CVector vecOffset;
 	ENTITY_TYPE* pEntity;
 } BULLET_DATA;
 #pragma pack(pop)
@@ -49,7 +49,7 @@ public:
 	bool IsInVehicle();
 	bool IsAPassenger();
 	void RemoveFromVehicleAndPutAt(float fX, float fY, float fZ);
-	void RestartIfWastedAt(VECTOR *vecRestart, float fRotation);
+	void RestartIfWastedAt(CVector *vecRestart, float fRotation);
 
 	void ExtinguishFire();
 	void TogglePlayerControllable(bool bControllable);
@@ -82,8 +82,8 @@ public:
 	void SetFightingStyle(int iStyle);
 	void SetRotation(float fRotation);
 	void DestroyFollowPedTask();
-	void GetBonePosition(int iBoneID, VECTOR* vecOut);
-	void GetTransformedBonePosition(int iBoneID, VECTOR* vecOut);
+	void GetBonePosition(int iBoneID, CVector* vecOut);
+	void GetTransformedBonePosition(int iBoneID, CVector* vecOut);
 	void ApplyAnimation(const char* szAnimName, const char* szAnimLib, float fT, int opt1, int opt2, int opt3, int opt4, int iTime);
 	void SetInterior(uint8_t byteInteriorId, bool bRefresh);
 	void PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatID);
@@ -137,13 +137,13 @@ public:
 	void RemoveAllAttachedObjects();
 
 	void ProcessAttachedObjects();
-	void GetBoneMatrix(MATRIX4X4* matOut, int iBoneID);
+	void GetBoneMatrix(RwMatrix* matOut, int iBoneID);
 
 	void ClumpUpdateAnimations(float step, int flag);
 
 	void FireInstant();
-	void GetWeaponInfoForFire(bool bLeftWrist, VECTOR* vecBonePos, VECTOR* vecOut);
-	VECTOR* GetCurrentWeaponFireOffset();
+	void GetWeaponInfoForFire(bool bLeftWrist, CVector* vecBonePos, CVector* vecOut);
+	CVector* GetCurrentWeaponFireOffset();
 	void ProcessBulletData(BULLET_DATA* btData);
 
 	ENTITY_TYPE* GetEntityUnderPlayer();

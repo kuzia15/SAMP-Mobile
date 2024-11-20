@@ -44,9 +44,9 @@ CTextDraw::CTextDraw(TEXT_DRAW_TRANSMIT* pTextDrawTransmit, const char* szText)
 	m_TextDrawData.dwParam2 = 0xFFFFFFFF;
 	m_TextDrawData.byteSelectable = pTextDrawTransmit->byteSelectable;
 	m_TextDrawData.wModelID = pTextDrawTransmit->wModelID;
-	m_TextDrawData.vecRot.X = pTextDrawTransmit->vecRot.X;
-	m_TextDrawData.vecRot.Y = pTextDrawTransmit->vecRot.Y;
-	m_TextDrawData.vecRot.Z = pTextDrawTransmit->vecRot.Z;
+	m_TextDrawData.vecRot.x = pTextDrawTransmit->vecRot.x;
+	m_TextDrawData.vecRot.y = pTextDrawTransmit->vecRot.y;
+	m_TextDrawData.vecRot.z = pTextDrawTransmit->vecRot.z;
 	m_TextDrawData.fZoom = pTextDrawTransmit->fZoom;
 	m_TextDrawData.wColor1 = pTextDrawTransmit->wColor1;
 	m_TextDrawData.wColor2 = pTextDrawTransmit->wColor2;
@@ -66,10 +66,10 @@ CTextDraw::CTextDraw(TEXT_DRAW_TRANSMIT* pTextDrawTransmit, const char* szText)
 	}
 
 	m_TextDrawData.bHasRectArea = false;
-	m_rectArea.fLeft = 0.0f;
-	m_rectArea.fRight = 0.0f;
-	m_rectArea.fBottom = 0.0f;
-	m_rectArea.fTop = 0.0f;
+	m_rectArea.left = 0.0f;
+	m_rectArea.right = 0.0f;
+	m_rectArea.bottom = 0.0f;
+	m_rectArea.top = 0.0f;
 	m_bHovered = false;
 	m_dwHoverColor = 0;
 }
@@ -131,8 +131,6 @@ void CTextDraw::DrawDefault()
 {
 	if (!m_szText || !strlen(m_szText)) return;
 
-	CFont::AsciiToGxtChar(m_szText, m_szString);
-
 	int iScreenWidth = RsGlobal->maximumWidth;
 	int iScreenHeight = RsGlobal->maximumHeight;
 	float fHorizHudScale = 1.0f / 640.0f;
@@ -180,30 +178,30 @@ void CTextDraw::DrawDefault()
 
 	float fUseY = iScreenHeight - ((448.0 - m_TextDrawData.fY) * (iScreenHeight * fVertHudScale));
 	float fUseX = iScreenWidth - ((640.0 - m_TextDrawData.fX) * (iScreenWidth * fHorizHudScale));
-	CFont::PrintString(fUseX, fUseY, m_szString);
+	CFont::PrintString(fUseX, fUseY, m_szText);
 
 	CFont::SetEdge(0);
 
 	if (m_TextDrawData.byteAlignRight)
 	{
-		m_rectArea.fLeft = fUseX - (fLineWidth - fUseX);
-		m_rectArea.fRight = fUseX;
-		m_rectArea.fBottom = fUseY + fLineHeight;
-		m_rectArea.fTop = fUseY;
+		m_rectArea.left = fUseX - (fLineWidth - fUseX);
+		m_rectArea.right = fUseX;
+		m_rectArea.bottom = fUseY + fLineHeight;
+		m_rectArea.top = fUseY;
 	}
 	else if (m_TextDrawData.byteCentered)
 	{
-		m_rectArea.fLeft = fUseX - (fLineHeight * 0.5f);
-		m_rectArea.fRight = m_rectArea.fLeft + fLineHeight;
-		m_rectArea.fBottom = fUseY + fLineHeight;
-		m_rectArea.fTop = fUseY;
+		m_rectArea.left = fUseX - (fLineHeight * 0.5f);
+		m_rectArea.right = m_rectArea.left + fLineHeight;
+		m_rectArea.bottom = fUseY + fLineHeight;
+		m_rectArea.top = fUseY;
 	}
 	else
 	{
-		m_rectArea.fLeft = fUseX;
-		m_rectArea.fRight = fLineWidth - fUseX + fUseX;
-		m_rectArea.fBottom = fUseY + fLineHeight;
-		m_rectArea.fTop = fUseY;
+		m_rectArea.left = fUseX;
+		m_rectArea.right = fLineWidth - fUseX + fUseX;
+		m_rectArea.bottom = fUseY + fLineHeight;
+		m_rectArea.top = fUseY;
 	}
 
 	m_TextDrawData.bHasRectArea = true;
@@ -214,11 +212,11 @@ void CTextDraw::DrawTextured()
 	float scaleX = RsGlobal->maximumWidth * (1.0f / 640.0f);
 	float scaleY = RsGlobal->maximumHeight * (1.0f / 448.0f);
 
-	RECT rect;
-	rect.fLeft = m_TextDrawData.fX * scaleX;
-	rect.fTop = m_TextDrawData.fY * scaleY;
-	rect.fRight = (m_TextDrawData.fX + m_TextDrawData.fLineWidth) * scaleX;
-	rect.fBottom = (m_TextDrawData.fY + m_TextDrawData.fLineHeight) * scaleY;
+	CRect rect;
+	rect.left = m_TextDrawData.fX * scaleX;
+	rect.top = m_TextDrawData.fY * scaleY;
+	rect.right = (m_TextDrawData.fX + m_TextDrawData.fLineWidth) * scaleX;
+	rect.bottom = (m_TextDrawData.fY + m_TextDrawData.fLineHeight) * scaleY;
 
 
 
@@ -243,13 +241,13 @@ void CTextDraw::DrawTextured()
 					  m_TextDrawData.dwStyle == 5 ? uv_reflected : uv_normal);
 	}
 
-	m_rectArea.fLeft = rect.fLeft;
-	m_rectArea.fRight = rect.fRight;
-	m_rectArea.fBottom = rect.fBottom;
-	m_rectArea.fTop = rect.fTop;
+	m_rectArea.left = rect.left;
+	m_rectArea.right = rect.right;
+	m_rectArea.bottom = rect.bottom;
+	m_rectArea.top = rect.top;
 	m_TextDrawData.bHasRectArea = true;
 }
-// и так пойдет
+// пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 void CTextDraw::SetText(const char* szText)
 {
 	memset(m_szText, 0, 800);
@@ -307,7 +305,7 @@ void CTextDraw::LoadTexture()
 
 			for (int i = 0; i < (sizeof(texture_samp) / sizeof(char*)); i++)
 			{
-				// если текстура та, что мы добавили в samp.txt
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ samp.txt
 				if (!strcasecmp(texture_samp[i], texturename))
 				{
 					char buf[64];

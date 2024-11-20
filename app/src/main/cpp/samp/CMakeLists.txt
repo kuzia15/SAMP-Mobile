@@ -18,14 +18,20 @@ file(GLOB_RECURSE SOURCES
         ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/*.c*
         ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/**/*.c*
         ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/**/**/*.c*
+        ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/**/**/**/*.c*
+        ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/**/**/**/**/*.c*
+        ${CMAKE_CURRENT_LIST_DIR}/**/**/**/**/**/**/**/**/**/*.c*
         )
 
 # Add include directories
 include_directories(
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/util/
+        ${CMAKE_CURRENT_LIST_DIR}/vendor/armhook
         ${CMAKE_CURRENT_LIST_DIR}/vendor/imgui
         ${CMAKE_CURRENT_LIST_DIR}/vendor/
         ${CMAKE_CURRENT_LIST_DIR}/game/RW/
+        ${CMAKE_CURRENT_LIST_DIR}/game/Core/
 )
 
 # Opus

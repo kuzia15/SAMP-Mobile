@@ -56,12 +56,13 @@ void Playback::Free() noexcept
 void Playback::Tick() noexcept
 {
     if(!Playback::loadStatus) return;
+    CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
 
-    BASS_Set3DPosition(
-        reinterpret_cast<const BASS_3DVECTOR*>(&pGame->GetCamera()->m_matPos->pos), nullptr,
-        reinterpret_cast<const BASS_3DVECTOR*>(&pGame->GetCamera()->m_matPos->at),
-        reinterpret_cast<const BASS_3DVECTOR*>(&pGame->GetCamera()->m_matPos->up)
-    );
+    /*BASS_Set3DPosition(
+        reinterpret_cast<const BASS_3DVECTOR*>(&TheCamera.GetMatrix().m_pos), nullptr,
+        reinterpret_cast<const BASS_3DVECTOR*>(&TheCamera.GetMatrix().m_forward),
+        reinterpret_cast<const BASS_3DVECTOR*>(&TheCamera.GetMatrix().m_up)
+    );*/
 
     BASS_Apply3D();
 }

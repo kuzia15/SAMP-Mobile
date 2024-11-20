@@ -2,7 +2,7 @@
 #include "game.h"
 #include "../net/netgame.h"
 #include "../gui/gui.h"
-#include "../vendor/armhook/armhook.h"
+#include "../vendor/armhook/patch.h"
 
 extern UI* pUI;
 extern CGame* pGame;
@@ -183,9 +183,9 @@ uint32_t(*CPad__MeleeAttackJustDown)(uintptr_t thiz);
 uint32_t CPad__MeleeAttackJustDown_hook(uintptr_t thiz)
 {
 	/*
-		0 - íå áüåì
-		1 - Ïðîñòîé óäàð (ËÊÌ)
-		2 - Ñèëüíûé óäàð (ÏÊÌ + F)
+		0 - ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		1 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½)
+		2 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ + F)
 	*/
 
 	if (*pbyteCurrentPlayer)
@@ -695,58 +695,58 @@ void HookCPad()
 	memset(&LocalPlayerKeys, 0, sizeof(PAD_KEYS));
 
 	// lr/ud (onfoot)
-	ARMHook::installPLTHook(g_libGTASA + 0x671014, (uintptr_t)CPad__GetPedWalkLeftRight_hook, (uintptr_t*)&CPad__GetPedWalkLeftRight);
-	ARMHook::installPLTHook(g_libGTASA + 0x6706D0, (uintptr_t)CPad__GetPedWalkUpDown_hook, (uintptr_t*)&CPad__GetPedWalkUpDown);
+	CHook::InstallPLT(g_libGTASA + 0x671014, (uintptr_t)CPad__GetPedWalkLeftRight_hook, (uintptr_t*)&CPad__GetPedWalkLeftRight);
+	CHook::InstallPLT(g_libGTASA + 0x6706D0, (uintptr_t)CPad__GetPedWalkUpDown_hook, (uintptr_t*)&CPad__GetPedWalkUpDown);
 
 	// sprint/jump stuff
-	ARMHook::installPLTHook(g_libGTASA + 0x670CE0, (uintptr_t)CPad__GetSprint_hook, (uintptr_t*)&CPad__GetSprint);
-	ARMHook::installPLTHook(g_libGTASA + 0x670274, (uintptr_t)CPad__JumpJustDown_hook, (uintptr_t*)& CPad__JumpJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x66FAE0, (uintptr_t)CPad__GetJump_hook, (uintptr_t*)& CPad__GetJump);
-	ARMHook::installPLTHook(g_libGTASA + 0x674A0C, (uintptr_t)CPad__GetAutoClimb_hook, (uintptr_t*)& CPad__GetAutoClimb);
-	ARMHook::installPLTHook(g_libGTASA + 0x6718D4, (uintptr_t)CPad__GetAbortClimb_hook, (uintptr_t*)& CPad__GetAbortClimb);
+	CHook::InstallPLT(g_libGTASA + 0x670CE0, (uintptr_t)CPad__GetSprint_hook, (uintptr_t*)&CPad__GetSprint);
+	CHook::InstallPLT(g_libGTASA + 0x670274, (uintptr_t)CPad__JumpJustDown_hook, (uintptr_t*)& CPad__JumpJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x66FAE0, (uintptr_t)CPad__GetJump_hook, (uintptr_t*)& CPad__GetJump);
+	CHook::InstallPLT(g_libGTASA + 0x674A0C, (uintptr_t)CPad__GetAutoClimb_hook, (uintptr_t*)& CPad__GetAutoClimb);
+	CHook::InstallPLT(g_libGTASA + 0x6718D4, (uintptr_t)CPad__GetAbortClimb_hook, (uintptr_t*)& CPad__GetAbortClimb);
 
 	// swimm
-	ARMHook::installPLTHook(g_libGTASA + 0x672FD0, (uintptr_t)CPad__DiveJustDown_hook, (uintptr_t*)& CPad__DiveJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x674030, (uintptr_t)CPad__SwimJumpJustDown_hook, (uintptr_t*)& CPad__SwimJumpJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x672FD0, (uintptr_t)CPad__DiveJustDown_hook, (uintptr_t*)& CPad__DiveJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x674030, (uintptr_t)CPad__SwimJumpJustDown_hook, (uintptr_t*)& CPad__SwimJumpJustDown);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x67127C, (uintptr_t)CPad__MeleeAttackJustDown_hook, (uintptr_t*)& CPad__MeleeAttackJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x6727CC, (uintptr_t)CPad__DuckJustDown_hook, (uintptr_t*)& CPad__DuckJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x66FAD8, (uintptr_t)CPad__GetBlock_hook, (uintptr_t*)& CPad__GetBlock);
+	CHook::InstallPLT(g_libGTASA + 0x67127C, (uintptr_t)CPad__MeleeAttackJustDown_hook, (uintptr_t*)& CPad__MeleeAttackJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x6727CC, (uintptr_t)CPad__DuckJustDown_hook, (uintptr_t*)& CPad__DuckJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x66FAD8, (uintptr_t)CPad__GetBlock_hook, (uintptr_t*)& CPad__GetBlock);
 
 	// steering lr/ud (incar)
-	ARMHook::installPLTHook(g_libGTASA + 0x673D84, (uintptr_t)CPad__GetSteeringLeftRight_hook, (uintptr_t*)& CPad__GetSteeringLeftRight);
-	ARMHook::installPLTHook(g_libGTASA + 0x672C14, (uintptr_t)CPad__GetSteeringUpDown_hook, (uintptr_t*)& CPad__GetSteeringUpDown);
+	CHook::InstallPLT(g_libGTASA + 0x673D84, (uintptr_t)CPad__GetSteeringLeftRight_hook, (uintptr_t*)& CPad__GetSteeringLeftRight);
+	CHook::InstallPLT(g_libGTASA + 0x672C14, (uintptr_t)CPad__GetSteeringUpDown_hook, (uintptr_t*)& CPad__GetSteeringUpDown);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x67482C, (uintptr_t)CPad__GetAccelerate_hook, (uintptr_t*)& CPad__GetAccelerate);
-	ARMHook::installPLTHook(g_libGTASA + 0x66EBE0, (uintptr_t)CPad__GetBrake_hook, (uintptr_t*)& CPad__GetBrake);
-	ARMHook::installPLTHook(g_libGTASA + 0x670514, (uintptr_t)CPad__GetHandBrake_hook, (uintptr_t*)& CPad__GetHandBrake);
-	ARMHook::installPLTHook(g_libGTASA + 0x673010, (uintptr_t)CPad__GetHorn_hook, (uintptr_t*)& CPad__GetHorn);
-    ARMHook::installMethodHook(g_libGTASA + 0x674B54, (uintptr_t)CPad__GetHorn_hook);
+	CHook::InstallPLT(g_libGTASA + 0x67482C, (uintptr_t)CPad__GetAccelerate_hook, (uintptr_t*)& CPad__GetAccelerate);
+	CHook::InstallPLT(g_libGTASA + 0x66EBE0, (uintptr_t)CPad__GetBrake_hook, (uintptr_t*)& CPad__GetBrake);
+	CHook::InstallPLT(g_libGTASA + 0x670514, (uintptr_t)CPad__GetHandBrake_hook, (uintptr_t*)& CPad__GetHandBrake);
+	CHook::InstallPLT(g_libGTASA + 0x673010, (uintptr_t)CPad__GetHorn_hook, (uintptr_t*)& CPad__GetHorn);
+    CHook::InstallPLT(g_libGTASA + 0x674B54, (uintptr_t)CPad__GetHorn_hook);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x66EB90, (uintptr_t)CPad__ExitVehicleJustDown_hook, (uintptr_t*)& CPad__ExitVehicleJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x672440, (uintptr_t)CPad__GetExitVehicle_hook, (uintptr_t*)&CPad__GetExitVehicle);
+	CHook::InstallPLT(g_libGTASA + 0x66EB90, (uintptr_t)CPad__ExitVehicleJustDown_hook, (uintptr_t*)& CPad__ExitVehicleJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x672440, (uintptr_t)CPad__GetExitVehicle_hook, (uintptr_t*)&CPad__GetExitVehicle);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x675394, (uintptr_t)CPad__GetDisplayVitalStats_hook, (uintptr_t*)&CPad__GetDisplayVitalStats);
-	//¡´¤éÒ§àÁ×èÍÁÍ§ËÑ¹ËÅÑ§
-	ARMHook::installPLTHook(g_libGTASA + 0x67063C, (uintptr_t)CPad__GetLookBehindForPed_hook, (uintptr_t*)&CPad__GetLookBehindForPed);
+	CHook::InstallPLT(g_libGTASA + 0x675394, (uintptr_t)CPad__GetDisplayVitalStats_hook, (uintptr_t*)&CPad__GetDisplayVitalStats);
+	//ï¿½ï¿½ï¿½ï¿½Ò§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í§ï¿½Ñ¹ï¿½ï¿½Ñ§
+	CHook::InstallPLT(g_libGTASA + 0x67063C, (uintptr_t)CPad__GetLookBehindForPed_hook, (uintptr_t*)&CPad__GetLookBehindForPed);
 
 	// WEAPON
-	ARMHook::installPLTHook(g_libGTASA + 0x675260, (uintptr_t)CPad__GetEnterTargeting_hook, (uintptr_t*)&CPad__GetEnterTargeting);
-	ARMHook::installPLTHook(g_libGTASA + 0x672E8C, (uintptr_t)CPad__GetWeapon_hook, (uintptr_t*)&CPad__GetWeapon);
-	ARMHook::installPLTHook(g_libGTASA + 0x6708F0, (uintptr_t)CCamera_IsTargetingActive_hook, (uintptr_t*)&CCamera_IsTargetingActive);
-	ARMHook::installPLTHook(g_libGTASA + 0x66FA0C, (uintptr_t)CPad__CycleWeaponRightJustDown_hook, (uintptr_t*)&CPad__CycleWeaponRightJustDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x66F304, (uintptr_t)CPad__CycleWeaponLeftJustDown_hook, (uintptr_t*)&CPad__CycleWeaponLeftJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x675260, (uintptr_t)CPad__GetEnterTargeting_hook, (uintptr_t*)&CPad__GetEnterTargeting);
+	CHook::InstallPLT(g_libGTASA + 0x672E8C, (uintptr_t)CPad__GetWeapon_hook, (uintptr_t*)&CPad__GetWeapon);
+	CHook::InstallPLT(g_libGTASA + 0x6708F0, (uintptr_t)CCamera_IsTargetingActive_hook, (uintptr_t*)&CCamera_IsTargetingActive);
+	CHook::InstallPLT(g_libGTASA + 0x66FA0C, (uintptr_t)CPad__CycleWeaponRightJustDown_hook, (uintptr_t*)&CPad__CycleWeaponRightJustDown);
+	CHook::InstallPLT(g_libGTASA + 0x66F304, (uintptr_t)CPad__CycleWeaponLeftJustDown_hook, (uintptr_t*)&CPad__CycleWeaponLeftJustDown);
 
     // nitro
-    ARMHook::installPLTHook(g_libGTASA + 0x66FAF8, (uintptr_t)CPad__GetNitroFired_hook, (uintptr_t*)&CPad__GetNitroFired);
+    CHook::InstallPLT(g_libGTASA + 0x66FAF8, (uintptr_t)CPad__GetNitroFired_hook, (uintptr_t*)&CPad__GetNitroFired);
 
-    ARMHook::installPLTHook(g_libGTASA + 0x67324C, (uintptr_t)CPad__GetLookLeft_hook, (uintptr_t*)&CPad__GetLookLeft);
-    ARMHook::installPLTHook(g_libGTASA + 0x67205C, (uintptr_t)CPad__GetLookRight_hook, (uintptr_t*)&CPad__GetLookRight);
+    CHook::InstallPLT(g_libGTASA + 0x67324C, (uintptr_t)CPad__GetLookLeft_hook, (uintptr_t*)&CPad__GetLookLeft);
+    CHook::InstallPLT(g_libGTASA + 0x67205C, (uintptr_t)CPad__GetLookRight_hook, (uintptr_t*)&CPad__GetLookRight);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x674418, (uintptr_t)CPad__GetCarGunLeftRight_hook,(uintptr_t*)&CPad__GetCarGunLeftRight);
-	ARMHook::installPLTHook(g_libGTASA + 0x674240, (uintptr_t)CPad__GetCarGunUpDown_hook, (uintptr_t*)&CPad__GetCarGunUpDown);
-	ARMHook::installPLTHook(g_libGTASA + 0x675ABC, (uintptr_t)CPad__GetCarGunFired_hook, (uintptr_t*)&CPad__GetCarGunFired);
+	CHook::InstallPLT(g_libGTASA + 0x674418, (uintptr_t)CPad__GetCarGunLeftRight_hook,(uintptr_t*)&CPad__GetCarGunLeftRight);
+	CHook::InstallPLT(g_libGTASA + 0x674240, (uintptr_t)CPad__GetCarGunUpDown_hook, (uintptr_t*)&CPad__GetCarGunUpDown);
+	CHook::InstallPLT(g_libGTASA + 0x675ABC, (uintptr_t)CPad__GetCarGunFired_hook, (uintptr_t*)&CPad__GetCarGunFired);
 
-	ARMHook::installPLTHook(g_libGTASA + 0x671CDC, (uintptr_t)CPad__GetTurretLeft_hook, (uintptr_t*)&CPad__GetTurretLeft);
-	ARMHook::installPLTHook(g_libGTASA + 0x672894, (uintptr_t)CPad__GetTurretRight_hook, (uintptr_t*)&CPad__GetTurretRight);
+	CHook::InstallPLT(g_libGTASA + 0x671CDC, (uintptr_t)CPad__GetTurretLeft_hook, (uintptr_t*)&CPad__GetTurretLeft);
+	CHook::InstallPLT(g_libGTASA + 0x672894, (uintptr_t)CPad__GetTurretRight_hook, (uintptr_t*)&CPad__GetTurretRight);
 }

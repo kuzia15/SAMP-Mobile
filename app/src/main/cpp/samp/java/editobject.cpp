@@ -79,23 +79,23 @@ Java_com_samp_mobile_game_ui_AttachEdit_Exit(JNIEnv *env, jobject thiz) {
             pJavaWrapper->HideEditObject();
         }
 
-        MATRIX4X4 matrix4X4;
+        RwMatrix matrix4X4;
         pObject->GetMatrix(&matrix4X4);
         auto pos = matrix4X4.pos;
-        VECTOR rot;
-        pObject->GetRotation(&rot.X, &rot.Y, &rot.Z);
+        CVector rot;
+        pObject->GetRotation(&rot.x, &rot.y, &rot.z);
 
         RakNet::BitStream bsSend;
 
         bsSend.Write((bool)     CObjectEditor::bPlayerObj);
         bsSend.Write((uint16_t) CObjectEditor::iEditedId);
         bsSend.Write((uint32_t) 0);
-        bsSend.Write((float)    pos.X);
-        bsSend.Write((float)    pos.Y);
-        bsSend.Write((float)    pos.Z);
-        bsSend.Write((float)    rot.X);
-        bsSend.Write((float)    rot.Y);
-        bsSend.Write((float)    rot.Z);
+        bsSend.Write((float)    pos.x);
+        bsSend.Write((float)    pos.y);
+        bsSend.Write((float)    pos.z);
+        bsSend.Write((float)    rot.x);
+        bsSend.Write((float)    rot.y);
+        bsSend.Write((float)    rot.z);
 
         pNetGame->GetRakClient()->RPC(&RPC_EditObject, &bsSend, HIGH_PRIORITY, RELIABLE, 0, false, UNASSIGNED_NETWORK_ID, nullptr);
     }
@@ -104,7 +104,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_Exit(JNIEnv *env, jobject thiz) {
     pJavaWrapper->HideEditObject();
 }
 
-void CObjectEditor::SendOnEditAttach(int response, int index, int modelid, int bone, VECTOR offset, VECTOR rot, VECTOR scale){
+void CObjectEditor::SendOnEditAttach(int response, int index, int modelid, int bone, CVector offset, CVector rot, CVector scale){
 
     RakNet::BitStream bsSend;
 
@@ -152,15 +152,15 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.Z += value;
+            pPlayer->m_attachedObjectInfo[slot].vecOffset.z += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            MATRIX4X4 matrix;
+            RwMatrix matrix;
             pObject->GetMatrix(&matrix);
             auto pos = matrix.pos;
-            pos.X += value;
+            pos.x += value;
 
-            pObject->TeleportTo(pos.X, pos.Y, pos.Z);
+            pObject->TeleportTo(pos.x, pos.y, pos.z);
             pObject->UpdateRwMatrixAndFrame();
         }
     }
@@ -169,31 +169,31 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.X += value;
+            pPlayer->m_attachedObjectInfo[slot].vecOffset.x += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            MATRIX4X4 matrix;
+            RwMatrix matrix;
             pObject->GetMatrix(&matrix);
             auto pos = matrix.pos;
-            pos.Z += value;
+            pos.z += value;
 
-            pObject->TeleportTo(pos.X, pos.Y, pos.Z);
+            pObject->TeleportTo(pos.x, pos.y, pos.z);
             pObject->UpdateRwMatrixAndFrame();
         }
     }
-    if(button_type == 2) { // Y
+    if(button_type == 2) { // y
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.Y += value;
+            pPlayer->m_attachedObjectInfo[slot].vecOffset.y += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            MATRIX4X4 matrix;
+            RwMatrix matrix;
             pObject->GetMatrix(&matrix);
             auto pos = matrix.pos;
-            pos.Y += value;
+            pos.y += value;
 
-            pObject->TeleportTo(pos.X, pos.Y, pos.Z);
+            pObject->TeleportTo(pos.x, pos.y, pos.z);
             pObject->UpdateRwMatrixAndFrame();
         }
     }
@@ -201,16 +201,16 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecScale.X += value;
-            pPlayer->m_attachedObjectInfo[slot].vecScale.Y += value;
-            pPlayer->m_attachedObjectInfo[slot].vecScale.Z += value;
+            pPlayer->m_attachedObjectInfo[slot].vecScale.x += value;
+            pPlayer->m_attachedObjectInfo[slot].vecScale.y += value;
+            pPlayer->m_attachedObjectInfo[slot].vecScale.z += value;
         }
     }
     if(button_type == 4) { // rot x
         float value = (button_id)?(0.1f):(-0.1f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.X += value;
+            pPlayer->m_attachedObjectInfo[slot].vecRot.x += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             float x, y, z;
@@ -225,7 +225,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.1f):(-0.1f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.Y += value;
+            pPlayer->m_attachedObjectInfo[slot].vecRot.y += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             float x, y, z;
@@ -240,7 +240,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(1.0f):(-1.0f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.Z += value;
+            pPlayer->m_attachedObjectInfo[slot].vecRot.z += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
 
@@ -270,23 +270,23 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         if (CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             auto pObject = pNetGame->GetObjectPool()->GetAt(CObjectEditor::iEditedId);
 
-            MATRIX4X4 matrix4X4;
+            RwMatrix matrix4X4;
             pObject->GetMatrix(&matrix4X4);
             auto pos = matrix4X4.pos;
-            VECTOR rot;
-            pObject->GetRotation(&rot.X, &rot.Y, &rot.Z);
+            CVector rot;
+            pObject->GetRotation(&rot.x, &rot.y, &rot.z);
 
             RakNet::BitStream bsSend;
 
             bsSend.Write((bool) CObjectEditor::bPlayerObj);
             bsSend.Write((uint16_t) CObjectEditor::iEditedId);
             bsSend.Write((uint32_t) 2);
-            bsSend.Write((float) pos.X);
-            bsSend.Write((float) pos.Y);
-            bsSend.Write((float) pos.Z);
-            bsSend.Write((float) rot.X);
-            bsSend.Write((float) rot.Y);
-            bsSend.Write((float) rot.Z);
+            bsSend.Write((float) pos.x);
+            bsSend.Write((float) pos.y);
+            bsSend.Write((float) pos.z);
+            bsSend.Write((float) rot.x);
+            bsSend.Write((float) rot.y);
+            bsSend.Write((float) rot.z);
 
             pNetGame->GetRakClient()->RPC(&RPC_EditObject, &bsSend, HIGH_PRIORITY, RELIABLE, 0,
                                           false, UNASSIGNED_NETWORK_ID, nullptr);
@@ -316,23 +316,23 @@ Java_com_samp_mobile_game_ui_AttachEdit_Save(JNIEnv *env, jobject thiz) {
         if(!pObject)
             goto exit;
 
-        MATRIX4X4 matrix4X4;
+        RwMatrix matrix4X4;
         pObject->GetMatrix(&matrix4X4);
         auto pos = matrix4X4.pos;
-        VECTOR rot;
-        pObject->GetRotation(&rot.X, &rot.Y, &rot.Z);
+        CVector rot;
+        pObject->GetRotation(&rot.x, &rot.y, &rot.z);
 
         RakNet::BitStream bsSend;
 
         bsSend.Write((bool)     CObjectEditor::bPlayerObj);
         bsSend.Write((uint16_t) CObjectEditor::iEditedId);
         bsSend.Write((uint32_t) CObjectEditor::eResponse::EDIT_RESPONSE_FINAL);
-        bsSend.Write((float)    pos.X);
-        bsSend.Write((float)    pos.Y);
-        bsSend.Write((float)    pos.Z);
-        bsSend.Write((float)    rot.X);
-        bsSend.Write((float)    rot.Y);
-        bsSend.Write((float)    rot.Z);
+        bsSend.Write((float)    pos.x);
+        bsSend.Write((float)    pos.y);
+        bsSend.Write((float)    pos.z);
+        bsSend.Write((float)    rot.x);
+        bsSend.Write((float)    rot.y);
+        bsSend.Write((float)    rot.z);
 
         pNetGame->GetRakClient()->RPC(&RPC_EditObject, &bsSend, HIGH_PRIORITY, RELIABLE, 0, false, UNASSIGNED_NETWORK_ID, nullptr);
     }

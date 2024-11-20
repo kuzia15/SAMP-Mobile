@@ -1981,43 +1981,6 @@ uintptr_t GetModelRWObject(uint uiModel)
 	uintptr_t modelInfo = GetModelInfoByID(uiModel);
 	return *(uintptr_t*)(modelInfo + 0x34); /* pRWObject */
 }
-
-uintptr_t GetTexture(const char* texname)
-{
-	uintptr_t texture = ((uintptr_t(*)(const char*))(g_libGTASA + 0x1E9C64 + 1))(texname);
-	if (texture == 0) return 0;
-	int count = *(int*)(texture + 0x54);
-	count++;
-	*(int*)(texture + 0x54) = count;
-	return texture;
-}
-
-uintptr_t LoadTextureFromDB(const char* dbname, const char* texname)
-{
-	uintptr_t texture = 0x00;
-
-	// TextureDatabaseRuntime::GetDatabase(dbname)
-	uintptr_t db_handle = ((uintptr_t(*)(const char*))(g_libGTASA + /*0x1BF530*/0x1EAC8C + 1))(dbname);
-
-	if (db_handle == 0x00) {
-		LOGW("TextureDatabase %s not found!", dbname);
-		goto ret;
-	}
-
-	// TextureDatabaseRuntime::Register(db)
-	((void(*)(uintptr_t))(g_libGTASA + /*0x1BE898*/0x1E9BC8 + 1))(db_handle);
-
-	texture = GetTexture(texname);
-	if (texture == 0x00) {
-		//LOGW("Texture (%s) not found in database (%s)", texname, dbname);
-	}
-
-	// TextureDatabaseRuntime::Unregister(db)
-	((void(*)(uintptr_t))(g_libGTASA + /*0x1BE938*/0x1E9C80 + 1))(db_handle);
-
-ret:
-	return texture;
-}
 /*
 uintptr_t LoadTexture(const char* texname)
 {
@@ -2042,7 +2005,7 @@ uintptr_t LoadTexture(const char* texname)
 
     for (int i = 0; i < sizeof(texdb) / sizeof(const char*); i++)
     {
-        uintptr_t texture = LoadTextureFromDB(texdb[i], texname);
+        uintptr_t texture = (uintptr_t)CUtil::LoadTextureFromDB(texdb[i], texname);
         if (texture != 0) {
             //Log("Texture: %s loaded from %s", texname, texdb[i]);
             return texture;
@@ -2055,7 +2018,7 @@ uintptr_t LoadTexture(const char* texname)
 
 // 0.3.7 
 #include "sprite2d.h"
-#include "armhook/armhook.h"
+#include "armhook/patch.h"
 #include <algorithm>
 
 RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename)
@@ -2064,10 +2027,10 @@ RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename)
     if (strncmp(txdname, "none", 5u))
     {
         uintptr_t v10 = ((int (*)(const char*))(g_libGTASA + 0x5D3E60+1))(txdname);
-        CallFunction<void>(g_libGTASA + 0x5D4184 + 1);
-        CallFunction<void>(g_libGTASA + 0x5D4184 + 1, v10, 0);
-        tex = CallFunction<RwTexture*>(g_libGTASA + 0x1DBABC + 1, texturename, 0);
-        CallFunction<void>(g_libGTASA + 0x5D41C4 + 1);
+        CHook::CallFunction<void>(g_libGTASA + 0x5D4184 + 1);
+        CHook::CallFunction<void>(g_libGTASA + 0x5D4184 + 1, v10, 0);
+        tex = CHook::CallFunction<RwTexture*>(g_libGTASA + 0x1DBABC + 1, texturename, 0);
+        CHook::CallFunction<void>(g_libGTASA + 0x5D41C4 + 1);
     }
 
     if(!tex) tex = (RwTexture*)LoadTexture(std::string(std::string(texturename) + "_" + txdname).c_str());
@@ -2088,7 +2051,7 @@ RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename)
 
     if(!tex)
     {
-        tex = (RwTexture*)LoadTextureFromDB(txdname, texturename);
+        tex = (RwTexture*)CUtil::LoadTextureFromDB(txdname, texturename);
     }
 
     return tex;
@@ -2161,29 +2124,29 @@ float subAngle(float a1, float a2)
 
 void HideEntity(ENTITY_TYPE *pEntity)
 {
-    pEntity->vPos.Z -= 2000.0;
+    pEntity->vPos.z -= 2000.0;
 
-    MATRIX4X4 *matrix = pEntity->mat;
-    if(matrix) matrix->pos.Y -= 2000.0;
+    RwMatrix *matrix = pEntity->mat;
+    if(matrix) matrix->pos.y -= 2000.0;
 }
 
 /* =========== RemoveBuildings ============= */
 int iBuildingToRemoveCount;
 REMOVEBUILDING_DATA BuildingToRemove[1000];
 
-void RemoveBuilding(uint32_t dwModel, VECTOR vecPos, float fRange)
+void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange)
 {
     RemoveObjectInRange(dwModel, vecPos, fRange);
 
     BuildingToRemove[iBuildingToRemoveCount].dwModel = dwModel;
-    BuildingToRemove[iBuildingToRemoveCount].vecPos.X = vecPos.X;
-    BuildingToRemove[iBuildingToRemoveCount].vecPos.Y = vecPos.Y;
-    BuildingToRemove[iBuildingToRemoveCount].vecPos.Z = vecPos.Z;
+    BuildingToRemove[iBuildingToRemoveCount].vecPos.x = vecPos.x;
+    BuildingToRemove[iBuildingToRemoveCount].vecPos.y = vecPos.y;
+    BuildingToRemove[iBuildingToRemoveCount].vecPos.z = vecPos.z;
     BuildingToRemove[iBuildingToRemoveCount].fRange = fRange;
     iBuildingToRemoveCount++;
 }
 
-void RemoveObjectInRange(int iModel, VECTOR vecPos, float fRange)
+void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
 {
     RemoveOccludersInRadius(vecPos, 500.0);
 
@@ -2196,12 +2159,12 @@ void RemoveObjectInRange(int iModel, VECTOR vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
-                VECTOR vecPool = VECTOR { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(VECTOR));
+                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                MATRIX4X4 *matrix = pEntity->mat;
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(VECTOR));
+                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
 
                 float fDistance = GetDistance(vecPool, vecPos);
@@ -2219,12 +2182,12 @@ void RemoveObjectInRange(int iModel, VECTOR vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
-                VECTOR vecPool = VECTOR { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(VECTOR));
+                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                MATRIX4X4 *matrix = pEntity->mat;
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(VECTOR));
+                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
 
                 float fDistance = GetDistance(vecPool, vecPos);
@@ -2242,12 +2205,12 @@ void RemoveObjectInRange(int iModel, VECTOR vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
-                VECTOR vecPool = VECTOR { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(VECTOR));
+                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                MATRIX4X4 *matrix = pEntity->mat;
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(VECTOR));
+                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
 
                 float fDistance = GetDistance(vecPool, vecPos);
@@ -2271,7 +2234,7 @@ struct stOccluders {
     unsigned short nFlags;
 };
 
-void RemoveOccludersInRadius(VECTOR vecPos, float fRadius)
+void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
 {
     int iOccludersOnMap = *(uint32_t *)(g_libGTASA+0xA45790);
     if(iOccludersOnMap >= 1)
@@ -2281,10 +2244,10 @@ void RemoveOccludersInRadius(VECTOR vecPos, float fRadius)
         {
             stOccluders *aOccluders = (stOccluders*)((i * 18) + dwOccluders);
 
-            VECTOR vecOccluderPos;
-            vecOccluderPos.X = (float)aOccluders->fMidX * 0.25;
-            vecOccluderPos.Y = (float)aOccluders->fMidY * 0.25;
-            vecOccluderPos.Z = (float)aOccluders->fMidZ * 0.25;
+            CVector vecOccluderPos;
+            vecOccluderPos.x = (float)aOccluders->fMidX * 0.25;
+            vecOccluderPos.y = (float)aOccluders->fMidY * 0.25;
+            vecOccluderPos.z = (float)aOccluders->fMidZ * 0.25;
 
             float fDistance = GetDistance(vecOccluderPos, vecPos);
             if(fDistance <= fRadius)
@@ -2348,43 +2311,43 @@ void DeleteRwTexture(uintptr_t texture)
 	((void(*)(uintptr_t))(g_libGTASA + 0x1DB764 + 1))(texture);
 }
 
-void DrawRaster(RwRaster* raster, RECT const& rect)
+void DrawRaster(RwRaster* raster, CRect const& rect)
 {
 	uint32_t white = 0xFFFFFFFF;
 	//CSprite2d::SetVertices(rect, color::White, color::White, color::White, color::White);
-	((void(*)(RwRaster*, const RECT&, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5C9014 + 1))(raster, rect, white, white, white, white);
+	((void(*)(RwRaster*, const CRect&, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5C9014 + 1))(raster, rect, white, white, white, white);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, raster);
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)true);
 	RwIm2DRenderPrimitive(rwPRIMTYPETRIFAN, (RwIm2DVertex*)(g_libGTASA + 0xA7C264), 4);
 }
 
-void DrawTexture(uintptr_t texture, RECT* rect, uint32_t dwColor)
+void DrawTexture(uintptr_t texture, CRect* rect, uint32_t dwColor)
 {
 	if (texture)
 	{
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 		// CSprite2d::Draw(CRect const&, CRGBA const&)
-		((void(*)(uintptr_t, RECT*, uint32_t*))(g_libGTASA + 0x5C9120 + 1))(texture, rect, &dwColor);
+		((void(*)(uintptr_t, CRect*, uint32_t*))(g_libGTASA + 0x5C9120 + 1))(texture, rect, &dwColor);
 	}
 }
 
-void DrawTextureUV(uintptr_t texture, RECT* rect, uint32_t dwColor, float *uv)
+void DrawTextureUV(uintptr_t texture, CRect* rect, uint32_t dwColor, float *uv)
 {
 	if (texture)
 	{
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 		// CSprite2d::Draw(CRect  const& posn, CRGBA  const& color, float u1, float v1, float u2, float v2, float u3, float v3, float u4, float v4);
-		((void(*)(uintptr_t, RECT*, uint32_t*, float, float, float, float, float, float, float, float))
+		((void(*)(uintptr_t, CRect*, uint32_t*, float, float, float, float, float, float, float, float))
 			(g_libGTASA + 0x5C95C0 + 1))(texture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
 	}
 }
 
-float GetDistance(VECTOR vec1, VECTOR vec2)
+float GetDistance(RwV3d vec1, RwV3d vec2)
 {
 	return sqrt(
-		(vec1.Z - vec2.Z) * (vec1.Z - vec2.Z) +
-		(vec1.Y - vec2.Y) * (vec1.Y - vec2.Y) +
-		(vec1.X - vec2.X) * (vec1.X - vec2.X));
+		(vec1.z - vec2.z) * (vec1.z - vec2.z) +
+		(vec1.y - vec2.y) * (vec1.y - vec2.y) +
+		(vec1.x - vec2.x) * (vec1.x - vec2.x));
 }
 
 PED_TYPE* dwPlayerPedPtrs[PLAYER_PED_SLOTS];
@@ -2542,10 +2505,10 @@ int GameGetWeaponModelIDFromWeaponID(int iWeaponID)
 	return -1;
 }
 
-bool IsPointInRect(float x, float y, RECT* rect)
+bool IsPointInRect(float x, float y, CRect* rect)
 {
-	if (x >= rect->fLeft && x <= rect->fRight &&
-		y >= rect->fTop && y <= rect->fBottom)
+	if (x >= rect->left && x <= rect->right &&
+		y >= rect->top && y <= rect->bottom)
 		return true;
 
 	return false;
@@ -2598,7 +2561,7 @@ float GetModelColSphereRadius(int iModel)
 }
 
 
-void GetModelColSphereVecCenter(int iModel, VECTOR* vec)
+void GetModelColSphereVecCenter(int iModel, RwV3d* vec)
 {
 	uintptr_t modelInfo = GetModelInfoByID(iModel);
 
@@ -2606,11 +2569,11 @@ void GetModelColSphereVecCenter(int iModel, VECTOR* vec)
 	{
 		uintptr_t colModel = *(uintptr_t*)(modelInfo + 0x2C);
 		if (colModel != 0) {
-			VECTOR* v = (VECTOR*)(colModel + 0x18);
+            RwV3d* v = (RwV3d*)(colModel + 0x18);
 
-			vec->X = v->X;
-			vec->Y = v->Y;
-			vec->Z = v->Z;
+			vec->x = v->x;
+			vec->y = v->y;
+			vec->z = v->z;
 		}
 	}
 }
@@ -2666,38 +2629,38 @@ void GameResetStats()
 }
 
 // 0.3.7
-void ProjectMatrix(VECTOR* vecOut, MATRIX4X4* mat, VECTOR* vecPos)
+void ProjectMatrix(RwV3d* vecOut, RwMatrix* mat, RwV3d* vecPos)
 {
-	vecOut->X =	mat->at.X * vecPos->Z + mat->up.X * vecPos->Y + mat->right.X * vecPos->X + mat->pos.X;
-	vecOut->Y = mat->at.Y * vecPos->Z + mat->up.Y * vecPos->Y + mat->right.Y * vecPos->X + mat->pos.Y;
-	vecOut->Z = mat->at.Z * vecPos->Z + mat->up.Z * vecPos->Y + mat->right.Z * vecPos->X + mat->pos.Z;
+	vecOut->x =	mat->at.x * vecPos->z + mat->up.x * vecPos->y + mat->right.x * vecPos->x + mat->pos.x;
+	vecOut->y = mat->at.y * vecPos->z + mat->up.y * vecPos->y + mat->right.y * vecPos->x + mat->pos.y;
+	vecOut->z = mat->at.z * vecPos->z + mat->up.z * vecPos->y + mat->right.z * vecPos->x + mat->pos.z;
 }
 
-static VECTOR _axis[3] = {
+static CVector _axis[3] = {
 		{1.0f, 0.0f, 0.0f},
 		{0.0f, 1.0f, 0.0f},
 		{0.0f, 0.0f, 1.0f}
 };
 
 // 0.3.7
-void RwMatrixRotate(MATRIX4X4* mat, int axis, float angle)
+void RwMatrixRotate(RwMatrix* mat, int axis, float angle)
 {
-	((void (*) (MATRIX4X4*, VECTOR*, float, int))(g_libGTASA + 0x1E3974 + 1))(mat, &_axis[axis], angle, 1);
+	((void (*) (RwMatrix*, RwV3d*, float, int))(g_libGTASA + 0x1E3974 + 1))(mat, &_axis[axis], angle, 1);
 }
 // 0.3.7
-void RwMatrixScale(MATRIX4X4* matrix, VECTOR* scale)
+void RwMatrixScale(RwMatrix* matrix, RwV3d* scale)
 {
-	matrix->right.X *= scale->X;
-	matrix->right.Y *= scale->X;
-	matrix->right.Z *= scale->X;
+	matrix->right.x *= scale->x;
+	matrix->right.y *= scale->x;
+	matrix->right.z *= scale->x;
 
-	matrix->up.X *= scale->Y;
-	matrix->up.Y *= scale->Y;
-	matrix->up.Z *= scale->Y;
+	matrix->up.x *= scale->y;
+	matrix->up.y *= scale->y;
+	matrix->up.z *= scale->y;
 
-	matrix->at.X *= scale->Z;
-	matrix->at.Y *= scale->Z;
-	matrix->at.Z *= scale->Z;
+	matrix->at.x *= scale->z;
+	matrix->at.y *= scale->z;
+	matrix->at.z *= scale->z;
 
 	matrix->flags &= 0xFFFDFFFC;
 }
@@ -2707,16 +2670,16 @@ const char* getGameDataFolderDirectory()
 	return (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
 }
 // 0.3.7
-void RwFrameTranslate(uintptr_t parent, VECTOR* vec, int flag)
+void RwFrameTranslate(uintptr_t parent, RwV3d* vec, int flag)
 {
 	// RwFrameTranslate
-	((void(*)(uintptr_t, VECTOR*, int))(g_libGTASA + 0x1D8694 + 1))(parent, vec, flag);
+	((void(*)(uintptr_t, RwV3d*, int))(g_libGTASA + 0x1D8694 + 1))(parent, vec, flag);
 }
 // 0.3.7
 void RwFrameRotate(uintptr_t frame, int axis, float angle)
 {
 	// RwFrameRotate
-	((void(*)(uintptr_t, VECTOR*, float, int))(g_libGTASA + 0x1D87A8 + 1))(frame, &_axis[axis], angle, 1);
+	((void(*)(uintptr_t, RwV3d*, float, int))(g_libGTASA + 0x1D87A8 + 1))(frame, &_axis[axis], angle, 1);
 }
 // 0.3.7
 void RpWorldAddLight(uintptr_t light)
@@ -2737,16 +2700,16 @@ void RpWorldRemoveLight(uintptr_t light)
 	}
 }
 
-int LineOfSight(VECTOR* start, VECTOR* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk)
+int LineOfSight(RwV3d* start, RwV3d* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk)
 {
 	// CWorld::LineOfSight
-	return (( int (*)(VECTOR*, VECTOR*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+0x424B44+1))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
+	return (( int (*)(RwV3d*, RwV3d*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+0x424B44+1))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
 }
 
-void RwMatrixInvert(MATRIX4X4 *matOut, MATRIX4X4 *matIn)
+void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn)
 {
 	// RwMatrixInvert
-	(( void (*)(MATRIX4X4*, MATRIX4X4*))(g_libGTASA+0x1E3A28+1))(matOut, matIn);
+	(( void (*)(RwMatrix*, RwMatrix*))(g_libGTASA+0x1E3A28+1))(matOut, matIn);
 }
 
 int GetTaskTypeFromTask(uint32_t *task)
@@ -2891,58 +2854,58 @@ enum Type {
     TYPEMASK = 3
 };
 
-void mat_invertOrthonormal(MATRIX4X4 *dst, const MATRIX4X4 *src)
+void mat_invertOrthonormal(RwMatrix *dst, const RwMatrix *src)
 {
-    dst->right.X = src->right.X;
-    dst->right.Y = src->up.X;
-    dst->right.Z = src->at.X;
-    dst->up.X = src->right.Y;
-    dst->up.Y = src->up.Y;
-    dst->up.Z = src->at.Y;
-    dst->at.X = src->right.Z;
-    dst->at.Y = src->up.Z;
-    dst->at.Z = src->at.Z;
-    dst->pos.X = -(src->pos.X*src->right.X +
-                   src->pos.Y*src->right.Y +
-                   src->pos.Z*src->right.Z);
-    dst->pos.Y = -(src->pos.X*src->up.X +
-                   src->pos.Y*src->up.Y +
-                   src->pos.Z*src->up.Z);
-    dst->pos.Z = -(src->pos.X*src->at.X +
-                   src->pos.Y*src->at.Y +
-                   src->pos.Z*src->at.Z);
+    dst->right.x = src->right.x;
+    dst->right.y = src->up.x;
+    dst->right.z = src->at.x;
+    dst->up.x = src->right.y;
+    dst->up.y = src->up.y;
+    dst->up.z = src->at.y;
+    dst->at.x = src->right.z;
+    dst->at.y = src->up.z;
+    dst->at.z = src->at.z;
+    dst->pos.x = -(src->pos.x*src->right.x +
+                   src->pos.y*src->right.y +
+                   src->pos.z*src->right.z);
+    dst->pos.y = -(src->pos.x*src->up.x +
+                   src->pos.y*src->up.y +
+                   src->pos.z*src->up.z);
+    dst->pos.z = -(src->pos.x*src->at.x +
+                   src->pos.y*src->at.y +
+                   src->pos.z*src->at.z);
     dst->flags = TYPEORTHONORMAL;
 }
 
-MATRIX4X4* mat_invertGeneral(MATRIX4X4 *dst, const MATRIX4X4 *src)
+RwMatrix* mat_invertGeneral(RwMatrix *dst, const RwMatrix *src)
 {
     float det, invdet;
     // calculate a few cofactors
-    dst->right.X = src->up.Y*src->at.Z - src->up.Z*src->at.Y;
-    dst->right.Y = src->at.Y*src->right.Z - src->at.Z*src->right.Y;
-    dst->right.Z = src->right.Y*src->up.Z - src->right.Z*src->up.Y;
+    dst->right.x = src->up.y*src->at.z - src->up.z*src->at.y;
+    dst->right.y = src->at.y*src->right.z - src->at.z*src->right.y;
+    dst->right.z = src->right.y*src->up.z - src->right.z*src->up.y;
     // get the determinant from that
-    det = src->up.X * dst->right.Y + src->at.X * dst->right.Z + dst->right.X * src->right.X;
+    det = src->up.x * dst->right.y + src->at.x * dst->right.z + dst->right.x * src->right.x;
     invdet = 1.0;
     if(det != 0.0f)
         invdet = 1.0f/det;
-    dst->right.X *= invdet;
-    dst->right.Y *= invdet;
-    dst->right.Z *= invdet;
-    dst->up.X = invdet * (src->up.Z*src->at.X - src->up.X*src->at.Z);
-    dst->up.Y = invdet * (src->at.Z*src->right.X - src->at.X*src->right.Z);
-    dst->up.Z = invdet * (src->right.Z*src->up.X - src->right.X*src->up.Z);
-    dst->at.X = invdet * (src->up.X*src->at.Y - src->up.Y*src->at.X);
-    dst->at.Y = invdet * (src->at.X*src->right.Y - src->at.Y*src->right.X);
-    dst->at.Z = invdet * (src->right.X*src->up.Y - src->right.Y*src->up.X);
-    dst->pos.X = -(src->pos.X*dst->right.X + src->pos.Y*dst->up.X + src->pos.Z*dst->at.X);
-    dst->pos.Y = -(src->pos.X*dst->right.Y + src->pos.Y*dst->up.Y + src->pos.Z*dst->at.Y);
-    dst->pos.Z = -(src->pos.X*dst->right.Z + src->pos.Y*dst->up.Z + src->pos.Z*dst->at.Z);
+    dst->right.x *= invdet;
+    dst->right.y *= invdet;
+    dst->right.z *= invdet;
+    dst->up.x = invdet * (src->up.z*src->at.x - src->up.x*src->at.z);
+    dst->up.y = invdet * (src->at.z*src->right.x - src->at.x*src->right.z);
+    dst->up.z = invdet * (src->right.z*src->up.x - src->right.x*src->up.z);
+    dst->at.x = invdet * (src->up.x*src->at.y - src->up.y*src->at.x);
+    dst->at.y = invdet * (src->at.x*src->right.y - src->at.y*src->right.x);
+    dst->at.z = invdet * (src->right.x*src->up.y - src->right.y*src->up.x);
+    dst->pos.x = -(src->pos.x*dst->right.x + src->pos.y*dst->up.x + src->pos.z*dst->at.x);
+    dst->pos.y = -(src->pos.x*dst->right.y + src->pos.y*dst->up.y + src->pos.z*dst->at.y);
+    dst->pos.z = -(src->pos.x*dst->right.z + src->pos.y*dst->up.z + src->pos.z*dst->at.z);
     dst->flags &= ~IDENTITY;
     return dst;
 }
 
-MATRIX4X4* mat_invert(MATRIX4X4 *dst, const MATRIX4X4 *src)
+RwMatrix* mat_invert(RwMatrix *dst, const RwMatrix *src)
 {
     if(src->flags & IDENTITY)
         *dst = *src;
@@ -3039,4 +3002,9 @@ RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject)
     }
 
     return rpAtomic;
+}
+
+void SetScissorRect(void* pRect)
+{
+    return ((void (*)(void*))(g_libGTASA + (VER_x32 ? 0x002B3EC4 + 1 : 0x373290)))(pRect);
 }

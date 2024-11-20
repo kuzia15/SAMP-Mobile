@@ -5,9 +5,9 @@ class CSnapShotHelper
 public:
 	CSnapShotHelper();
 
-	uintptr_t CreatePedSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom);
-	uintptr_t CreateVehicleSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom, uint32_t wColor1, uint32_t wColor2);
-	uintptr_t CreateObjectSnapShot(int iModel, uint32_t dwColor, VECTOR* vecRot, float fZoom);
+	uintptr_t CreatePedSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom);
+	uintptr_t CreateVehicleSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom, uint32_t wColor1, uint32_t wColor2);
+	uintptr_t CreateObjectSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom);
 
 private:
 	void SetUpScene();

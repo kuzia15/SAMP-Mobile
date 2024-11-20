@@ -1,15 +1,13 @@
 #include "../main.h"
 #include "game.h"
-#include "../vendor/armhook/armhook.h"
+#include "../vendor/armhook/patch.h"
 
 void ApplySAMPPatchesInGame();
 void InitScripting();
 
 bool bUsedPlayerSlots[PLAYER_PED_SLOTS];
 
-extern char* WORLD_PLAYERS;
-
-char* szGameTextMessage = nullptr;
+uint16_t *szGameTextMessage;
 
 inline int FindFirstFreePlayerPedSlot()
 {
@@ -24,7 +22,6 @@ inline int FindFirstFreePlayerPedSlot()
 
 CGame::CGame()
 {
-	m_pGameCamera = new CCamera();
 	m_pGamePlayer = nullptr;
 	m_bCheckpointsEnabled = false;
 	m_bRaceCheckpointsEnabled = false;
@@ -42,18 +39,23 @@ CGame::~CGame()
 
 }
 
+void ApplyGlobalPatches();
+void InstallHooks();
 void CGame::StartGame()
 {
 	FLog("Starting game..");
 
 	// OnNewGameCheck
-	((void (*)(void))(g_libGTASA + 0x2A7270 + 1))();
+    //(( void (*)())(g_libGTASA + (VER_x32 ? 0x002A7270 + 1 : 0x365EA0)))();
 
 	//*(int*)(g_libGTASA + 0xA987C8) = 8;
 	//*(char*)(g_libGTASA + 0x96B514) = 0;
 	//*(short*)(g_libGTASA + 0x6E00C0) = 0;
 	//*(int*)(g_libGTASA + 0x6E0098) = 0;
 	//*(char*)(g_libGTASA + 0x6E00D9) = 0;
+
+    ApplyGlobalPatches();
+    InstallHooks();
 
 	GameAimSyncInit();
 	InitScripting();
@@ -66,54 +68,52 @@ void CGame::Initialize()
 {
 	FLog("CGame initializing..");
 
-	// Menu_SwithOffToGame
-	((void (*)(void))(g_libGTASA + 0x2A9360 + 1))();
-
-	ApplySAMPPatchesInGame();
+#if VER_x32
+    ApplySAMPPatchesInGame();
+#endif
 	GameResetRadarColors();
 
-	szGameTextMessage = (char*)malloc(512 + 1);
+    szGameTextMessage = new uint16_t[1076];
 }
 // 0.3.7
 void CGame::SetMaxStats()
 {
-	// CCheat::VehicleSkillsCheat
-	((void(*)(void))(g_libGTASA + /*0x2BAED0*/0x2FE690 + 1))();
-	// CCheat::WeaponSkillsCheat
-	((void(*)(void))(g_libGTASA + /*0x2BAE68*/0x2FE62A + 1))();
-	// CStats::SetStatValue
-	ARMHook::makeRET(g_libGTASA + /*0x3B9074*/0x41557C);
+    CHook::CallFunction<void>("_ZN6CCheat18VehicleSkillsCheatEv");
+    CHook::CallFunction<void>("_ZN6CCheat17WeaponSkillsCheatEv");
+
+    // CStats::SetStatValue nop
+    CHook::RET("_ZN6CStats12SetStatValueEtf");
 }
 // 0.3.7
 void CGame::ToggleThePassingOfTime(bool bOnOff)
 {
-	if (bOnOff)
+	/*if (bOnOff)
 	{
-		ARMHook::writeMemory(g_libGTASA + /*0x38C154*/0x3E33C8, (uintptr_t)"\xD0\xB5", 2);
+		CHook::WriteMemory(g_libGTASA + 0x3E33C8, (uintptr_t)"\xD0\xB5", 2);
 		this->m_bClockEnabled = true;
 	}
 	else
 	{
-		ARMHook::makeRET(g_libGTASA + /*0x38C154*/0x3E33C8);
+		CHook::RET(g_libGTASA + 0x3E33C8);
 		this->m_bClockEnabled = false;
-	}
+	}*/
 }
 // 0.3.7
 void CGame::EnableClock(bool bEnable)
 {
-	char byteClockData[] = { '%', '0', '2', 'd', ':', '%', '0', '2', 'd', 0 };
-	ARMHook::unprotect(g_libGTASA + /*0x599504*/0x2BD618);
+	/*char byteClockData[] = { '%', '0', '2', 'd', ':', '%', '0', '2', 'd', 0 };
+	CHook::UnFuck(g_libGTASA + 0x2BD618);
 
 	if (bEnable)
 	{
 		ToggleThePassingOfTime(true);
-		memcpy((void*)(g_libGTASA + /*0x599504*/0x2BD618), byteClockData, 10);
+		memcpy((void*)(g_libGTASA + 0x2BD618), byteClockData, 10);
 	}
 	else
 	{
 		ToggleThePassingOfTime(false);
-		memset((void*)(g_libGTASA + /*0x599504*/0x2BD618), 0, 10);
-	}
+		memset((void*)(g_libGTASA + 0x2BD618), 0, 10);
+	}*/
 }
 // 0.3.7
 void CGame::EnableZoneNames(bool bEnable)
@@ -123,15 +123,15 @@ void CGame::EnableZoneNames(bool bEnable)
 // 0.3.7
 void CGame::SetWorldTime(int iHour, int iMinute)
 {
-	*(uint8_t*)(g_libGTASA + /*0x8B18A4*/0x953143) = (uint8_t)iMinute;
-	*(uint8_t*)(g_libGTASA + /*0x8B18A5*/0x953142) = (uint8_t)iHour;
-	ScriptCommand(&set_current_time, iHour, iMinute);
+    *(uint8_t*)(g_libGTASA + (VER_x32 ? 0x00953143 : 0xBBBC1B)) = (uint8_t)iMinute;
+    *(uint8_t*)(g_libGTASA + (VER_x32 ? 0x00953142 : 0xBBBC1A)) = (uint8_t)iHour;
+    ScriptCommand(&set_current_time, iHour, iMinute);
 }
 // 0.3.7
 void CGame::GetWorldTime(int *iHour, int *iMinute)
 {
-	*iMinute = *(uint8_t*)(g_libGTASA + /*0x8B18A4*/0x953143);
-	*iHour = *(uint8_t*)(g_libGTASA + /*0x8B18A5*/0x953142);
+	*iMinute = *(uint8_t*)(g_libGTASA + (VER_x32 ? 0x00953143 : 0xBBBC1B));
+	*iHour = *(uint8_t*)(g_libGTASA + (VER_x32 ? 0x00953142 : 0xBBBC1A));
 }
 // 0.3.7
 void CGame::PreloadObjectsAnims()
@@ -164,26 +164,26 @@ void CGame::PreloadObjectsAnims()
 // 0.3.7
 void CGame::SetWorldWeather(int byteWeatherID)
 {
-	*(unsigned char*)(g_libGTASA + /*0x9DB98E*/0xA7D138) = byteWeatherID;
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005CDF88 + 1 : 0x6F24E8), byteWeatherID);
 
-	if (!m_bClockEnabled)
-	{
-		*(uint16_t*)(g_libGTASA + /*0x9DB990*/0xA7D136) = byteWeatherID;
-		*(uint16_t*)(g_libGTASA + /*0x9DB992*/0xA7D134) = byteWeatherID;
-	}
+    if(!m_bClockEnabled)
+    {
+        *(uint16_t*)(g_libGTASA + (VER_x32 ? 0x00A7D136 : 0xD216F2)) = byteWeatherID;
+        *(uint16_t*)(g_libGTASA + (VER_x32 ? 0x00A7D134 : 0xD216F0)) = byteWeatherID;
+    }
 }
 // 0.3.7
 void CGame::DisplayHUD(bool bDisp)
 {
 	if (bDisp)
 	{
-		*(uint8_t*)(g_libGTASA + /*0x8ED7D9*/0x819D88) = 1;
-		*(uint8_t*)(g_libGTASA + /*0x8EF36B*/0x991FD8) = 0;
+		*(uint8_t*)(g_libGTASA + (VER_x32 ? 0x819D88 : 0x9FF3A8)) = 1;
+		*(uint8_t*)(g_libGTASA + (VER_x32 ? 0x991FD8 : 0xC20DFC)) = 0;
 	}
 	else
 	{
-		*(uint8_t*)(g_libGTASA + /*0x8ED7D9*/0x819D88) = 0;
-		*(uint8_t*)(g_libGTASA + /*0x8EF36B*/0x991FD8) = 1;
+		*(uint8_t*)(g_libGTASA + (VER_x32 ? 0x819D88 : 0x9FF3A8)) = 0;
+		*(uint8_t*)(g_libGTASA + (VER_x32 ? 0x991FD8 : 0xC20DFC)) = 1;
 	}
 }
 // 0.3.7
@@ -196,7 +196,7 @@ uint8_t CGame::GetActiveInterior()
 
 const char* CGame::GetDataDirectory()
 {
-	return (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
+	return ""; // StorageRootBuffer
 }
 // 0.3.7
 void CGame::UpdateCheckpoints()
@@ -207,13 +207,13 @@ void CGame::UpdateCheckpoints()
 		if (pPlayerPed) 
 		{
 			ScriptCommand(&is_actor_near_point_3d, pPlayerPed->m_dwGTAId,
-				m_vecCheckpointPos.X, m_vecCheckpointPos.Y, m_vecCheckpointPos.Z,
-				m_vecCheckpointExtent.X, m_vecCheckpointExtent.Y, m_vecCheckpointExtent.Z, 1);
+				m_vecCheckpointPos.x, m_vecCheckpointPos.y, m_vecCheckpointPos.z,
+				m_vecCheckpointExtent.x, m_vecCheckpointExtent.y, m_vecCheckpointExtent.z, 1);
 
 			if (!m_dwCheckpointMarker)
 			{
-				m_dwCheckpointMarker = CreateRadarMarkerIcon(0, m_vecCheckpointPos.X,
-					m_vecCheckpointPos.Y, m_vecCheckpointPos.Z, 1005, 0);
+				m_dwCheckpointMarker = CreateRadarMarkerIcon(0, m_vecCheckpointPos.x,
+					m_vecCheckpointPos.y, m_vecCheckpointPos.z, 1005, 0);
 			}
 		}
 	}
@@ -230,8 +230,8 @@ void CGame::UpdateCheckpoints()
 		{
 			if (!m_dwRaceCheckpointMarker)
 			{
-				m_dwRaceCheckpointMarker = CreateRadarMarkerIcon(0, m_vecRaceCheckpointPos.X,
-					m_vecRaceCheckpointPos.Y, m_vecRaceCheckpointPos.Z, 1005, 0);
+				m_dwRaceCheckpointMarker = CreateRadarMarkerIcon(0, m_vecRaceCheckpointPos.x,
+					m_vecRaceCheckpointPos.y, m_vecRaceCheckpointPos.z, 1005, 0);
 			}
 		}
 	}
@@ -280,13 +280,15 @@ void CGame::UpdateGlobalTimer(uint32_t dwTimer)
 // 0.3.7
 void CGame::SetGravity(float fGravity)
 {
-	ARMHook::unprotect(g_libGTASA + /*0x3A0B64*/0x3FE7C0);
-	*(float*)(g_libGTASA + /*0x3A0B64*/0x3FE7C0) = -fGravity;
+#if VER_x32
+    CHook::UnFuck(g_libGTASA + (VER_2_1 ? 0x003FE810 : 0x3A0B64));
+    *(float*)(g_libGTASA + (VER_2_1 ? 0x003FE810 : 0x3A0B64)) = fGravity;
+#endif
 }
 
 bool CGame::IsGamePaused()
 {
-	return *(uint8_t*)(g_libGTASA + /*0x8C9BA3*/0x96B514);
+	return *(uint8_t*)(g_libGTASA + (VER_x32 ? 0x96B514 : 0xBDC594));
 }
 
 bool CGame::IsGameLoaded()
@@ -297,7 +299,7 @@ bool CGame::IsGameLoaded()
 void CGame::DrawGangZone(float fPos[], uint32_t dwColor, uint32_t dwUnk)
 {
 	// CRadar::DrawAreaOnRadar
-	((void(*)(float*, uint32_t*, uint32_t))(g_libGTASA + /*0x3DE7F8*/0x443C10 + 1))(fPos, &dwColor, dwUnk);
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x00443C60 + 1 : 0x528EC4), fPos, &dwColor, dwUnk);
 }
 // 0.3.7
 uint32_t CGame::CreatePickup(int iModel, int iType, float x, float y, float z, int *pdwIndex)
@@ -337,8 +339,8 @@ bool CGame::IsModelLoaded(int iModel)
 void CGame::RequestModel(uint16_t iModelId, uint8_t iLoadingStream) 
 {
 	// CStreaming::RequestModel
-	(( void (*)(int32_t, int32_t))(g_libGTASA+0x2D292C+1))(iModelId, iLoadingStream);
-	//ScriptCommand(&request_model, iModelID);
+	//(( void (*)(int32_t, int32_t))(g_libGTASA+0x2D292C+1))(iModelId, iLoadingStream);
+	ScriptCommand(&request_model, iModelId);
 }
 // 0.3.7
 void CGame::LoadRequestedModels()
@@ -353,8 +355,8 @@ void CGame::RemoveModel(int iModel, bool bFromStreaming)
 		if (bFromStreaming)
 		{
 			if(ScriptCommand(&is_model_available, iModel))
-				// CStreaming::RemoveModel
-				((void(*)(int))(g_libGTASA + 0x2D00B8 + 1))(iModel);
+				// CStreaming::RemoveModel x64	0000000000391FF0 x32 002D0128
+				((void(*)(int))(g_libGTASA + (VER_x32 ? 0x2D0128 + 1 : 0x391FF0)))(iModel);
 		}
 		else
 		{
@@ -364,7 +366,7 @@ void CGame::RemoveModel(int iModel, bool bFromStreaming)
 	}
 }
 // 0.3.7 (������������ 2 ��������� ��������� ��������� � 0.3DL)
-CObject* CGame::NewObject(int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDistance)
+CObject* CGame::NewObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance)
 {
 	CObject *pObjectNew = new CObject(iModel, vecPos, vecRot, fDrawDistance, 0);
 	return pObjectNew;
@@ -447,28 +449,27 @@ void CGame::RequestAnimation(const char* szAnimLib)
 	ScriptCommand(&request_animation, szAnimLib);
 }
 // 0.3.7
-float CGame::FindGroundZForCoord(float fX, float fY)
+float CGame::FindGroundZForCoord(float fX, float fY, float fZ)
 {
-	/*float fPosZ;
-	ScriptCommand(&get_ground_z, fX, fY, fZ, &fPosZ);
-	return fPosZ;*/
-	return (( float (*)(float, float))(g_libGTASA+0x42A774+1))(fX, fY);
+    float fGroundZ;
+    ScriptCommand(&get_ground_z, fX, fY, fZ, &fGroundZ);
+    return fGroundZ;
 }
 // 0.3.7
 void CGame::DisableAutoAim()
 {
-	//ARMHook::makeRET(g_libGTASA + 0x4C6CF4); // CPlayerPed::FindWeaponLockOnTarget
-	//ARMHook::makeRET(g_libGTASA + 0x4C7CDC); // CPlayerPed::FindNextWeaponLockOnTarget
+	//CHook::RET(g_libGTASA + 0x4C6CF4); // CPlayerPed::FindWeaponLockOnTarget
+	//CHook::RET(g_libGTASA + 0x4C7CDC); // CPlayerPed::FindNextWeaponLockOnTarget
 
 	// CPed::SetWeaponLockOnTarget
-	ARMHook::makeRET(g_libGTASA + 0x4A82D4/*0x438DB4*/);
+	//CHook::RET(g_libGTASA + 0x4A82D4/*0x438DB4*/);
 }
 
 // 0.3.7
 void CGame::EnabledAutoAim()
 {
-	ARMHook::makeRET(g_libGTASA + 0x4C6CF4); // CPlayerPed::FindWeaponLockOnTarget
-	ARMHook::makeRET(g_libGTASA + 0x4C7CDC); // CPlayerPed::FindNextWeaponLockOnTarget
+	CHook::RET(g_libGTASA + 0x4C6CF4); // CPlayerPed::FindWeaponLockOnTarget
+	CHook::RET(g_libGTASA + 0x4C7CDC); // CPlayerPed::FindNextWeaponLockOnTarget
 }
 // 0.3.7
 CVehicle* CGame::NewVehicle(int iVehicleType, float fX, float fY, float fZ, float fRotation, bool bAddSiren)
@@ -483,15 +484,15 @@ CVehicle* CGame::NewVehicle(int iVehicleType, float fX, float fY, float fZ, floa
 	return pNewVehicle;
 }
 // 0.3.7
-void CGame::SetCheckpointInformation(VECTOR* vecPos, VECTOR* vecSize)
+void CGame::SetCheckpointInformation(CVector* vecPos, CVector* vecSize)
 {
-	m_vecCheckpointPos.X = vecPos->X;
-	m_vecCheckpointPos.Y = vecPos->Y;
-	m_vecCheckpointPos.Z = vecPos->Z;
+	m_vecCheckpointPos.x = vecPos->x;
+	m_vecCheckpointPos.y = vecPos->y;
+	m_vecCheckpointPos.z = vecPos->z;
 
-	m_vecCheckpointExtent.X = vecSize->X;
-	m_vecCheckpointExtent.Y = vecSize->Y;
-	m_vecCheckpointExtent.Z = vecSize->Z;
+	m_vecCheckpointExtent.x = vecSize->x;
+	m_vecCheckpointExtent.y = vecSize->y;
+	m_vecCheckpointExtent.z = vecSize->z;
 	
 	if (m_dwCheckpointMarker)
 	{
@@ -499,22 +500,22 @@ void CGame::SetCheckpointInformation(VECTOR* vecPos, VECTOR* vecSize)
 		m_dwCheckpointMarker = 0;
 
 		m_dwCheckpointMarker = CreateRadarMarkerIcon(0,
-			m_vecCheckpointPos.X,
-			m_vecCheckpointPos.Y,
-			m_vecCheckpointPos.Z,
+			m_vecCheckpointPos.x,
+			m_vecCheckpointPos.y,
+			m_vecCheckpointPos.z,
 			1005, 0);
 	}
 }
 // 0.3.7
-void CGame::SetRaceCheckpointInformation(uint8_t byteType, VECTOR* vecPos, VECTOR* vecNextPos, float fRadius)
+void CGame::SetRaceCheckpointInformation(uint8_t byteType, CVector* vecPos, CVector* vecNextPos, float fRadius)
 {
-	m_vecRaceCheckpointPos.X = vecPos->X;
-	m_vecRaceCheckpointPos.Y = vecPos->Y;
-	m_vecRaceCheckpointPos.Z = vecPos->Z;
+	m_vecRaceCheckpointPos.x = vecPos->x;
+	m_vecRaceCheckpointPos.y = vecPos->y;
+	m_vecRaceCheckpointPos.z = vecPos->z;
 
-	m_vecRaceCheckpointNextPos.X = vecNextPos->X;
-	m_vecRaceCheckpointNextPos.Y = vecNextPos->Y;
-	m_vecRaceCheckpointNextPos.Z = vecNextPos->Z;
+	m_vecRaceCheckpointNextPos.x = vecNextPos->x;
+	m_vecRaceCheckpointNextPos.y = vecNextPos->y;
+	m_vecRaceCheckpointNextPos.z = vecNextPos->z;
 
 	m_byteRaceType = byteType;
 	m_fRaceCheckpointRadius = fRadius;
@@ -524,9 +525,9 @@ void CGame::SetRaceCheckpointInformation(uint8_t byteType, VECTOR* vecPos, VECTO
 		DisableMarker(m_dwRaceCheckpointMarker);
 		
 		m_dwRaceCheckpointMarker = CreateRadarMarkerIcon(0,
-			m_vecRaceCheckpointPos.X,
-			m_vecRaceCheckpointPos.Y,
-			m_vecRaceCheckpointPos.Z,
+			m_vecRaceCheckpointPos.x,
+			m_vecRaceCheckpointPos.y,
+			m_vecRaceCheckpointPos.z,
 			1005,
 			0);
 	}
@@ -539,8 +540,8 @@ void CGame::MakeRaceCheckpoint()
 	DisableRaceCheckpoint();
 
 	ScriptCommand(&create_racing_checkpoint, (int)m_byteRaceType,
-		m_vecRaceCheckpointPos.X, m_vecRaceCheckpointPos.Y, m_vecRaceCheckpointPos.Z,
-		m_vecRaceCheckpointNextPos.X, m_vecRaceCheckpointNextPos.Y, m_vecRaceCheckpointNextPos.Z,
+		m_vecRaceCheckpointPos.x, m_vecRaceCheckpointPos.y, m_vecRaceCheckpointPos.z,
+		m_vecRaceCheckpointNextPos.x, m_vecRaceCheckpointNextPos.y, m_vecRaceCheckpointNextPos.z,
 		m_fRaceCheckpointRadius, &m_dwRaceCheckpointHandle);
 
 	m_bRaceCheckpointsEnabled = true;
@@ -559,24 +560,22 @@ void CGame::DisableRaceCheckpoint()
 
 void CGame::SetWantedLevel(uint8_t level)
 {
-	//ARMHook::writeMemory(g_libGTASA+0x2BDF6E, (uintptr_t)&level, 1);
+	//CHook::WriteMemory(g_libGTASA+0x2BDF6E, (uintptr_t)&level, 1);
 }
 
 void CGame::EnableStuntBonus(bool bEnable)
 {
-	ARMHook::unprotect(0x7BE2A8);
-	*(int*)(g_libGTASA+0x7BE2A8) = (int)bEnable;
+	//CHook::UnFuck(0x7BE2A8);
+	//*(int*)(g_libGTASA+0x7BE2A8) = (int)bEnable;
 }
 // 0.3.7
 void CGame::DisplayGameText(const char* szStr, int iTime, int iSize)
 {
-	if (iSize > 200) return;
+    ScriptCommand(&text_clear_all);
+    CFont::AsciiToGxtChar(szStr, szGameTextMessage);
 
-	ScriptCommand(&text_clear_all);
-	CFont::AsciiToGxtChar(szStr, (uint16_t*)szGameTextMessage);
-
-	// CMessages::AddBigMesssage
-	((void (*)(char*, int, int))(g_libGTASA + 0x54C5BC + 1))(szGameTextMessage, iTime, iSize);
+    // CMessages::AddBigMesssage
+    (( void (*)(uint16_t*, int, int))(g_libGTASA + (VER_x32 ? 0x0054C62C + 1 : 0x66C150)))(szGameTextMessage, iTime, iSize);
 }
 // 0.3.7
 void CGame::AddToLocalMoney(int iAmmount)
@@ -597,33 +596,26 @@ void CGame::ResetLocalMoney()
 // 0.3.7
 int CGame::GetLocalMoney()
 {
-	return *(int*)(WORLD_PLAYERS + 0xB8);
+	return 0;
 }
 // 0.3.7
 void CGame::DisableEnterExits()
 {
-	uintptr_t poolEntryExit = *(uintptr_t*)(g_libGTASA + 0x7A1E18);
-	int size = *(int*)(poolEntryExit + 8);
-	if (!size) return;
+#if VER_x32
+    uintptr_t addr = *(uintptr_t*)(g_libGTASA + (VER_2_1 ? 0x007A1E20 : 0x700120));
+    int count = *(uint32_t*)(addr+8);
 
-	uintptr_t pEntry = *(uintptr_t*)poolEntryExit;
+    addr = *(uintptr_t*)addr;
 
-	for (int i = 0; i < size; i++)
-	{
-		*(uint16_t*)(pEntry + 0x30) = 0;
-		pEntry += 0x3C;
-	}
+    for(int i=0; i<count; i++)
+    {
+        *(uint16_t*)(addr+0x30) = 0;
+        addr += 0x3C;
+    }
+#endif
 }
 
 void CGame::ToggleCJWalk(bool bUseCJWalk)
 {
-	//if (bUseCJWalk)
-	//	ARMHook::writeMemory(g_libGTASA + 0x4C661C/*0x45477E*/, (uintptr_t)"\xC4\xF8\xDC\x64", 4);
-	//else
-	//	ARMHook::makeNOP(g_libGTASA + 0x4C661C/*0x45477E*/, 2);
-	ARMHook::unprotect(g_libGTASA+0x4C5EFA);
-    if(bUseCJWalk)
-        ARMHook::writeMemory(g_libGTASA+0x4C5EFA, (uintptr_t)"\xCA\xF8\xE0\x04", 4);
-    else
-		*(uint8_t *)(g_libGTASA+0x4C5EFA) = 0;
+        CHook::NOP(g_libGTASA + (VER_x32 ? 0x004C5F6A : 0x5C3970), 2);
 }

@@ -3,7 +3,7 @@
 
 Image::Image(const std::string& arch_name, const std::string& name)
 {
-	m_texture = (RwTexture*)LoadTextureFromDB(arch_name.c_str(), name.c_str());
+	m_texture = (RwTexture*)CUtil::LoadTextureFromDB(arch_name.c_str(), name.c_str());
 }
 
 void Image::performLayout()

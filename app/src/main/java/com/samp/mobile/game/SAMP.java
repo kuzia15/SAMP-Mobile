@@ -25,23 +25,6 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
 
     private AttachEdit mAttachEdit;
 
-    static String vmVersion;
-
-    static {
-        vmVersion = null;
-        Log.i(TAG, "**** Loading SO's");
-
-        try {
-            vmVersion = System.getProperty("java.vm.version");
-            Log.i(TAG, "vmVersion " + vmVersion);
-
-            System.loadLibrary("SAMP");
-        }
-        catch (ExceptionInInitializerError | UnsatisfiedLinkError e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
     public native void sendDialogResponse(int i, int i2, int i3, byte[] str);
 
     public static SAMP getInstance() {
@@ -78,7 +61,7 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
 
     }
 
-    private void setPauseState(boolean pause) {
+    public void setPauseState(boolean pause) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -179,23 +162,7 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
         Log.i(TAG, "**** onCreate");
         super.onCreate(savedInstanceState);
 
-        if (new SharedPreferenceCore().getBoolean(this, "CLEO")) {
-            try {
-                System.loadLibrary("CLEO");
-            } catch (ExceptionInInitializerError | UnsatisfiedLinkError e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-
-        if (new SharedPreferenceCore().getBoolean(this, "AML")) {
-            try {
-                System.loadLibrary("AML");
-            } catch (ExceptionInInitializerError | UnsatisfiedLinkError e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-
-        mHeightProvider = new HeightProvider(this);
+        //mHeightProvider = new HeightProvider(this);
 
         mKeyboard = new CustomKeyboard(this);
 
@@ -233,7 +200,7 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
     public void onResume() {
         Log.i(TAG, "**** onResume");
         super.onResume();
-        mHeightProvider.init(view);
+        //mHeightProvider.init(view);
     }
 
     public native void onEventBackPressed();
@@ -273,7 +240,7 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
 
     @Override
     public void onHeightChanged(int orientation, int height) {
-        mKeyboard.onHeightChanged(height);
-        mDialog.onHeightChanged(height);
+        //mKeyboard.onHeightChanged(height);
+        //mDialog.onHeightChanged(height);
     }
 }

@@ -425,7 +425,7 @@ void Plugin::ControlPacketHandler(const ControlPacket& controlPacket)
 
             LogVoice("[sv:dbg:plugin:createlpstream] : "
                 "stream(%p), dist(%.2f), pos(%.2f;%.2f;%.2f), color(0x%x), name(%s)",
-                stData.stream, stData.distance, stData.position.X, stData.position.Y, stData.position.Z,
+                stData.stream, stData.distance, stData.position.x, stData.position.y, stData.position.z,
                 stData.color, stData.color ? stData.name : "");
 
             const auto& streamPtr = Plugin::streamTable[stData.stream] =
@@ -506,7 +506,7 @@ void Plugin::ControlPacketHandler(const ControlPacket& controlPacket)
             if(controlPacket.length != sizeof(stData)) break;
 
             LogVoice("[sv:dbg:plugin:updatelpstreamcoords] : stream(%p), pos(%.2f;%.2f;%.2f)",
-                stData.stream, stData.position.X, stData.position.Y, stData.position.Z);
+                stData.stream, stData.position.x, stData.position.y, stData.position.z);
 
             const auto iter = Plugin::streamTable.find(stData.stream);
             if(iter == Plugin::streamTable.end()) break;

@@ -15,18 +15,18 @@ class StreamAtPoint : public LocalStream {
 
 public:
     explicit StreamAtPoint(uint32_t color, std::string name,
-                           float distance, const VECTOR& position) noexcept;
+                           float distance, const CVector& position) noexcept;
 
     ~StreamAtPoint() noexcept = default;
 
 public:
-    void SetPosition(const VECTOR& position) noexcept;
+    void SetPosition(const CVector& position) noexcept;
 
 private:
     void OnChannelCreate(const Channel& channel) noexcept override;
 
 private:
-    VECTOR position;
+    CVector position;
 };
 
 using StreamAtPointPtr = std::unique_ptr<StreamAtPoint>;

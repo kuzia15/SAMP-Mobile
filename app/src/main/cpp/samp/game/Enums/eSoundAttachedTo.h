@@ -1,0 +1,14 @@
+//
+// Created by plaka on 19.08.2023.
+//
+
+#ifndef LIVERUSSIA_ESOUNDATTACHEDTO_H
+#define LIVERUSSIA_ESOUNDATTACHEDTO_H
+
+enum eSoundAttachedTo {
+    NONE = 0,
+    TOVEHICLE,
+    TOPLAYER
+};
+
+#endif //LIVERUSSIA_ESOUNDATTACHEDTO_H

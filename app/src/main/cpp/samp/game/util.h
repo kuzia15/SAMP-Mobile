@@ -3,6 +3,7 @@
 #include "../game/RW/RenderWare.h"
 
 class CObject;
+#include "../game/Core/Rect.h"
 
 enum eWidgetType {
     TYPE_NONE = 0,
@@ -37,8 +38,6 @@ int GetModelRefCounts(int iModel);
 bool IsValidPedModel(uint modelID);
 uintptr_t GetModelRWObject(uint modelID);
 
-uintptr_t GetTexture(const char* texname);
-uintptr_t LoadTextureFromDB(const char* dbname, const char* texname);
 //uintptr_t LoadTexture(const char* texname);
 
 RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename);
@@ -49,7 +48,7 @@ void PopCurrentTxd();
 uintptr_t SetTexture(const char* texturename);
 
 float FloatOffset(float f1, float f2);
-float GetDistance(VECTOR vec1, VECTOR vec2);
+float GetDistance(RwV3d vec1, RwV3d vec2);
 float DegToRad(float fDegress);
 float fixAngle(float angle);
 float subAngle(float a1, float a2);
@@ -63,22 +62,22 @@ int GetFreeTextDrawTextureSlot();
 void ResetTextDrawTextures();
 void DestroyTextDrawTexture(int index);
 
-void DrawTexture(uintptr_t texture, RECT* rect, uint32_t dwColor);
-void DrawTextureUV(uintptr_t texture, RECT* rect, uint32_t dwColor, float* uv);
+void DrawTexture(uintptr_t texture, CRect* rect, uint32_t dwColor);
+void DrawTextureUV(uintptr_t texture, CRect* rect, uint32_t dwColor, float* uv);
 void DeleteRwTexture(uintptr_t texture);
 
-bool IsPointInRect(float x, float y, RECT* rect);
+bool IsPointInRect(float x, float y, CRect* rect);
 
 uintptr_t ModelInfoCreateInstance(int iModel);
 
 void RenderClumpOrAtomic(uintptr_t rwObject);
 
-void RwFrameTranslate(uintptr_t frame, VECTOR* vec, int flag);
+void RwFrameTranslate(uintptr_t frame, RwV3d* vec, int flag);
 void RwFrameRotate(uintptr_t frame, int axis, float angle);
 
 float GetModelColSphereRadius(int iModel);
 
-void GetModelColSphereVecCenter(int iModel, VECTOR* vec);
+void GetModelColSphereVecCenter(int iModel, RwV3d* vec);
 
 void DestroyAtomicOrClump(uintptr_t rwObject);
 
@@ -87,18 +86,18 @@ void RpWorldRemoveLight(uintptr_t light);
 
 void GamePrepareTrain(VEHICLE_TYPE* pGtaVehicle);
 
-void DrawRaster(RwRaster* raster, RECT const& rect);
+void DrawRaster(RwRaster* raster, CRect const& rect);
 
 void GameResetStats();
 
-void ProjectMatrix(VECTOR* vecOut, MATRIX4X4* mat, VECTOR* vecPos);
-void RwMatrixRotate(MATRIX4X4* mat, int axis, float angle);
-void RwMatrixScale(MATRIX4X4* mat, VECTOR* vecScale);
+void ProjectMatrix(RwV3d* vecOut, RwMatrix* mat, RwV3d* vecPos);
+void RwMatrixRotate(RwMatrix* mat, int axis, float angle);
+void RwMatrixScale(RwMatrix* mat, RwV3d* vecScale);
 
 const char* getGameDataFolderDirectory();
 
-int LineOfSight(VECTOR* start, VECTOR* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk);
-void RwMatrixInvert(MATRIX4X4 *matOut, MATRIX4X4 *matIn);
+int LineOfSight(RwV3d* start, RwV3d* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk);
+void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn);
 
 int GetTaskTypeFromTask(uint32_t *task);
 int Game_PedStatPrim(int model_id);
@@ -111,16 +110,16 @@ eWidgetState ProcessFixedWidgetFromId(int iWidgetId);
 
 uint32_t GetUpperCaseKey(const char* szUpper);
 
-MATRIX4X4* mat_invert(MATRIX4X4 *dst, const MATRIX4X4 *src);
+RwMatrix* mat_invert(RwMatrix *dst, const RwMatrix *src);
 
 const char* GetAnimByIdx(int idx);
 int GetAnimIdxByName(const char* szName);
 
 bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity);
 
-void RemoveBuilding(uint32_t dwModel, VECTOR vecPos, float fRange);
-void RemoveObjectInRange(int iModel, VECTOR vecPos, float fRange);
-void RemoveOccludersInRadius(VECTOR vecPos, float fRadius);
+void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange);
+void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange);
+void RemoveOccludersInRadius(RwV3d vecPos, float fRadius);
 
 RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename);
 uintptr_t LoadTexture(const char* texname);
@@ -129,3 +128,5 @@ RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data);
 RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject);
 
 bool GetAnimationIndexFromName(const char* szName);
+
+void SetScissorRect(void* pRect);

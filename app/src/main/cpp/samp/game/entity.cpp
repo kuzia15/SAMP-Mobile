@@ -7,74 +7,74 @@ extern CGame* pGame;
 extern CNetGame *pNetGame;
 
 // 0.3.7
-void CEntity::GetMatrix(PMATRIX4X4 Matrix)
+void CEntity::GetMatrix(RwMatrix* Matrix)
 {
 	if (!m_pEntity || !m_pEntity->mat) return;
 
-	Matrix->right.X = m_pEntity->mat->right.X;
-	Matrix->right.Y = m_pEntity->mat->right.Y;
-	Matrix->right.Z = m_pEntity->mat->right.Z;
+	Matrix->right.x = m_pEntity->mat->right.x;
+	Matrix->right.y = m_pEntity->mat->right.y;
+	Matrix->right.z = m_pEntity->mat->right.z;
 
-	Matrix->up.X = m_pEntity->mat->up.X;
-	Matrix->up.Y = m_pEntity->mat->up.Y;
-	Matrix->up.Z = m_pEntity->mat->up.Z;
+	Matrix->up.x = m_pEntity->mat->up.x;
+	Matrix->up.y = m_pEntity->mat->up.y;
+	Matrix->up.z = m_pEntity->mat->up.z;
 
-	Matrix->at.X = m_pEntity->mat->at.X;
-	Matrix->at.Y = m_pEntity->mat->at.Y;
-	Matrix->at.Z = m_pEntity->mat->at.Z;
+	Matrix->at.x = m_pEntity->mat->at.x;
+	Matrix->at.y = m_pEntity->mat->at.y;
+	Matrix->at.z = m_pEntity->mat->at.z;
 
-	Matrix->pos.X = m_pEntity->mat->pos.X;
-	Matrix->pos.Y = m_pEntity->mat->pos.Y;
-	Matrix->pos.Z = m_pEntity->mat->pos.Z;
+	Matrix->pos.x = m_pEntity->mat->pos.x;
+	Matrix->pos.y = m_pEntity->mat->pos.y;
+	Matrix->pos.z = m_pEntity->mat->pos.z;
 }
 // 0.3.7
-void CEntity::SetMatrix(MATRIX4X4 Matrix)
+void CEntity::SetMatrix(RwMatrix Matrix)
 {
 	if (!m_pEntity || !m_pEntity->mat) return;
 
-	m_pEntity->mat->right.X = Matrix.right.X;
-	m_pEntity->mat->right.Y = Matrix.right.Y;
-	m_pEntity->mat->right.Z = Matrix.right.Z;
+	m_pEntity->mat->right.x = Matrix.right.x;
+	m_pEntity->mat->right.y = Matrix.right.y;
+	m_pEntity->mat->right.z = Matrix.right.z;
 
-	m_pEntity->mat->up.X = Matrix.up.X;
-	m_pEntity->mat->up.Y = Matrix.up.Y;
-	m_pEntity->mat->up.Z = Matrix.up.Z;
+	m_pEntity->mat->up.x = Matrix.up.x;
+	m_pEntity->mat->up.y = Matrix.up.y;
+	m_pEntity->mat->up.z = Matrix.up.z;
 
-	m_pEntity->mat->at.X = Matrix.at.X;
-	m_pEntity->mat->at.Y = Matrix.at.Y;
-	m_pEntity->mat->at.Z = Matrix.at.Z;
+	m_pEntity->mat->at.x = Matrix.at.x;
+	m_pEntity->mat->at.y = Matrix.at.y;
+	m_pEntity->mat->at.z = Matrix.at.z;
 
-	m_pEntity->mat->pos.X = Matrix.pos.X;
-	m_pEntity->mat->pos.Y = Matrix.pos.Y;
-	m_pEntity->mat->pos.Z = Matrix.pos.Z;
+	m_pEntity->mat->pos.x = Matrix.pos.x;
+	m_pEntity->mat->pos.y = Matrix.pos.y;
+	m_pEntity->mat->pos.z = Matrix.pos.z;
 }
 // 0.3.7
-void CEntity::GetMoveSpeedVector(PVECTOR Vector)
+void CEntity::GetMoveSpeedVector(CVector* Vector)
 {
-	Vector->X = m_pEntity->vecMoveSpeed.X;
-	Vector->Y = m_pEntity->vecMoveSpeed.Y;
-	Vector->Z = m_pEntity->vecMoveSpeed.Z;
+	Vector->x = m_pEntity->vecMoveSpeed.x;
+	Vector->y = m_pEntity->vecMoveSpeed.y;
+	Vector->z = m_pEntity->vecMoveSpeed.z;
 }
 // 0.3.7
-void CEntity::SetMoveSpeedVector(VECTOR Vector)
+void CEntity::SetMoveSpeedVector(CVector Vector)
 {
-	m_pEntity->vecMoveSpeed.X = Vector.X;
-	m_pEntity->vecMoveSpeed.Y = Vector.Y;
-	m_pEntity->vecMoveSpeed.Z = Vector.Z;
+	m_pEntity->vecMoveSpeed.x = Vector.x;
+	m_pEntity->vecMoveSpeed.y = Vector.y;
+	m_pEntity->vecMoveSpeed.z = Vector.z;
 }
 // 0.3.7
-void CEntity::GetTurnSpeedVector(PVECTOR Vector)
+void CEntity::GetTurnSpeedVector(CVector* Vector)
 {
-	Vector->X = m_pEntity->vecTurnSpeed.X;
-	Vector->Y = m_pEntity->vecTurnSpeed.Y;
-	Vector->Z = m_pEntity->vecTurnSpeed.Z;
+	Vector->x = m_pEntity->vecTurnSpeed.x;
+	Vector->y = m_pEntity->vecTurnSpeed.y;
+	Vector->z = m_pEntity->vecTurnSpeed.z;
 }
 // 0.3.7
-void CEntity::SetTurnSpeedVector(VECTOR Vector)
+void CEntity::SetTurnSpeedVector(CVector Vector)
 {
-	m_pEntity->vecTurnSpeed.X = Vector.X;
-	m_pEntity->vecTurnSpeed.Y = Vector.Y;
-	m_pEntity->vecTurnSpeed.Z = Vector.Z;
+	m_pEntity->vecTurnSpeed.x = Vector.x;
+	m_pEntity->vecTurnSpeed.y = Vector.y;
+	m_pEntity->vecTurnSpeed.z = Vector.z;
 }
 // 0.3.7
 uint CEntity::GetModelIndex()
@@ -114,9 +114,9 @@ void CEntity::SetModelIndex(uint uiModel)
 // 0.3.7
 void CEntity::TeleportTo(float fX, float fY, float fZ)
 {
-	MATRIX4X4 mat;
+	RwMatrix mat;
 
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14)) /* CPlaceable */
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) /* CPlaceable */
 	{
 		uint16_t modelIndex = m_pEntity->nModelIndex;
 		if (modelIndex != TRAIN_PASSENGER_LOCO &&
@@ -124,6 +124,7 @@ void CEntity::TeleportTo(float fX, float fY, float fZ)
 			modelIndex != TRAIN_TRAM)
 			//((void(*)(ENTITY_TYPE*, float, float, float, bool))(*(void**)(m_pEntity->vtable + 0x3C)))(m_pEntity, fX, fY, fZ, 0);
 		{
+            LOGI("TeleportTo 0x%llx", m_pEntity->vtable + 0x3C);
 			((void(*)(ENTITY_TYPE*, float, float, float))(*(void**)(m_pEntity->vtable + 0x3C)))(m_pEntity, fX, fY, fZ);
 		}
 		else
@@ -153,7 +154,7 @@ void CEntity::Add()
 
 	if (!m_pEntity->dwUnkModelRel) {
 
-		VECTOR vec = { 0.0f, 0.0f, 0.0f };
+		CVector vec = { 0.0f, 0.0f, 0.0f };
 
 		SetMoveSpeedVector(vec);
 		SetTurnSpeedVector(vec);
@@ -161,9 +162,9 @@ void CEntity::Add()
 		// CWorld::Add
 		((void(*)(ENTITY_TYPE*))(g_libGTASA + /*0x3C14B0*/0x4233C8 + 1))(m_pEntity);
 
-		MATRIX4X4 mat;
+		RwMatrix mat;
 		GetMatrix(&mat);
-		TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+		TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 	}
 }
 // 0.3.7
@@ -181,28 +182,28 @@ void CEntity::Remove()
 
 float CEntity::GetDistanceFromCamera()
 {
-	MATRIX4X4 matEnt;
+	RwMatrix matEnt;
 	if (!m_pEntity || m_pEntity->vtable == 0x667D14) // CPlaceable
 		return 100000.0f;
 
 	GetMatrix(&matEnt);
 
-	float tmpX = (matEnt.pos.X - *(float*)(g_libGTASA + 0x9528D4));
-	float tmpY = (matEnt.pos.Y - *(float*)(g_libGTASA + 0x9528D8));
-	float tmpZ = (matEnt.pos.Z - *(float*)(g_libGTASA + 0x9528DC));
+	float tmpX = (matEnt.pos.x - *(float*)(g_libGTASA + 0x9528D4));
+	float tmpY = (matEnt.pos.y - *(float*)(g_libGTASA + 0x9528D8));
+	float tmpZ = (matEnt.pos.z - *(float*)(g_libGTASA + 0x9528DC));
 
 	return sqrt(tmpX * tmpX + tmpY * tmpY + tmpZ * tmpZ);
 }
 
 // 0.3.7
-float CEntity::GetDistanceFromPoint(VECTOR Vector)
+float CEntity::GetDistanceFromPoint(CVector Vector)
 {
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	GetMatrix(&mat);
 
-	float tmpX = (mat.pos.X - Vector.X) * (mat.pos.X - Vector.X);
-	float tmpY = (mat.pos.Y - Vector.Y) * (mat.pos.Y - Vector.Y);
-	float tmpZ = (mat.pos.Z - Vector.Z) * (mat.pos.Z - Vector.Z);
+	float tmpX = (mat.pos.x - Vector.x) * (mat.pos.x - Vector.x);
+	float tmpY = (mat.pos.y - Vector.y) * (mat.pos.y - Vector.y);
+	float tmpZ = (mat.pos.z - Vector.z) * (mat.pos.z - Vector.z);
 
 	return (float)sqrt(tmpX + tmpY + tmpZ);
 }
@@ -218,8 +219,8 @@ uintptr_t CEntity::GetRWObject()
 // 0.3.7
 float CEntity::GetDistanceFromLocalPlayerPed()
 {
-	MATRIX4X4	matFromPlayer;
-	MATRIX4X4	matThis;
+	RwMatrix	matFromPlayer;
+	RwMatrix	matThis;
 	float		fSX, fSY, fSZ;
 
 	CPlayerPed* pLocalPlayerPed = pGame->FindPlayerPed();
@@ -233,7 +234,8 @@ float CEntity::GetDistanceFromLocalPlayerPed()
 	if (pNetGame) {
 		pLocalPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer();
 		if (pLocalPlayer && (pLocalPlayer->IsSpectating() || pLocalPlayer->IsInRCMode())) {
-			pGame->GetCamera()->GetMatrix(&matFromPlayer);
+            CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+			TheCamera.GetMatrix(&matFromPlayer);
 		}
 		else {
 			pLocalPlayerPed->GetMatrix(&matFromPlayer);
@@ -243,9 +245,9 @@ float CEntity::GetDistanceFromLocalPlayerPed()
 		pLocalPlayerPed->GetMatrix(&matFromPlayer);
 	}
 
-	fSX = (matThis.pos.X - matFromPlayer.pos.X) * (matThis.pos.X - matFromPlayer.pos.X);
-	fSY = (matThis.pos.Y - matFromPlayer.pos.Y) * (matThis.pos.Y - matFromPlayer.pos.Y);
-	fSZ = (matThis.pos.Z - matFromPlayer.pos.Z) * (matThis.pos.Z - matFromPlayer.pos.Z);
+	fSX = (matThis.pos.x - matFromPlayer.pos.x) * (matThis.pos.x - matFromPlayer.pos.x);
+	fSY = (matThis.pos.y - matFromPlayer.pos.y) * (matThis.pos.y - matFromPlayer.pos.y);
+	fSZ = (matThis.pos.z - matFromPlayer.pos.z) * (matThis.pos.z - matFromPlayer.pos.z);
 
 	return (float)sqrt(fSX + fSY + fSZ);
 }
@@ -280,7 +282,7 @@ void CEntity::SetGravityProcessing(bool state)
 	}
 }
 // 0.3.7
-void CEntity::UpdateMatrix(MATRIX4X4 matrix)
+void CEntity::UpdateMatrix(RwMatrix matrix)
 {
 	if (m_pEntity && m_pEntity->mat)
 	{
@@ -298,7 +300,7 @@ void CEntity::UpdateMatrix(MATRIX4X4 matrix)
 // 0.3.7
 void CEntity::UpdateRwMatrixAndFrame()
 {
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + 0x667D14)) // CPlaceable
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) // CPlaceable
 	{
 		if (m_pEntity->pRwObject)
 		{
@@ -307,7 +309,7 @@ void CEntity::UpdateRwMatrixAndFrame()
 				uintptr_t pRwMatrix = *(uintptr_t*)(m_pEntity->pRwObject + 4) + 0x10;
 
 				// CMatrix::UpdateRwMatrix
-				((void (*)(MATRIX4X4*, uintptr_t))(g_libGTASA + 0x44EDEE + 1))(m_pEntity->mat, pRwMatrix);
+				((void (*)(RwMatrix*, uintptr_t))(g_libGTASA + 0x44EDEE + 1))(m_pEntity->mat, pRwMatrix);
 
 				// CEntity::UpdateRwFrame
 				((void (*)(ENTITY_TYPE*))(g_libGTASA + 0x3EBFE8 + 1))(m_pEntity);
@@ -354,9 +356,9 @@ bool CEntity::IsStationary()
 {
 	if(!IsAdded()) return false; // movespeed vectors are invalid if its not added
 
-	if(m_pEntity->vecMoveSpeed.X == 0.0f &&
-	   m_pEntity->vecMoveSpeed.Y == 0.0f &&
-	   m_pEntity->vecMoveSpeed.Z == 0.0f)
+	if(m_pEntity->vecMoveSpeed.x == 0.0f &&
+	   m_pEntity->vecMoveSpeed.y == 0.0f &&
+	   m_pEntity->vecMoveSpeed.z == 0.0f)
 	{
 		return true;
 	}
@@ -367,60 +369,60 @@ bool CEntity::EnforceWorldBoundries(float fPX, float fZX, float fPY, float fNY)
 {
 	if(!m_pEntity) return false;
 
-	MATRIX4X4 matWorld;
-	VECTOR vecMoveSpeed;
+	RwMatrix matWorld;
+	CVector vecMoveSpeed;
 	GetMatrix(&matWorld);
 	GetMoveSpeedVector(&vecMoveSpeed);
 
-	if(matWorld.pos.X > fPX)
+	if(matWorld.pos.x > fPX)
 	{
-		if(vecMoveSpeed.X != 0.0f)
+		if(vecMoveSpeed.x != 0.0f)
 		{
-			vecMoveSpeed.X = -0.2f;
-			vecMoveSpeed.Z = 0.1f;
+			vecMoveSpeed.x = -0.2f;
+			vecMoveSpeed.z = 0.1f;
 		}
 
 		SetMoveSpeedVector(vecMoveSpeed);
-		matWorld.pos.Z += 0.04f;
+		matWorld.pos.z += 0.04f;
 		SetMatrix(matWorld);
 		return true;
 	}
-	else if(matWorld.pos.X < fZX)
+	else if(matWorld.pos.x < fZX)
 	{
-		if(vecMoveSpeed.X != 0.0f)
+		if(vecMoveSpeed.x != 0.0f)
 		{
-			vecMoveSpeed.X = 0.2f;
-			vecMoveSpeed.Z = 0.1f;
+			vecMoveSpeed.x = 0.2f;
+			vecMoveSpeed.z = 0.1f;
 		}
 
 		SetMoveSpeedVector(vecMoveSpeed);
-		matWorld.pos.Z += 0.04f;
+		matWorld.pos.z += 0.04f;
 		SetMatrix(matWorld);
 		return true;
 	}
-	else if(matWorld.pos.Y > fPY)
+	else if(matWorld.pos.y > fPY)
 	{
-		if(vecMoveSpeed.Y != 0.0f)
+		if(vecMoveSpeed.y != 0.0f)
 		{
-			vecMoveSpeed.Y = -0.2f;
-			vecMoveSpeed.Z = 0.1f;
+			vecMoveSpeed.y = -0.2f;
+			vecMoveSpeed.z = 0.1f;
 		}
 
 		SetMoveSpeedVector(vecMoveSpeed);
-		matWorld.pos.Z += 0.04f;
+		matWorld.pos.z += 0.04f;
 		SetMatrix(matWorld);
 		return true;
 	}
-	else if(matWorld.pos.Y < fNY)
+	else if(matWorld.pos.y < fNY)
 	{
-		if(vecMoveSpeed.Y != 0.0f)
+		if(vecMoveSpeed.y != 0.0f)
 		{
-			vecMoveSpeed.Y = 0.2f;
-			vecMoveSpeed.Z = 0.1f;
+			vecMoveSpeed.y = 0.2f;
+			vecMoveSpeed.z = 0.1f;
 		}
 
 		SetMoveSpeedVector(vecMoveSpeed);
-		matWorld.pos.Z += 0.04f;
+		matWorld.pos.z += 0.04f;
 		SetMatrix(matWorld);
 		return true;
 	}
@@ -432,10 +434,10 @@ bool CEntity::HasExceededWorldBoundries(float fPX, float fZX, float fPY, float f
 {
 	if(m_pEntity)
 	{
-		MATRIX4X4 matWorld;
+		RwMatrix matWorld;
 		GetMatrix(&matWorld);
 
-		if(matWorld.pos.X > fPX || matWorld.pos.X < fZX || matWorld.pos.Y > fPY || matWorld.pos.Y < fNY)
+		if(matWorld.pos.x > fPX || matWorld.pos.x < fZX || matWorld.pos.y > fPY || matWorld.pos.y < fNY)
 			return true;
 	}
 

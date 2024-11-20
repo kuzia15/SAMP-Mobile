@@ -1,7 +1,7 @@
 #include "../main.h"
 #include "game.h"
 #include "../net/netgame.h"
-#include "../vendor/armhook/armhook.h"
+#include "../vendor/armhook/patch.h"
 #include <cmath>
 
 extern CGame* pGame;
@@ -94,11 +94,11 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 
 	// GameResetPlayerKeys
 
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	GetMatrix(&mat);
-	mat.pos.X = fX;
-	mat.pos.Y = fY;
-	mat.pos.Z = fZ + 0.15f;
+	mat.pos.x = fX;
+	mat.pos.y = fY;
+	mat.pos.z = fZ + 0.15f;
 	SetMatrix(mat);
 
 	m_stuffData.dwDrunkLevel = 0;
@@ -125,7 +125,7 @@ CPlayerPed::~CPlayerPed()
 	// GameResetPlayerKeys
 	SetPlayerPedPtrRecord(m_bytePlayerNumber, 0);
 
-	if (m_pPed && (GamePool_Ped_GetAt(m_dwGTAId) != 0) && m_pPed->entity.vtable != (g_libGTASA + 0x667D14) /* CPlaceable */)
+	if (m_pPed && (GamePool_Ped_GetAt(m_dwGTAId) != 0) && m_pPed->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)) /* CPlaceable */)
 	{
 		if (m_dwParachuteObject)
 		{
@@ -217,7 +217,7 @@ void CPlayerPed::SetActionTrigger(uint8_t action)
 
 void CPlayerPed::SetDead()
 {
-	MATRIX4X4 mat;
+	RwMatrix mat;
 
 	if (m_dwGTAId && m_pPed) {
 		if (!IN_VEHICLE(m_pPed))
@@ -227,7 +227,7 @@ void CPlayerPed::SetDead()
 
 		ExtinguishFire();
 		GetMatrix(&mat);
-		TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+		TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 		m_pPed->fHealth = 0.0f;
 		*pbyteCurrentPlayer = m_bytePlayerNumber;
 		ScriptCommand(&kill_actor, m_dwGTAId);
@@ -244,7 +244,7 @@ bool CPlayerPed::IsDead()
 // 0.3.7
 void CPlayerPed::TogglePlayerControllable(bool bControllable)
 {
-	MATRIX4X4 mat;
+	RwMatrix mat;
 
 	if (GamePool_Ped_GetAt(m_dwGTAId))
 	{
@@ -255,7 +255,7 @@ void CPlayerPed::TogglePlayerControllable(bool bControllable)
 
 			if (!IsInVehicle()) {
 				GetMatrix(&mat);
-				TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+				TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 			}
 		}
 		else
@@ -439,9 +439,9 @@ void CPlayerPed::PlayAnimationFromIndex(int iIndex, float fDelta)
 {
 	if (!iIndex)
 	{
-		MATRIX4X4 mat;
+		RwMatrix mat;
 		GetMatrix(&mat);
-		TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+		TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 		return;
 	}
 	std::string szAnim;
@@ -509,9 +509,9 @@ void CPlayerPed::SetInitialState()
 	((void(*)(PED_TYPE*))(g_libGTASA + /*0x458D1C*/0x4C3744 + 1))(m_pPed);
 }
 // 0.3.7
-void CPlayerPed::RestartIfWastedAt(VECTOR *vecRestart, float fRotation)
+void CPlayerPed::RestartIfWastedAt(CVector *vecRestart, float fRotation)
 {
-	ScriptCommand(&restart_if_wasted_at, vecRestart->X, vecRestart->Y, vecRestart->Z, fRotation, 0);
+	ScriptCommand(&restart_if_wasted_at, vecRestart->x, vecRestart->y, vecRestart->z, fRotation, 0);
 }
 // 0.3.7
 void CPlayerPed::SetModelIndex(uint uiModel)
@@ -525,7 +525,7 @@ void CPlayerPed::SetModelIndex(uint uiModel)
 	if (m_pPed)
 	{
 		// CClothes::RebuildPlayer
-		ARMHook::makeRET(g_libGTASA + 0x45751C);
+		CHook::RET(g_libGTASA + 0x45751C);
 		DestroyFollowPedTask();
 		CEntity::SetModelIndex(uiModel);
 		// CAEPedSpeechAudioEntity::Initialise
@@ -802,22 +802,22 @@ void CPlayerPed::DestroyFollowPedTask()
 }
 
 // 0.3.7
-void CPlayerPed::GetBonePosition(int iBoneID, VECTOR* vecOut)
+void CPlayerPed::GetBonePosition(int iBoneID, CVector* vecOut)
 {
 	if (!m_pPed) return;
-	if (m_pEntity->vtable == g_libGTASA + 0x667D14) return; // CPlaceable
+	if (m_pEntity->vtable == g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)) return; // CPlaceable
 
 	// CPed::GetBonePosition
-	((void (*)(PED_TYPE*, VECTOR*, int, int))(g_libGTASA + 0x4A4A9C + 1))(m_pPed, vecOut, iBoneID, 0);
+	((void (*)(PED_TYPE*, CVector*, int, int))(g_libGTASA + 0x4A4A9C + 1))(m_pPed, vecOut, iBoneID, 0);
 }
 // 0.3.7
-void CPlayerPed::GetTransformedBonePosition(int iBoneID, VECTOR* vecOut)
+void CPlayerPed::GetTransformedBonePosition(int iBoneID, CVector* vecOut)
 {
 	if (!m_pPed) return;
-	if (m_pEntity->vtable == g_libGTASA + 0x667D14) return; // CPlaceable
+	if (m_pEntity->vtable == g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)) return; // CPlaceable
 
 	// CPed::GetTransformedBonePosition
-	((void (*)(PED_TYPE*, VECTOR*, int, int))(g_libGTASA + 0x4A2438 + 1))(m_pPed, vecOut, iBoneID, 0);
+	((void (*)(PED_TYPE*, CVector*, int, int))(g_libGTASA + 0x4A2438 + 1))(m_pPed, vecOut, iBoneID, 0);
 }
 
 void CPlayerPed::ApplyAnimation(const char* szAnimName, const char* szAnimLib, float fT, int opt1, int opt2, int opt3, int opt4, int iTime)
@@ -856,9 +856,9 @@ void CPlayerPed::SetInterior(uint8_t byteInteriorId, bool bRefresh)
 		ScriptCommand(&link_actor_to_interior, m_dwGTAId, byteInteriorId);
 		if (bRefresh)
 		{
-			MATRIX4X4 mat;
+			RwMatrix mat;
 			this->GetMatrix(&mat);
-			ScriptCommand(&refresh_streaming_at, mat.pos.X, mat.pos.Y);
+			ScriptCommand(&refresh_streaming_at, mat.pos.x, mat.pos.y);
 		}
 	}
 }
@@ -957,7 +957,7 @@ void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatI
 
 	VEHICLE_TYPE* pGtaVehicle = GamePool_Vehicle_GetAt(dwVehicleGTAId);
 
-	if (pGtaVehicle->fHealth != 0.0f && pGtaVehicle->entity.vtable != (g_libGTASA + 0x667D14))
+	if (pGtaVehicle->fHealth != 0.0f && pGtaVehicle->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
 	{
 		if (GetVehicleSubtype(pGtaVehicle) == VEHICLE_SUBTYPE_CAR ||
 			GetVehicleSubtype(pGtaVehicle) == VEHICLE_SUBTYPE_BIKE)
@@ -981,7 +981,7 @@ void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatI
 		if (m_pPed == GamePool_FindPlayerPed())
 		{
 			if (IN_VEHICLE(m_pPed)) {
-				pGame->GetCamera()->SetBehindPlayer();
+				CCamera::SetBehindPlayer();
 			}
 		}
 
@@ -1121,7 +1121,7 @@ int CPlayerPed::GetVehicleSeatID()
 void CPlayerPed::SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedObject)
 {
 	FLog("CPlayerPed::SetAttachedObject BoneID: %d", pNewAttachedObject->iBoneID);
-	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D14))
+	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
 	{
 		if (m_pPed->entity.pRwObject)
 		{
@@ -1133,7 +1133,7 @@ void CPlayerPed::SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedO
 					if (GetObjectSlotState(index))
 						RemoveAttachedObject(index);
 
-					MATRIX4X4 mat;
+					RwMatrix mat;
 					GetMatrix(&mat);
 					memcpy(&m_attachedObjectInfo[index], pNewAttachedObject, sizeof(NEW_ATTACHED_OBJECT));
 
@@ -1236,22 +1236,22 @@ void CPlayerPed::ProcessAttachedObjects()
 					// CPhysical::Remove
 					((void (*) (ENTITY_TYPE*))(*(uintptr_t*)(m_pAttachedObjects[i]->m_pEntity->vtable + 0x10)))(m_pAttachedObjects[i]->m_pEntity);
 
-					MATRIX4X4 boneMatrix;
+					RwMatrix boneMatrix;
 					GetBoneMatrix(&boneMatrix, iBoneIndex);
 
-					VECTOR vecOut;
+					CVector vecOut;
 					ProjectMatrix(&vecOut, &boneMatrix, &m_attachedObjectInfo[i].vecOffset);
 
-					boneMatrix.pos.X = vecOut.X;
-					boneMatrix.pos.Y = vecOut.Y;
-					boneMatrix.pos.Z = vecOut.Z;
+					boneMatrix.pos.x = vecOut.x;
+					boneMatrix.pos.y = vecOut.y;
+					boneMatrix.pos.z = vecOut.z;
 
-					if (m_attachedObjectInfo[i].vecRot.X != 0.0f)
-						RwMatrixRotate(&boneMatrix, 0, m_attachedObjectInfo[i].vecRot.X);
-					if (m_attachedObjectInfo[i].vecRot.Y != 0.0f)
-						RwMatrixRotate(&boneMatrix, 1, m_attachedObjectInfo[i].vecRot.Y);
-					if (m_attachedObjectInfo[i].vecRot.Z != 0.0f)
-						RwMatrixRotate(&boneMatrix, 2, m_attachedObjectInfo[i].vecRot.Z);
+					if (m_attachedObjectInfo[i].vecRot.x != 0.0f)
+						RwMatrixRotate(&boneMatrix, 0, m_attachedObjectInfo[i].vecRot.x);
+					if (m_attachedObjectInfo[i].vecRot.y != 0.0f)
+						RwMatrixRotate(&boneMatrix, 1, m_attachedObjectInfo[i].vecRot.y);
+					if (m_attachedObjectInfo[i].vecRot.z != 0.0f)
+						RwMatrixRotate(&boneMatrix, 2, m_attachedObjectInfo[i].vecRot.z);
 
 					RwMatrixScale(&boneMatrix, &m_attachedObjectInfo[i].vecScale);
 
@@ -1271,9 +1271,9 @@ void CPlayerPed::ProcessAttachedObjects()
 }
 
 // 0.3.7
-void CPlayerPed::GetBoneMatrix(MATRIX4X4* matOut, int iBoneID)
+void CPlayerPed::GetBoneMatrix(RwMatrix* matOut, int iBoneID)
 {
-	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D14))
+	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
 	{
 		if (m_pPed->entity.pRwObject)
 		{
@@ -1282,9 +1282,9 @@ void CPlayerPed::GetBoneMatrix(MATRIX4X4* matOut, int iBoneID)
 
 			// RpHAnimIDGetIndex
 			int index = (( int (*)(uintptr_t, int))(g_libGTASA + 0x1C2C90 + 1))(pAnimHierarchy, iBoneID) << 6;
-			MATRIX4X4* mat = (MATRIX4X4*)(index + *(uintptr_t*)(pAnimHierarchy + 8));
+			RwMatrix* mat = (RwMatrix*)(index + *(uintptr_t*)(pAnimHierarchy + 8));
 
-			memcpy(matOut, mat, sizeof(MATRIX4X4));
+			memcpy(matOut, mat, sizeof(RwMatrix));
 		}
 	}
 }
@@ -1303,9 +1303,9 @@ void CPlayerPed::ClumpUpdateAnimations(float step, int flag)
 	}
 }
 bool g_customFire = false;
-extern uint32_t(*CWeapon_FireInstantHit)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, VECTOR* vecOrigin, VECTOR* muzzlePosn, ENTITY_TYPE* targetEntity,
-										 VECTOR* target, VECTOR* originForDriveBy, bool arg6, bool muzzle);
-extern uint32_t(*CWeapon_FireSniper)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, VECTOR* target);
+extern uint32_t(*CWeapon_FireInstantHit)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, CVector* vecOrigin, CVector* muzzlePosn, ENTITY_TYPE* targetEntity,
+										 CVector* target, CVector* originForDriveBy, bool arg6, bool muzzle);
+extern uint32_t(*CWeapon_FireSniper)(WEAPON_SLOT_TYPE* thiz, PED_TYPE* pFiringEntity, ENTITY_TYPE* victim, CVector* target);
 
 CPlayerPed* g_pCurrentFiredPed = nullptr;
 BULLET_DATA* g_pCurrentBulletData = nullptr;
@@ -1341,7 +1341,7 @@ void CPlayerPed::FireInstant()
 	else
 		g_pCurrentBulletData = nullptr;
 
-	VECTOR vecBonePos, vecOut;
+	CVector vecBonePos, vecOut;
 
 	if (GetCurrentWeapon() == WEAPON_SNIPER)
 	{
@@ -1365,7 +1365,7 @@ void CPlayerPed::FireInstant()
 		WEAPON_SLOT_TYPE* pSlot = GetCurrentWeaponSlot();
 
 		// CWeapon::FireInstantHit
-		((void (*)(WEAPON_SLOT_TYPE*, PED_TYPE*, VECTOR*, VECTOR*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5DC128 + 1))(
+		((void (*)(WEAPON_SLOT_TYPE*, PED_TYPE*, CVector*, CVector*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5DC128 + 1))(
 				pSlot, m_pPed, &vecBonePos, &vecOut, 0, 0, 0, 0, 1);
 	}
 
@@ -1382,37 +1382,37 @@ void CPlayerPed::FireInstant()
 	}
 }
 // 0.3.7
-void CPlayerPed::GetWeaponInfoForFire(bool bLeftWrist, VECTOR* vecBonePos, VECTOR* vecOut)
+void CPlayerPed::GetWeaponInfoForFire(bool bLeftWrist, CVector* vecBonePos, CVector* vecOut)
 {
 	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId) || IsGameEntityArePlaceable(m_pEntity))
 		return;
 
-	VECTOR *pFireOffset = GetCurrentWeaponFireOffset();
+	CVector *pFireOffset = GetCurrentWeaponFireOffset();
 	if(pFireOffset && vecBonePos && vecOut)
 	{
-		vecOut->X = pFireOffset->X;
-		vecOut->Y = pFireOffset->Y;
-		vecOut->Z = pFireOffset->Z;
+		vecOut->x = pFireOffset->x;
+		vecOut->y = pFireOffset->y;
+		vecOut->z = pFireOffset->z;
 
 		int iBoneId = 24;
 		if(bLeftWrist) iBoneId = 34;
 
 		GetBonePosition(iBoneId, vecBonePos);
 
-		vecBonePos->Z += pFireOffset->Z + 0.15000001f;
+		vecBonePos->z += pFireOffset->z + 0.15000001f;
 
 		GetTransformedBonePosition(iBoneId, vecOut);
 	}
 }
 // 0.3.7
-VECTOR* CPlayerPed::GetCurrentWeaponFireOffset()
+CVector* CPlayerPed::GetCurrentWeaponFireOffset()
 {
-	VECTOR * pVecOffset;
+	CVector * pVecOffset;
 
 	WEAPON_SLOT_TYPE* pSlot = GetCurrentWeaponSlot();
 	// CWeaponInfo::GetWeaponInfo
 	uintptr_t pWeaponInfo = ((uintptr_t(*)(int, int))(g_libGTASA + 0x5E4298 + 1))(pSlot->dwType, 1);
-	pVecOffset = (VECTOR*)(pWeaponInfo + 0x24);
+	pVecOffset = (CVector*)(pWeaponInfo + 0x24);
 
 	return pVecOffset;
 }
@@ -1429,17 +1429,17 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 	m_bHaveBulletData = true;
 	m_bulletData.pEntity = btData->pEntity;
 
-	m_bulletData.vecOrigin.X = btData->vecOrigin.X;
-	m_bulletData.vecOrigin.Y = btData->vecOrigin.Y;
-	m_bulletData.vecOrigin.Z = btData->vecOrigin.Z;
+	m_bulletData.vecOrigin.x = btData->vecOrigin.x;
+	m_bulletData.vecOrigin.y = btData->vecOrigin.y;
+	m_bulletData.vecOrigin.z = btData->vecOrigin.z;
 
-	m_bulletData.vecPos.X = btData->vecPos.X;
-	m_bulletData.vecPos.Y = btData->vecPos.Y;
-	m_bulletData.vecPos.Z = btData->vecPos.Z;
+	m_bulletData.vecPos.x = btData->vecPos.x;
+	m_bulletData.vecPos.y = btData->vecPos.y;
+	m_bulletData.vecPos.z = btData->vecPos.z;
 
-	m_bulletData.vecOffset.X = btData->vecOffset.X;
-	m_bulletData.vecOffset.Y = btData->vecOffset.Y;
-	m_bulletData.vecOffset.Z = btData->vecOffset.Z;
+	m_bulletData.vecOffset.x = btData->vecOffset.x;
+	m_bulletData.vecOffset.y = btData->vecOffset.y;
+	m_bulletData.vecOffset.z = btData->vecOffset.z;
 
 	if (m_bytePlayerNumber == 0)
 	{
@@ -1490,19 +1490,19 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 										}
 										else
 										{
-											VECTOR vecOut = { 0.0f, 0.0f, 0.0f };
+											CVector vecOut = { 0.0f, 0.0f, 0.0f };
 											if (btData->pEntity->mat)
 											{
 												ProjectMatrix(&vecOut, btData->pEntity->mat, &btData->vecOffset);
-												btData->vecOffset.X = vecOut.X;
-												btData->vecOffset.Y = vecOut.Y;
-												btData->vecOffset.Z = vecOut.Z;
+												btData->vecOffset.x = vecOut.x;
+												btData->vecOffset.y = vecOut.y;
+												btData->vecOffset.z = vecOut.z;
 											}
 											else
 											{
-												btData->vecOffset.X += btData->pEntity->vPos.X;
-												btData->vecOffset.Y += btData->pEntity->vPos.Y;
-												btData->vecOffset.Z += btData->pEntity->vPos.Z;
+												btData->vecOffset.x += btData->pEntity->vPos.x;
+												btData->vecOffset.y += btData->pEntity->vPos.y;
+												btData->vecOffset.z += btData->pEntity->vPos.z;
 											}
 										}
 									}
@@ -1510,17 +1510,17 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 							}
 						}
 
-						btSync.vecOrigin.X = btData->vecOrigin.X;
-						btSync.vecOrigin.Y = btData->vecOrigin.Y;
-						btSync.vecOrigin.Z = btData->vecOrigin.Z;
+						btSync.vecOrigin.x = btData->vecOrigin.x;
+						btSync.vecOrigin.y = btData->vecOrigin.y;
+						btSync.vecOrigin.z = btData->vecOrigin.z;
 
-						btSync.vecPos.X = btData->vecPos.X;
-						btSync.vecPos.Y = btData->vecPos.Y;
-						btSync.vecPos.Z = btData->vecPos.Z;
+						btSync.vecPos.x = btData->vecPos.x;
+						btSync.vecPos.y = btData->vecPos.y;
+						btSync.vecPos.z = btData->vecPos.z;
 
-						btSync.vecOffset.X = btData->vecOffset.X;
-						btSync.vecOffset.Y = btData->vecOffset.Y;
-						btSync.vecOffset.Z = btData->vecOffset.Z;
+						btSync.vecOffset.x = btData->vecOffset.x;
+						btSync.vecOffset.y = btData->vecOffset.y;
+						btSync.vecOffset.z = btData->vecOffset.z;
 
 						btSync.byteHitType = byteHitType;
 						btSync.PlayerID = InstanceID;
@@ -1657,25 +1657,25 @@ bool CPlayerPed::IsOnGround()
 	return false;
 }
 
-extern uint32_t(*CWorld_ProcessLineOfSight)(VECTOR*, VECTOR*, VECTOR*, ENTITY_TYPE**, bool, bool, bool, bool, bool, bool, bool, bool);
+extern uint32_t(*CWorld_ProcessLineOfSight)(CVector*, CVector*, CVector*, ENTITY_TYPE**, bool, bool, bool, bool, bool, bool, bool, bool);
 ENTITY_TYPE* CPlayerPed::GetEntityUnderPlayer()
 {
 	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId))
 		return nullptr;
 
 	ENTITY_TYPE* entity;
-	VECTOR vecStart;
-	VECTOR vecEnd;
-	VECTOR vecPos;
+	CVector vecStart;
+	CVector vecEnd;
+	CVector vecPos;
 	char buf[100];
 
-	vecStart.X = m_pPed->entity.mat->pos.X;
-	vecStart.Y = m_pPed->entity.mat->pos.Y;
-	vecStart.Z = m_pPed->entity.mat->pos.Z - 0.25f;
+	vecStart.x = m_pPed->entity.mat->pos.x;
+	vecStart.y = m_pPed->entity.mat->pos.y;
+	vecStart.z = m_pPed->entity.mat->pos.z - 0.25f;
 
-	vecEnd.X = m_pPed->entity.mat->pos.X;
-	vecEnd.Y = m_pPed->entity.mat->pos.Y;
-	vecEnd.Z = vecStart.Z - 1.75f;
+	vecEnd.x = m_pPed->entity.mat->pos.x;
+	vecEnd.y = m_pPed->entity.mat->pos.y;
+	vecEnd.z = vecStart.z - 1.75f;
 
 	LineOfSight(&vecStart, &vecEnd, (void*)buf, (uintptr_t)&entity, 0, 1, 0, 1, 0, 0, 0, 0);
 	return (ENTITY_TYPE*)entity;
@@ -1732,7 +1732,7 @@ void CPlayerPed::StartJetpack()
 	*pbyteCurrentPlayer = m_bytePlayerNumber;
 
 	// reset CTasks so the CJetPack task priority can be enforced
-	TeleportTo(m_pPed->entity.mat->pos.X, m_pPed->entity.mat->pos.Y, m_pPed->entity.mat->pos.Z);
+	TeleportTo(m_pPed->entity.mat->pos.x, m_pPed->entity.mat->pos.y, m_pPed->entity.mat->pos.z);
 
 	// CCheat::JetpackCheat
 	(( void (*)())(g_libGTASA+0x2FE1E8+1))();
@@ -1747,10 +1747,10 @@ void CPlayerPed::StopJetpack()
 
 	if(IsInJetpackMode())
 	{
-		uint32_t dwJetPackTask = (uint32_t)m_pPed->Tasks->pdwJumpJetPack;
+		uintptr_t dwJetPackTask = reinterpret_cast<uintptr_t>(m_pPed->Tasks->pdwJumpJetPack);
 
 		// CTaskSimpleJetPack::~CTaskSimpleJetPack
-		(( void (*)(uint32_t))(g_libGTASA+0x530C8C+1))(dwJetPackTask); // CTaskSimpleJetPack::~CTaskSimpleJetPack
+		(( void (*)(uintptr_t))(g_libGTASA+0x530C8C+1))(dwJetPackTask); // CTaskSimpleJetPack::~CTaskSimpleJetPack
 
 		m_pPed->Tasks->pdwJumpJetPack = 0;
 	}
@@ -1822,9 +1822,9 @@ void CPlayerPed::StopDancing()
 
 	m_iDanceStyle = -1;
 
-	MATRIX4X4 mat;
+	RwMatrix mat;
 	GetMatrix(&mat);
-	TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+	TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 }
 
 void CPlayerPed::ProcessDancing()
@@ -1928,9 +1928,9 @@ void CPlayerPed::StopPissing()
 			m_dwPissParticlesHandle = 0;
 		}
 
-		MATRIX4X4 mat;
+		RwMatrix mat;
 		GetMatrix(&mat);
-		TeleportTo(mat.pos.X, mat.pos.Y, mat.pos.Z);
+		TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
 
 		m_bPissingState = false;
 	}
@@ -2017,30 +2017,30 @@ void CPlayerPed::GiveStuff(eStuffType type)
 
 	SetArmedWeapon(0, 0);
 
-	MATRIX4X4 matPlayer;
+	RwMatrix matPlayer;
 	GetMatrix(&matPlayer);
 	switch(type)
 	{
 		case eStuffType::STUFF_TYPE_BEER:
-			ScriptCommand(&create_object, OBJECT_CJ_BEER_B_2, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z, &m_stuffData.dwObject);
+			ScriptCommand(&create_object, OBJECT_CJ_BEER_B_2, matPlayer.pos.x, matPlayer.pos.y, matPlayer.pos.z, &m_stuffData.dwObject);
 			if(GamePool_Object_GetAt(m_stuffData.dwObject))
 				ScriptCommand(&task_pick_up_object, m_dwGTAId, m_stuffData.dwObject, 0.05000000074505806, 0.02999999932944775, -0.300000011920929, 6, 16, "NULL", "NULL", -1);
 			break;
 
 		case eStuffType::STUFF_TYPE_DYN_BEER:
-			ScriptCommand(&create_object, OBJECT_DYN_BEER_1, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z, &m_stuffData.dwObject);
+			ScriptCommand(&create_object, OBJECT_DYN_BEER_1, matPlayer.pos.x, matPlayer.pos.y, matPlayer.pos.z, &m_stuffData.dwObject);
 			if(GamePool_Object_GetAt(m_stuffData.dwObject))
 				ScriptCommand(&task_pick_up_object, m_dwGTAId, m_stuffData.dwObject, 0.05000000074505806, 0.02999999932944775, -0.05000000074505806, 6, 16, "NULL", "NULL", -1);
 			break;
 
 		case eStuffType::STUFF_TYPE_PINT_GLASS:
-			ScriptCommand(&create_object, OBJECT_CJ_PINT_GLASS, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z, &m_stuffData.dwObject);
+			ScriptCommand(&create_object, OBJECT_CJ_PINT_GLASS, matPlayer.pos.x, matPlayer.pos.y, matPlayer.pos.z, &m_stuffData.dwObject);
 			if(GamePool_Object_GetAt(m_stuffData.dwObject))
 				ScriptCommand(&task_pick_up_object, m_dwGTAId, m_stuffData.dwObject, 0.03999999910593033, 0.1000000014901161, -0.01999999955296516, 6, 16, "NULL", "NULL", -1);
 			break;
 
 		case eStuffType::STUFF_TYPE_CIGGI:
-			ScriptCommand(&create_object, OBJECT_CJ_CIGGY, matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z, &m_stuffData.dwObject);
+			ScriptCommand(&create_object, OBJECT_CJ_CIGGY, matPlayer.pos.x, matPlayer.pos.y, matPlayer.pos.z, &m_stuffData.dwObject);
 			if(GamePool_Object_GetAt(m_stuffData.dwObject))
 				ScriptCommand(&task_pick_up_object, m_dwGTAId, m_stuffData.dwObject, 0.0, 0.0, 0.0, 6, 16, "NULL", "NULL", -1);
 			break;
@@ -2060,9 +2060,9 @@ void CPlayerPed::DropStuff()
 		m_stuffData.dwObject = 0;
 	}
 
-	MATRIX4X4 matPlayer;
+	RwMatrix matPlayer;
 	GetMatrix(&matPlayer);
-	TeleportTo(matPlayer.pos.X, matPlayer.pos.Y, matPlayer.pos.Z);
+	TeleportTo(matPlayer.pos.x, matPlayer.pos.y, matPlayer.pos.z);
 
 	m_stuffData.type = eStuffType::STUFF_TYPE_NONE;
 }
@@ -2125,10 +2125,10 @@ void CPlayerPed::ProcessDrunk()
 							}
 						}
 
-						if(FloatOffset(_pVehicle->entity.vecMoveSpeed.X, 0.0) > 0.050000001f ||
-						   FloatOffset(_pVehicle->entity.vecMoveSpeed.Y, 0.0) > 0.050000001f)
+						if(FloatOffset(_pVehicle->entity.vecMoveSpeed.x, 0.0) > 0.050000001f ||
+						   FloatOffset(_pVehicle->entity.vecMoveSpeed.y, 0.0) > 0.050000001f)
 						{
-							_pVehicle->entity.vecTurnSpeed.Z = fRotation + _pVehicle->entity.vecTurnSpeed.Z;
+							_pVehicle->entity.vecTurnSpeed.z = fRotation + _pVehicle->entity.vecTurnSpeed.z;
 						}
 
 						m_stuffData.dwLastUpdateTick = GetTickCount();
@@ -2324,17 +2324,17 @@ void CPlayerPed::SetCurrentWeapon(uint8_t weaponType)
 
 float CPlayerPed::GetDistanceFromVehicle(CVehicle *pVehicle)
 {
-	MATRIX4X4 matFromPlayer, matThis;
-	VECTOR vecDistance;
+	RwMatrix matFromPlayer, matThis;
+	CVector vecDistance;
 
 	GetMatrix(&matThis);
 	pVehicle->GetMatrix(&matFromPlayer);
 
-	vecDistance.X = matThis.pos.X - matFromPlayer.pos.X;
-	vecDistance.Y = matThis.pos.Y - matFromPlayer.pos.Y;
-	vecDistance.Z = matThis.pos.Z - matFromPlayer.pos.Z;
+	vecDistance.x = matThis.pos.x - matFromPlayer.pos.x;
+	vecDistance.y = matThis.pos.y - matFromPlayer.pos.y;
+	vecDistance.z = matThis.pos.z - matFromPlayer.pos.z;
 
-	return (float)sqrt(vecDistance.X * vecDistance.X + vecDistance.Y * vecDistance.Y + vecDistance.Z * vecDistance.Z);
+	return (float)sqrt(vecDistance.x * vecDistance.x + vecDistance.y * vecDistance.y + vecDistance.z * vecDistance.z);
 }
 
 CVehicle* CPlayerPed::GetCurrentVehicle()
@@ -2395,10 +2395,10 @@ void CPlayerPed::StopPassengerDriveByMode()
 
 	if(IsInPassengerDriveByMode())
 	{
-		uint32_t dwJetPackTask = (uint32_t)m_pPed->Tasks->pdwJumpJetPack;
+        uintptr_t dwJetPackTask = (uintptr_t)m_pPed->Tasks->pdwJumpJetPack;
 
 		// CTaskSimpleGangDriveBy::~CTaskSimpleGangDriveBy
-		(( void (*)(uint32_t))(g_libGTASA+0x4E4458+1))(dwJetPackTask);
+		(( void (*)(uintptr_t))(g_libGTASA+0x4E4458+1))(dwJetPackTask);
 
 		m_pPed->Tasks->pdwJumpJetPack = 0;
 	}

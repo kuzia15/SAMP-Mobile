@@ -11,7 +11,7 @@ bool bInProcessDetachTrailer = false;
 CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, bool bPreloaded, bool bSiren)
 {
 	uint32_t dwRetID = 0;
-	MATRIX4X4 matEnt;
+	RwMatrix matEnt;
 	static VEHICLE_TYPE* pCreatedTrain = nullptr;
 
 	m_pVehicle = nullptr;
@@ -46,13 +46,13 @@ CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, boo
 			m_bIsLocked = false;
 
 			GetMatrix(&matEnt);
-			matEnt.pos.X = fX;
-			matEnt.pos.Y = fY;
-			matEnt.pos.Z = fZ;
+			matEnt.pos.x = fX;
+			matEnt.pos.y = fY;
+			matEnt.pos.z = fZ;
 
 			if( GetVehicleSubtype() != VEHICLE_SUBTYPE_BIKE &&
 				GetVehicleSubtype() != VEHICLE_SUBTYPE_PUSHBIKE)
-				matEnt.pos.Z += 0.25f;
+				matEnt.pos.z += 0.25f;
 
 			UpdateMatrix(matEnt);
 			m_bPreloaded = bPreloaded;
@@ -317,9 +317,9 @@ void CVehicle::RemoveEveryoneFromVehicle()
 	if (!m_pVehicle) return;
 	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return;
 
-	float fPosX = m_pVehicle->entity.mat->pos.X;
-	float fPosY = m_pVehicle->entity.mat->pos.Y;
-	float fPosZ = m_pVehicle->entity.mat->pos.Z;
+	float fPosX = m_pVehicle->entity.mat->pos.x;
+	float fPosY = m_pVehicle->entity.mat->pos.y;
+	float fPosZ = m_pVehicle->entity.mat->pos.z;
 
 	int iPlayerID = 0;
 	if (m_pVehicle->pDriver) {
@@ -514,7 +514,7 @@ bool CVehicle::IsDriverLocalPlayer()
 // 0.3.7
 void CVehicle::SetInvulnerable(bool bInv)
 {
-	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && m_pVehicle->entity.vtable != (g_libGTASA + 0x667D14))
+	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && m_pVehicle->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14:0x830098)))
 	{
 		if (bInv)
 		{

@@ -12,7 +12,7 @@ CSettings::CSettings()
 	FLog("Loading settings..");	
 
 	char buff[0x7F];
-	sprintf(buff, "%sSAMP/settings.ini", pGame->GetDataDirectory());
+	sprintf(buff, "%sSAMP/settings.ini", g_pszStorage);
 
 	INIReader reader(buff);
 

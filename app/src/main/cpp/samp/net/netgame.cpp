@@ -46,22 +46,28 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
 	// voice
 	Network::OnRaknetConnect(szHostOrIp, iPort);
+    FLog("CNetGame initializing..1");
 
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 
+    FLog("CNetGame initializing..2");
 	m_pNetSet = new NET_SETTINGS;
 	memset(m_szHostName, 0, 256);
 	memset(m_szHostOrIp, 0, 256);
 
+    FLog("CNetGame initializing..3");
 	strcpy(m_szHostName, "SA-MP");
 	strncpy(m_szHostOrIp, szHostOrIp, sizeof(m_szHostOrIp));
 	m_iPort = iPort;
 
+    FLog("CNetGame initializing..4");
 	m_pRakClient = RakNetworkFactory::GetRakClientInterface();
+    FLog("CNetGame initializing..4 1");
 	InitializePools();
-	
+
+    FLog("CNetGame initializing.. 5");
 	GetPlayerPool()->SetLocalPlayerName(szPlayerName);
 
 	RegisterRPCs(m_pRakClient);
@@ -70,9 +76,11 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
 	memset(m_dwMapIcon, 0, sizeof(m_dwMapIcon));
 
+    FLog("CNetGame initializing.. 6");
 	pGame->EnableClock(false);
 	pGame->EnableZoneNames(false);
 
+    FLog("CNetGame initializing..7");
 	m_pNetSet->iDeathDropMoney = 0;
 	m_pNetSet->iSpawnsAvailable = 0;
 	m_pNetSet->bNameTagLOS = 0;
@@ -116,17 +124,29 @@ CNetGame::~CNetGame()
 
 void CNetGame::InitializePools()
 {
+    FLog("InitializePools");
 	m_pPools = new NET_POOLS;
+    FLog("InitializePools 1");
 	m_pPools->pPlayerPool = new CPlayerPool();
+    FLog("InitializePools 2");
 	m_pPools->pVehiclePool = new CVehiclePool();
+    FLog("InitializePools 3");
 	m_pPools->pGangZonePool = new CGangZonePool();
+    FLog("InitializePools 4");
 	m_pPools->pPickupPool = new CPickupPool();
+    FLog("InitializePools 5");
 	m_pPools->pObjectPool = new CObjectPool();
+    FLog("InitializePools 6");
 	m_pPools->pTextLabelPool = new C3DTextLabelPool();
+    FLog("InitializePools 7");
 	m_pPools->pTextDrawPool = new CTextDrawPool();
+    FLog("InitializePools 8");
 	m_pPools->pActorPool = new CActorPool();
+    FLog("InitializePools 9");
 	m_pPools->pMenuPool = new CMenuPool();
+    FLog("InitializePools 10");
 	m_pPools->pPlayerBubblePool = new CPlayerBubblePool();
+    FLog("InitializePools 11");
 }
 
 void CNetGame::UninitializePools()
@@ -195,24 +215,30 @@ void CNetGame::UninitializePools()
 
 void CNetGame::Process()
 {
+    FLog("CNetgame process");
 	static uint32_t time = GetTickCount();
 	bool bProcess = false;
 	if (GetTickCount() - time >= 1000 / 30)
 	{
-		UpdateNetwork();
+		//UpdateNetwork();
 		time = GetTickCount();
 		bProcess = true;
 	}
+    FLog("CNetgame process1");
 	if (m_pNetSet->byteHoldTime) {
 		pGame->SetWorldTime(m_pNetSet->byteWorldTime_Hour, m_pNetSet->byteWorldTime_Minute);
 	}
 
+    FLog("CNetgame process2");
 	pGame->PreloadObjectsAnims();
 
+    FLog("CNetgame process3");
 	if (GetGameState() == GAMESTATE_CONNECTED) {
-		ProcessPools();
+        FLog("CNetgame process4");
+		//ProcessPools();
 	}
 	else {
+        FLog("CNetgame process5");
 		ProcessLoadingScreen();
 	}
 
@@ -413,8 +439,8 @@ void CNetGame::ProcessLoadingScreen()
 		pPlayerPed->TeleportTo(1133.0504, -2038.4034, 69.099998);
 	}
 
-	pGame->GetCamera()->SetPosition(1093.0, -2036.0, 90.0, 0.0, 0.0, 0.0);
-	pGame->GetCamera()->LookAtPoint(384.0, -1557.0, 20.0, 2);
+	CCamera::SetPosition(1093.0, -2036.0, 90.0, 0.0, 0.0, 0.0);
+	CCamera::LookAtPoint(384.0, -1557.0, 20.0, 2);
 	pGame->SetWorldWeather(1);
 	pGame->DisplayHUD(false);
 }
@@ -615,7 +641,7 @@ void CNetGame::Packet_PlayerSync(Packet *pkt)
 	}
 
 	bsData.Read(ofSync.wKeys);
-	bsData.Read((char*)&ofSync.vecPos, sizeof(VECTOR));
+	bsData.Read((char*)&ofSync.vecPos, sizeof(CVector));
 	float w, x, y, z;
 	bsData.ReadNormQuat(w, x, y, z);
 	ofSync.quat.Set(x, y, z, w);
@@ -640,16 +666,16 @@ void CNetGame::Packet_PlayerSync(Packet *pkt)
 	ofSync.byteCurrentWeapon ^= (byteCurrentWeapon ^ ofSync.byteCurrentWeapon) & 0x3F;
 
 	bsData.Read(ofSync.byteSpecialAction);
-	bsData.ReadVector(ofSync.vecMoveSpeed.X, ofSync.vecMoveSpeed.Y, ofSync.vecMoveSpeed.Z);
+	bsData.ReadVector(ofSync.vecMoveSpeed.x, ofSync.vecMoveSpeed.y, ofSync.vecMoveSpeed.z);
 
 	bool bHasVehicleSurfingInfo;
 	bsData.Read(bHasVehicleSurfingInfo);
 	if (bHasVehicleSurfingInfo)
 	{
 		bsData.Read(ofSync.wSurfID);
-		bsData.Read(ofSync.vecSurfOffsets.X);
-		bsData.Read(ofSync.vecSurfOffsets.Y);
-		bsData.Read(ofSync.vecSurfOffsets.Z);
+		bsData.Read(ofSync.vecSurfOffsets.x);
+		bsData.Read(ofSync.vecSurfOffsets.y);
+		bsData.Read(ofSync.vecSurfOffsets.z);
 	}
 	else
 		ofSync.wSurfID = INVALID_VEHICLE_ID;
@@ -692,8 +718,8 @@ void CNetGame::Packet_VehicleSync(Packet* pkt)
 	bsData.ReadNormQuat(w, x, y, z);
 	icSync.quat.Set(x, y, z, w);
 	
-	bsData.Read((char*)& icSync.vecPos, sizeof(VECTOR));
-	bsData.ReadVector(icSync.vecMoveSpeed.X, icSync.vecMoveSpeed.Y, icSync.vecMoveSpeed.Z);
+	bsData.Read((char*)& icSync.vecPos, sizeof(CVector));
+	bsData.ReadVector(icSync.vecMoveSpeed.x, icSync.vecMoveSpeed.y, icSync.vecMoveSpeed.z);
 
 	// car health
 	uint16_t wTempVehicleHealth;

@@ -10,8 +10,11 @@
 #include "log.h"
 #include <jni.h>
 #include <cstring>
+#include "game/common.h"
 #include "vendor/bass/bass.h"
 #include "vendor/bass/bass_fx.h"
+
+extern char* g_pszStorage;
 
 #ifndef SAFE_DELETE
 	#define SAFE_DELETE(p) { if (p) { delete (p); (p) = NULL; } }

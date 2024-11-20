@@ -8,17 +8,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class NvAPKFileHelper {
-    private static final boolean logAssetFiles = false;
     private static NvAPKFileHelper instance = new NvAPKFileHelper();
+    private static final boolean logAssetFiles = false;
     int apkCount = 0;
     String[] apkFiles;
+    private Context context = null;
     boolean hasAPKFiles = false;
     int myApkCount = 0;
-    private Context context = null;
-
-    public static NvAPKFileHelper getInstance() {
-        return instance;
-    }
+    private int READ_MODE_ONLY = 268435456;
 
     private int findInAPKFiles(String str) {
         if (this.myApkCount == 0) {
@@ -27,13 +24,19 @@ public class NvAPKFileHelper {
         String str2 = str + ".mp3";
         for (int i = 0; i < this.apkFiles.length; i++) {
             if (str.compareToIgnoreCase(this.apkFiles[i]) == 0 || str2.compareToIgnoreCase(this.apkFiles[i]) == 0) {
-                str.compareTo(this.apkFiles[i]);
+                if (str.compareTo(this.apkFiles[i]) != 0) {
+                }
                 return i;
             }
         }
         return -1;
     }
 
+    public static NvAPKFileHelper getInstance() {
+        return instance;
+    }
+
+    /* access modifiers changed from: 0000 */
     public void AddAssetFile(String str) {
         String[] strArr = this.apkFiles;
         int i = this.myApkCount;
@@ -41,6 +44,7 @@ public class NvAPKFileHelper {
         strArr[i] = str;
     }
 
+    /* access modifiers changed from: 0000 */
     public void GetAssetList() {
         try {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.context.getAssets().open("assetfile.txt")));
@@ -76,6 +80,7 @@ public class NvAPKFileHelper {
         nvAPKFile.is = null;
     }
 
+    /* access modifiers changed from: 0000 */
     public int getDirectoryListing(AssetManager assetManager, String str, int i) {
         try {
             if (this.apkFiles == null && i > 0) {
@@ -90,7 +95,8 @@ public class NvAPKFileHelper {
                 }
             } else if (i == 0) {
             }
-            for (int i2 = 0; i2 < list.length; i2++) {
+            int i2 = 0;
+            while (i2 < list.length) {
                 if (list[i2].indexOf(46) == -1) {
                     getDirectoryListing(assetManager, str.length() > 0 ? str + "/" + list[i2] : list[i2], i);
                 } else if (i > 0) {
@@ -98,6 +104,7 @@ public class NvAPKFileHelper {
                 } else {
                     this.apkCount++;
                 }
+                i2++;
             }
         } catch (Exception e) {
             System.out.println("ERROR: getDirectoryListing " + e.getMessage());
@@ -124,8 +131,7 @@ public class NvAPKFileHelper {
         try {
             nvAPKFile.is = this.context.getAssets().open(this.apkFiles[findInAPKFiles]);
             nvAPKFile.length = nvAPKFile.is.available();
-            int MODE_READ_ONLY = 268435456;
-            nvAPKFile.is.mark(MODE_READ_ONLY);
+            nvAPKFile.is.mark(READ_MODE_ONLY);
             nvAPKFile.bufferSize = 1024;
             nvAPKFile.data = new byte[nvAPKFile.bufferSize];
             return nvAPKFile;

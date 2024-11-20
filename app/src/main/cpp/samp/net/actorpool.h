@@ -5,7 +5,7 @@ typedef struct _NEW_ACTOR
 {
 	PLAYERID ActorID;
 	int iSkin;
-	VECTOR vecPos;
+	CVector vecPos;
 	float fAngle;
 	float fHealth;
 	bool bInvulnerable;
@@ -44,5 +44,5 @@ public:
 private:
 	CActor* m_pActors[MAX_ACTORS];
 	bool m_bActorSlotState[MAX_ACTORS];
-	PED_TYPE* m_pGtaPed[MAX_ACTORS];
+    PED_TYPE* m_pGtaPed[MAX_ACTORS];
 };

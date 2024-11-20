@@ -24,7 +24,7 @@ CObjectPool::~CObjectPool()
 	}
 }
 
-bool CObjectPool::New(OBJECTID ObjectID, int iModel, VECTOR vecPos, VECTOR vecRot, float fDrawDistance)
+bool CObjectPool::New(OBJECTID ObjectID, int iModel, CVector vecPos, CVector vecRot, float fDrawDistance)
 {
 	if (m_pObjects[ObjectID] != nullptr) {
 		Delete(ObjectID);
