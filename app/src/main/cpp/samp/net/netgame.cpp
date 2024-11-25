@@ -45,7 +45,7 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 	FLog("CNetGame initializing..");
 
 	// voice
-	Network::OnRaknetConnect(szHostOrIp, iPort);
+	//Network::OnRaknetConnect(szHostOrIp, iPort);
     FLog("CNetGame initializing..1");
 
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
@@ -107,7 +107,7 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 CNetGame::~CNetGame()
 {
 	// voice
-	Network::OnRaknetDisconnect();
+	//Network::OnRaknetDisconnect();
 
 	m_pRakClient->Disconnect(0);
 	UnregisterRPCs(m_pRakClient);
@@ -325,7 +325,7 @@ void CNetGame::UpdateNetwork()
                 break;
 
             case Network::kRaknetPacketId: {
-                Network::OnRaknetReceive(pkt);
+                //Network::OnRaknetReceive(pkt);
                 break;
             }
         }
@@ -456,7 +456,7 @@ void CNetGame::ProcessConnecting()
 		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 2);
 		
 		// voice fix voice not connect when restart
-		Network::OnRaknetConnect(m_szHostOrIp, m_iPort);
+		//Network::OnRaknetConnect(m_szHostOrIp, m_iPort);
 
 		m_dwLastConnectAttempt = GetTickCount();
 		SetGameState(GAMESTATE_CONNECTING);
@@ -958,12 +958,12 @@ void CNetGame::SetMapIcon(uint8_t byteIconID, float fPosX, float fPosY, float fP
 		DisableMapIcon(byteIconID);
 	}
 
-	m_dwMapIcon[byteIconID] = pGame->CreateRadarMarkerIcon(byteType, fPosX, fPosY, fPosZ, dwColor, byteStyle);
+	//m_dwMapIcon[byteIconID] = pGame->CreateRadarMarkerIcon(byteType, fPosX, fPosY, fPosZ, dwColor, byteStyle);
 }
 // 0.3.7
 void CNetGame::DisableMapIcon(uint8_t byteIconID)
 {
-	ScriptCommand(&disable_marker, m_dwMapIcon[byteIconID]);
+	//ScriptCommand(&disable_marker, m_dwMapIcon[byteIconID]);
 	m_dwMapIcon[byteIconID] = 0;
 }
 // 0.3.7
@@ -1017,7 +1017,7 @@ void CNetGame::ResetMapIcons()
 	for (int i = 0; i < MAX_MAP_ICONS; i++)
 	{
 		if (m_dwMapIcon[i]) {
-			ScriptCommand(&disable_marker, m_dwMapIcon[i]);
+			//ScriptCommand(&disable_marker, m_dwMapIcon[i]);
 			m_dwMapIcon[i] = 0;
 		}
 	}
@@ -1053,7 +1053,7 @@ void CNetGame::ResetMenuPool()
 void CNetGame::InitGameLogic()
 {
 	if (m_pNetSet->bManualVehicleEngineAndLight) {
-		InstallVehicleEngineLightPatches();
+		//InstallVehicleEngineLightPatches();
 	}
 
 	m_pNetSet->fWorldBounds[0] = 20000.0f;

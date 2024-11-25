@@ -510,7 +510,7 @@ void CLocalPlayer::ProcessSpectating()
 	uint16_t lrAnalog, udAnalog;
 	uint16_t wKeys = m_pPlayerPed->GetKeys(&lrAnalog, &udAnalog);
     CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
-    TheCamera.GetMatrix(&matPos);
+    matPos = TheCamera.GetMatrix().ToRwMatrix();
 
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();

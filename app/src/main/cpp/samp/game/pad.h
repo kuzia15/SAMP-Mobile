@@ -25,7 +25,6 @@ enum ePadKeys
 	KEY_CTRL_BACK, 			// H 			|   H 					|	262144
 };
 
-#pragma pack(push, 1)
 typedef struct
 {
 	uint16_t wKeyLR;
@@ -33,7 +32,8 @@ typedef struct
 	bool bKeys[ePadKeys::SIZE+4];
 	bool bIgnoreJump;
 } PAD_KEYS;
-#pragma pack(pop)
+
+VALIDATE_SIZE(PAD_KEYS, 24);
 
 extern PAD_KEYS LocalPlayerKeys;
 extern PAD_KEYS RemotePlayerKeys[PLAYER_PED_SLOTS];

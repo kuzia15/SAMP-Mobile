@@ -67,6 +67,7 @@ void CRemotePlayer::Process()
 			m_byteUpdateFromNetwork == UPDATE_TYPE_ONFOOT &&
 			!m_pPlayerPed->IsInVehicle())
 		{
+            FLog("CRemotePlayer::Process 1");
 			UpdateOnFootPositionAndSpeed(&m_ofSync.vecPos, &m_ofSync.vecMoveSpeed);
 			UpdateOnFootTargetPosition();
 
@@ -91,17 +92,19 @@ void CRemotePlayer::Process()
 			}
 			else
 			{
-				ProcessAnimation();
+				//ProcessAnimation();
 				m_pPlayerPed->SetActionTrigger(ACTION_NORMAL);
 			}
 
 			m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
+            FLog("CRemotePlayer::Process 2");
 		}
 		// ---- DRIVER NETWORK PROCESSING ----
 		else if (GetState() == PLAYER_STATE_DRIVER &&
 			m_byteUpdateFromNetwork == UPDATE_TYPE_INCAR &&
 			m_pPlayerPed->IsInVehicle())
 		{
+            FLog("CRemotePlayer::Process 3");
 			if (!m_pCurrentVehicle || !m_pCurrentVehicle->VerifyInstance()) {
 				return;
 			}
@@ -159,11 +162,13 @@ void CRemotePlayer::Process()
 			}
 
 			m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
+            FLog("CRemotePlayer::Process 4");
 		}
 		// ---- PASSENGER NETWORK PROCESSING ----
 		else if (GetState() == PLAYER_STATE_PASSENGER &&
 			m_byteUpdateFromNetwork == UPDATE_TYPE_PASSENGER)
 		{
+            FLog("CRemotePlayer::Process 5");
 			if (!m_pCurrentVehicle || !m_pCurrentVehicle->VerifyInstance()) {
 				return;
 			}
@@ -180,15 +185,17 @@ void CRemotePlayer::Process()
 			}
 
 			m_byteUpdateFromNetwork = UPDATE_TYPE_NONE;
+            FLog("CRemotePlayer::Process 6");
 		}
 
 		// ------ PROCESSED FOR ALL FRAMES ----- 
 		if (GetState() == PLAYER_STATE_ONFOOT && !m_pPlayerPed->IsInVehicle())
 		{
+            FLog("CRemotePlayer::Process7");
 			InterpolateAndRotate();
 			//SyncHead();
 			m_bPassengerDriveByMode = false;
-			ProcessSpecialActions(m_ofSync.byteSpecialAction);
+			//ProcessSpecialActions(m_ofSync.byteSpecialAction);
 
             if (m_byteWeaponShotID != 0xFF)
             {
@@ -254,11 +261,12 @@ void CRemotePlayer::Process()
 					//m_pPlayerPed->SetGravityProcessing(1);
 					m_pPlayerPed->m_pPed->SetCollisionChecking(1);
 				}
-
+                FLog("CRemotePlayer::Process 8");
 			}
 		}
 		else if (GetState() == PLAYER_STATE_DRIVER && m_pPlayerPed->IsInVehicle())
 		{
+            FLog("CRemotePlayer::Process9");
 			if (!m_pCurrentVehicle)
 			{
 				return;
@@ -295,6 +303,8 @@ void CRemotePlayer::Process()
 						m_pCurrentVehicle->m_pVehicle->SetVelocity(m_icSync.vecMoveSpeed);
 					}
 				}
+
+                FLog("CRemotePlayer::Process10");
 			}
 
 			m_pPlayerPed->SetKeys(m_icSync.lrAnalog, m_icSync.udAnalog, m_icSync.wKeys);
@@ -318,6 +328,7 @@ void CRemotePlayer::Process()
 		}
 		else if (GetState() == PLAYER_STATE_PASSENGER && m_pPlayerPed->IsInVehicle())
 		{
+            FLog("CRemotePlayer::Process11");
 			if((GetTickCount() - m_dwLastRecvTick) > 3000)
 				m_bIsAFK = true;
 
@@ -325,10 +336,13 @@ void CRemotePlayer::Process()
 		}
 		else
 		{
+            FLog("CRemotePlayer::Process12");
 			m_pPlayerPed->SetKeys(0, 0, 0);
+            FLog("CRemotePlayer::Process15");
 			vecMoveSpeed.x = 0.0f;
 			vecMoveSpeed.y = 0.0f;
 			vecMoveSpeed.z = 0.0f;
+            FLog("CRemotePlayer::Process16");
 			m_pPlayerPed->m_pPed->SetVelocity(vecMoveSpeed);
 			m_bPassengerDriveByMode = false;
 		}
@@ -343,6 +357,7 @@ void CRemotePlayer::Process()
 	}
 	else
 	{
+        FLog("CRemotePlayer::Process13");
 		if (m_pPlayerPed) {
 			ResetAllSyncAttributes();
 			pGame->RemovePlayer(m_pPlayerPed);
@@ -522,10 +537,12 @@ bool CRemotePlayer::Spawn(uint8_t byteTeam, int iSkin, CVector *vecPos, float fR
 	CPlayerPed* pPlayerPed = pGame->NewPlayer(iSkin, vecPos->x, vecPos->y, vecPos->z, fRotation, true, m_bIsNPC);
 	if (pPlayerPed)
 	{
+        FLog("CRemotePlayer::Spawn 1");
 		if (dwColor) {
 			SetRadarColor(m_PlayerID, dwColor);
 		}
 
+        FLog("CRemotePlayer::Spawn 2");
 		if (m_dwMarker) {
 			pGame->DisableMarker(m_dwMarker);
 			m_dwMarker = 0;
@@ -544,11 +561,15 @@ bool CRemotePlayer::Spawn(uint8_t byteTeam, int iSkin, CVector *vecPos, float fR
 			pPlayerPed->SetFightingStyle(byteFightingStyle);
 		}
 
+        FLog("CRemotePlayer::Spawn 3");
+
 		SetState(PLAYER_STATE_SPAWNED);
+        FLog("CRemotePlayer::Spawn 4");
 		return true;
 	}
 	else
 	{
+        FLog("CRemotePlayer::Spawn no spawn");
 		SetState(PLAYER_STATE_NONE);
 		return false;
 	}
@@ -1024,17 +1045,17 @@ void CRemotePlayer::ShowGlobalMarker(short sPosX, short sPosY, short sPosZ)
 
 	if (m_dwMarker)
 	{
-		pGame->DisableMarker(m_dwMarker);
+		//pGame->DisableMarker(m_dwMarker);
 		m_dwMarker = 0;
 	}
 
 	if (m_pPlayerPed)
 	{
-		uint32_t dwMarker = pGame->CreateRadarMarkerIcon(0, sPosX, sPosY, sPosZ, m_PlayerID, 0);
+		//uint32_t dwMarker = pGame->CreateRadarMarkerIcon(0, sPosX, sPosY, sPosZ, m_PlayerID, 0);
 		m_vecGlobalMarkerPos.x = sPosX;
 		m_vecGlobalMarkerPos.y = sPosY;
 		m_vecGlobalMarkerPos.z = sPosZ;
-		m_dwMarker = dwMarker;
+		//m_dwMarker = dwMarker;
 	}
 }
 // 0.3.7

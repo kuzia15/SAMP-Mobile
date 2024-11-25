@@ -236,4 +236,6 @@ uint32_t TranslateColorCodeToRGBA(uint iCode)
 	if (iCode < NUM_RADAR_COLORS) {
 		return dwUseHudColors[iCode];
 	}
+
+    return 0xE2C063FF;
 }

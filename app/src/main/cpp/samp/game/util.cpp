@@ -3,6 +3,7 @@
 #include "RW/RenderWare.h"
 #include <cmath>
 #include "../net/netgame.h"
+#include "World.h"
 
 extern CNetGame* pNetGame;
 extern CGame* pGame;
@@ -1859,11 +1860,10 @@ const char g_szAnimBlockNames[][40] = {
 
 #define PI 3.14159265
 
-extern char* WORLD_PLAYERS;
 
 CPedGTA* GamePool_FindPlayerPed()
 {
-	return *(CPedGTA**)WORLD_PLAYERS;
+	return *(CPedGTA**)CWorld::Players;
 }
 
 CPedGTA* GamePool_Ped_GetAt(int iID)
@@ -2140,6 +2140,7 @@ void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange)
     iBuildingToRemoveCount++;
 }
 
+#include "Pools.h"
 void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
 {
     RemoveOccludersInRadius(vecPos, 500.0);
@@ -2148,7 +2149,7 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     uintptr_t *pBuildingPool = *(uintptr_t**)(g_libGTASA+0x95AC4C);
     for(int i = 0; i < 20000; i++)
     {
-        CEntityGTA *pEntity = (CEntityGTA*)((i * 60) + *pBuildingPool);
+        CEntityGTA *pEntity = CPools::G;
         if(pEntity)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)

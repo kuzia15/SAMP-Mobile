@@ -704,7 +704,6 @@ typedef struct {
 #pragma warning(push)
 #pragma warning(disable:4200)
 #endif
-#pragma pack(push,1)
 typedef struct {
 	char Description[256];			// description
 	char Originator[32];			// name of the originator
@@ -723,7 +722,6 @@ typedef struct {
 	char CodingHistory[1];			// history
 #endif
 } TAG_BEXT;
-#pragma pack(pop)
 
 // BWF "cart" tag structures
 typedef struct
@@ -828,7 +826,6 @@ typedef struct {
 
 #ifndef _WAVEFORMATEX_
 #define _WAVEFORMATEX_
-#pragma pack(push,1)
 typedef struct tWAVEFORMATEX
 {
 	WORD wFormatTag;
@@ -840,7 +837,6 @@ typedef struct tWAVEFORMATEX
 	WORD cbSize;
 } WAVEFORMATEX, *PWAVEFORMATEX, *LPWAVEFORMATEX;
 typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
-#pragma pack(pop)
 #endif
 
 // BASS_ChannelGetLength/GetPosition/SetPosition modes

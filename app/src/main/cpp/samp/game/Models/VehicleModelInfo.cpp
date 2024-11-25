@@ -218,9 +218,9 @@ void CVehicleModelInfo__DeleteRwObject_hook(CVehicleModelInfo* thiz) {
 }*/
 
 void CVehicleModelInfo::InjectHooks() {
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x679D00 : 0x851A18), &ms_pLightsTexture);
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x67820C : 0x84E440), &ms_pLightsOnTexture);
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x676CD4 : 0x84BA08), &ms_lightsOn);
+    //CHook::Write(g_libGTASA + (VER_x32 ? 0x679D00 : 0x851A18), &ms_pLightsTexture);
+    //CHook::Write(g_libGTASA + (VER_x32 ? 0x67820C : 0x84E440), &ms_pLightsOnTexture);
+    //CHook::Write(g_libGTASA + (VER_x32 ? 0x676CD4 : 0x84BA08), &ms_lightsOn);
 
     //CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x66E910 : 0x83DEE0), &SetEditableMaterials);
     //CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x675E30 : 0x849D10), &ResetEditableMaterials);

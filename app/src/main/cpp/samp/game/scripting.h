@@ -1,42 +1,60 @@
 #pragma once
 
-#define MAX_SCRIPT_VARS	18
+#define MAX_SCRIPT_VARS	16
 
 struct GAME_SCRIPT_THREAD
 {
-    uintptr *pNext;
-    uintptr *pPrevious;
+    uintptr_t *pNext;
+    uintptr_t *pPrevious;
     char ScriptName[8];
-    uint8 *BaseAddressOfThisScript;
+    uint8_t *BaseAddressOfThisScript;
     uintptr dwScriptIP;
-    uint8 *PCStack[8];
-    uint16 StackDepth;
-    int32 dwLocalVar[42];
+    uint8_t *PCStack[8];
+    uint16_t StackDepth;
+    int32_t dwLocalVar[42];
     bool bActive;
     bool condResult;
     bool IsThisAMissionScript;
     bool bIsThisAStreamedScript;
     bool bIsThisAMiniGameScript;
-    uint8 ScriptBrainType;
-    uint32 ActivateTime;
-    uint16 AndOrState;
+    uint8_t ScriptBrainType;
+    uint32_t ActivateTime;
+    uint16_t AndOrState;
     bool NotForLatestExpression;
     bool DeatharrestCheckEnabled;
     bool DoneDeatharrest;
-    int32 EndOfScriptedCutscenePC;
+    int32_t EndOfScriptedCutscenePC;
     bool ThisMustBeTheOnlyMissionRunning;
 };
 VALIDATE_SIZE(GAME_SCRIPT_THREAD, (VER_x32 ? 0x100 : 0x130));
 
+//struct GAME_SCRIPT_THREAD
+//{
+//	uint8_t Pad1[20];			// +00
+//	uintptr_t dwScriptIP;		// +20
+//	uint8_t Pad2[36];			// +24
+//	uint32_t dwLocalVar[32];	// +60
+//	uint32_t dwTimers[2];		// +188
+//	uint8_t Pad3[33];			// +196
+//	uint8_t condResult;			// +229
+//	uint8_t Pad4[10];			// +230
+//	uint16_t logicalOp;			// +240
+//	uint8_t notFlag;			// +242
+//	uint8_t Pad5[13];			// +243
+//	// STRUCT SIZE = 256
+//};
+
+#pragma pack(push, 1)
 struct SCRIPT_COMMAND
 {
     uint16_t OpCode;
     char Params[MAX_SCRIPT_VARS];
 };
+#pragma pack(pop)
 
 int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...);
 
-const SCRIPT_COMMAND create_player							= { 0x0053, "vfffv" }; 	// 0, x, y, z, $PLAYER_CHAR
+const SCRIPT_COMMAND create_player = { 0x0053, "vfffv" };	// 0, x, y, z, PLAYER_CHAR
 const SCRIPT_COMMAND create_actor_from_player				= { 0x01F5, "vv" };		// PLAYER_CHAR, PLAYER_ACTOR
 const SCRIPT_COMMAND set_camera_behind_player				= { 0x0373, "" };
 const SCRIPT_COMMAND restore_camera_jumpcut					= { 0x02EB, "" };

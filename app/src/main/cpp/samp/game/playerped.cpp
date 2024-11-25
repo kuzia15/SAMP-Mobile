@@ -4,8 +4,9 @@
 #include "../vendor/armhook/patch.h"
 #include <cmath>
 // 0.3.7
-#include "Entity/CPedGta.h"
+#include "Entity/CPedGTA.h"
 #include "Streaming.h"
+#include "World.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -46,26 +47,58 @@ CPlayerPed::CPlayerPed()
 	}
 
 	m_bHaveBulletData = false;
-	memset(&m_bulletData, 0, sizeof(BULLET_DATA));
 }
 
 CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float fRotation)
 {
 	FLog("Creating PlayerPed(%d)", iNum);
+    FLog("Attempting to create player: iPlayerNum=%d, fX=%f, fY=%f, fZ=%f, m_dwGTAId=%p", iNum, fX, fY, fZ, &m_dwGTAId);
 	uint32_t dwPlayerActorID;
+    static int iPlayerNum;
+    iPlayerNum = iNum;
 
-	ScriptCommand(&create_player, &iNum, fX, fY, fZ, &dwPlayerActorID);
-	ScriptCommand(&create_actor_from_player, &iNum, &dwPlayerActorID);
+    m_pPed = nullptr;
+    m_dwGTAId = 0;
+    m_dwArrow = 0;
+    m_bHaveBulletData = false;
 
-	m_dwGTAId = dwPlayerActorID;
+    /*if (!ScriptCommand(&create_player, &iPlayerNum, fX, fY, fZ, &m_dwGTAId)) {
+        FLog("Error: Failed to create player!");
+        return;
+    }*/
+
+    //458FC0 ; CPlayerPed::SetupPlayerPed(int)
+    ((void (*)(int))(g_libGTASA + (VER_x32 ? 0x4C39A4 + 1:0x5C0FD4)))(iPlayerNum); // CPlayerPed::SetupPlayerPed
+    //4543D4 ; CPlayerPed::DeactivatePlayerPed
+    ((void (*)(int))(g_libGTASA + (VER_x32 ? 0x4C3AD4+1: 0x5C1140)))(iPlayerNum); // CPlayerPed::DeactivatePlayerPed
+    //3AC5DC ; FindPlayerPed(int)
+    m_pPed = FindPlayerPed(iNum); // CPlayerPed::FindPlayerPed
+
+    CVector posn = {fX, fY, fZ};
+    ((void (*)(const CVector&, CEntityGTA*))(g_libGTASA + (VER_x32 ? 0x34DA34+1: 0x419BE0)))(posn, m_pPed); // CTheScripts::ClearSpaceForMissionEntity
+    //4543F8 ; CPlayerPed::ReactivatePlayerPed
+    ((void (*)(int))(g_libGTASA+(VER_x32 ? 0x4C3AEC + 1:0x5C1158)))(iPlayerNum); // CPlayerPed::ReactivatePlayerPed
+    //((void (*)(ENTITY_TYPE*))(SA_ADDR(0x3C14B0 + 1)))((ENTITY_TYPE*)m_pPed); // CWorld::Add
+    CWorld::Add(m_pPed);
+
+	//ScriptCommand(&create_actor_from_player, &iPlayerNum, &m_dwGTAId);
+
+    m_dwGTAId = GamePool_Ped_GetIndex(m_pPed);
+    FLog("m_dwGTAId=%p",m_dwGTAId);
+
 	m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
-	m_bytePlayerNumber = iNum;
+    if (!m_pPed) {
+        FLog("Error: Invalid m_pPed after GamePool_Ped_GetAt!");
+        return;
+    }
+	m_bytePlayerNumber = iPlayerNum;
 
-	SetPlayerPedPtrRecord(iNum, m_pPed);
+	SetPlayerPedPtrRecord(iPlayerNum, m_pPed);
 
-	ScriptCommand(&set_actor_weapon_droppable, m_dwGTAId, 1);
+    m_pPed->bDoesntDropWeaponsWhenDead = true;
 	ScriptCommand(&set_actor_immunities, m_dwGTAId, 0, 0, 1, 0, 0);
 	ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
+    m_pPed->bNeverEverTargetThisPed = true;
 
 	if (pNetGame)
 	{
@@ -87,35 +120,34 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 
 	SetModelIndex(iSkin);
 
-	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId))
-	{
-		m_pPed->m_fAimingRotation = DegToRad(fRotation);
-		m_pPed->m_fAimingRotation = DegToRad(fRotation);
-	}
+    FLog("CPlayerPed1");
 
 	// GameResetPlayerKeys
+    memset(&RemotePlayerKeys[m_bytePlayerNumber], 0, sizeof(PAD_KEYS));
 
-	RwMatrix mat;
-	m_pPed->GetMatrix(&mat);
-	mat.pos.x = fX;
-	mat.pos.y = fY;
-	mat.pos.z = fZ + 0.15f;
-    m_pPed->SetMatrix((CMatrix&)mat);
+    FLog("CPlayerPed2");
+    SetTargetRotation(fRotation);
+    RwMatrix mat = m_pPed->GetMatrix().ToRwMatrix();
+    mat.pos.x = fX;
+    mat.pos.y = fY;
+    mat.pos.z = fZ+ 0.15f;
+    //m_pPed->SetMatrix((CMatrix&)mat);
 
 	m_stuffData.dwDrunkLevel = 0;
 	m_stuffData.dwObject = 0;
 	m_stuffData.type = eStuffType::STUFF_TYPE_NONE;
 	m_stuffData.dwLastUpdateTick = 0;
 
-	for (int i = 0; i < 10; i++)
+	/*for (int i = 0; i < 10; i++)
 	{
 		m_bObjectSlotUsed[i] = false;
-		memset(&m_attachedObjectInfo[i], 0, sizeof(NEW_ATTACHED_OBJECT));
+		//memset(&m_attachedObjectInfo[i], 0, sizeof(NEW_ATTACHED_OBJECT));
 		m_pAttachedObjects[i] = nullptr;
-	}
+	}*/
 
 	m_bHaveBulletData = false;
-	memset(&m_bulletData, 0, sizeof(BULLET_DATA));
+    FLog("CPlayerPed3");
+    FLog("m_pPed: %p, m_dwGTAId: %d", m_pPed, m_dwGTAId);
 }
 
 CPlayerPed::~CPlayerPed()
@@ -212,12 +244,13 @@ void CPlayerPed::SetDead()
 		}
 
 		ExtinguishFire();
-        m_pPed->GetMatrix(&mat);
+        mat = m_pPed->GetMatrix().ToRwMatrix();
         m_pPed->SetPosn(mat.pos.x, mat.pos.y, mat.pos.z);
 		m_pPed->m_fHealth = 0.0f;
-		*pbyteCurrentPlayer = m_bytePlayerNumber;
-		ScriptCommand(&kill_actor, m_dwGTAId);
-		*pbyteCurrentPlayer = 0;
+        uint8_t old = CWorld::PlayerInFocus;
+        CWorld::PlayerInFocus = m_bytePlayerNumber;
+        ScriptCommand(&kill_actor, m_dwGTAId);
+        CWorld::PlayerInFocus = 0;
 	}
 }
 // 0.3.7
@@ -238,15 +271,17 @@ void CPlayerPed::TogglePlayerControllable(bool bControllable)
     if (!IsValidGamePed(m_pPed) || !GamePool_Ped_GetAt(m_dwGTAId)) {
         return;
     }
-
+    FLog("TogglePlayerControllable4");
     //CHUD::bIsDisableControll = !bToggle;
     if(!bControllable)
     {
+        FLog("TogglePlayerControllable5");
         ScriptCommand(&toggle_player_controllable, m_bytePlayerNumber, 0);
         ScriptCommand(&lock_actor, m_dwGTAId, 1);
     }
     else if(bControllable)
     {
+        FLog("TogglePlayerControllable6");
         ScriptCommand(&toggle_player_controllable, m_bytePlayerNumber, 1);
         ScriptCommand(&lock_actor, m_dwGTAId, 0);
     }
@@ -308,9 +343,8 @@ bool IsTaskRunNamedOrSlideToCoord(void* pTask)
 	return false;
 }
 
-void* GetSubTaskFromTask(void* pTask)
+void* GetSubTaskFromTask(CPedIntelligence* pTask)
 {
-
 	uintptr_t pVTableTask = *((uintptr_t*)pTask);
 	return ((void* (*)(void*))(*(void**)(pVTableTask + 12)))(pTask);
 }
@@ -334,7 +368,7 @@ uint32_t CPlayerPed::GetCurrentAnimationIndex()
 		return 0;
 	}
 	sizeof(CPedGTA);
-	CPedIntelligence* pIntelligence = m_pPed->pPedIntelligence;
+	CPedIntelligence* pIntelligence = m_pPed->m_pIntelligence;
 
 	if (pIntelligence)
 	{
@@ -422,7 +456,7 @@ void CPlayerPed::PlayAnimationFromIndex(int iIndex, float fDelta)
 	if (!iIndex)
 	{
 		RwMatrix mat;
-        m_pPed->GetMatrix(&mat);
+        mat = m_pPed->GetMatrix().ToRwMatrix();
         m_pPed->SetPosn(mat.pos.x, mat.pos.y, mat.pos.z);
 		return;
 	}
@@ -515,6 +549,7 @@ void CPlayerPed::SetModelIndex(uint uiModel)
         m_pPed->SetModelIndex(uiModel);
         FLog("SetModelIndex4");
         CStreaming::RemoveModelIfNoRefs(oldModelId);
+        FLog("SetModelIndex5");
     }
 }
 
@@ -557,15 +592,15 @@ void CPlayerPed::SetArmedWeapon(uint8_t weapon, bool unk)
 {
 	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId))
 	{
-		*pbyteCurrentPlayer = m_bytePlayerNumber;
-		GameStoreLocalPlayerSkills();
+		CWorld::PlayerInFocus = m_bytePlayerNumber;
+		//GameStoreLocalPlayerSkills();
 		GameSetRemotePlayerSkills(m_bytePlayerNumber);
 		// sub_1009C420()
 		// sub_1009C610()
 		if (unk)
 		{
 			// CPed::SetCurrentWeapon
-			((void (*)(CPedGTA*, int))(g_libGTASA + 0x4A51AC + 1))(m_pPed, weapon);
+			((void (*)(CPedGTA*, int))(g_libGTASA + (VER_x32 ? 0x004A521C + 1 : 0x59B86C)))(m_pPed, weapon);
 			// sub_1009C4B0
 		}
 		else
@@ -574,8 +609,8 @@ void CPlayerPed::SetArmedWeapon(uint8_t weapon, bool unk)
 			//sub_1009C4B0();
 		}
 
-		GameSetLocalPlayerSkills();
-		*pbyteCurrentPlayer = 0;
+		//GameSetLocalPlayerSkills();
+        CWorld::PlayerInFocus = 0;
 	}
 }
 // 0.3.7
@@ -601,13 +636,13 @@ void CPlayerPed::SetImmunities(int BP, int FP, int EP, int CP, int MP)
 void CPlayerPed::ShowMarker(int nIndex)
 {
 	if (m_dwArrow) {
-		ScriptCommand(&disable_marker, m_dwArrow);
+		//ScriptCommand(&disable_marker, m_dwArrow);
 		m_dwArrow = 0;
 	}
 
-	ScriptCommand(&create_arrow_above_actor, m_dwGTAId, &m_dwArrow);
-	ScriptCommand(&set_marker_color, m_dwArrow, nIndex);
-	ScriptCommand(&show_on_radar2, m_dwArrow, 2);
+	//ScriptCommand(&create_arrow_above_actor, m_dwGTAId, &m_dwArrow);
+	//ScriptCommand(&set_marker_color, m_dwArrow, nIndex);
+	//ScriptCommand(&show_on_radar2, m_dwArrow, 2);
 }
 
 void CPlayerPed::SetKeys(uint16_t lrAnalog, uint16_t udAnalog, uint16_t wKeys)
@@ -827,7 +862,7 @@ void CPlayerPed::SetInterior(uint8_t byteInteriorId, bool bRefresh)
 		if (bRefresh)
 		{
 			RwMatrix mat;
-            m_pPed->GetMatrix(&mat);
+            mat = m_pPed->GetMatrix().ToRwMatrix();
 			ScriptCommand(&refresh_streaming_at, mat.pos.x, mat.pos.y);
 		}
 	}
@@ -914,14 +949,14 @@ void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatI
 
 	if(GetCurrentWeapon() == WEAPON_PARACHUTE)
 	{
-		*pbyteCurrentPlayer = m_bytePlayerNumber;
+		CWorld::PlayerInFocus = m_bytePlayerNumber;
 		GameStoreLocalPlayerSkills();
 		GameSetRemotePlayerSkills(m_bytePlayerNumber);
 
 		SetArmedWeapon(0, 0);
 
 		GameSetLocalPlayerSkills();
-		*pbyteCurrentPlayer = 0;
+		CWorld::PlayerInFocus = 0;
 	}
 
     CVehicleGTA* pGtaVehicle = GamePool_Vehicle_GetAt(dwVehicleGTAId);
@@ -985,14 +1020,14 @@ void CPlayerPed::EnterVehicle(uint32_t dwVehicleGTAId, bool bPassenger)
 	bIgnoreNextEntry = true;
 	if(GetCurrentWeapon() == WEAPON_PARACHUTE)
 	{
-		*pbyteCurrentPlayer = m_bytePlayerNumber;
+		CWorld::PlayerInFocus = m_bytePlayerNumber;
 		GameStoreLocalPlayerSkills();
 		GameSetRemotePlayerSkills(m_bytePlayerNumber);
 
 		SetArmedWeapon(0,0);
 
 		GameSetLocalPlayerSkills();
-		*pbyteCurrentPlayer = 0;
+		CWorld::PlayerInFocus = 0;
 	}
 
 	if (bPassenger)
@@ -1285,9 +1320,8 @@ void CPlayerPed::ClumpUpdateAnimations(float step, int flag)
 	}
 }
 bool g_customFire = false;
-extern uint32_t(*CWeapon_FireInstantHit)(CWeapon* thiz, CPedGTA* pFiringEntity, CVector* vecOrigin, CVector* muzzlePosn, CEntityGTA* targetEntity,
-										 CVector* target, CVector* originForDriveBy, bool arg6, bool muzzle);
-extern uint32_t(*CWeapon_FireSniper)(CWeapon* thiz, CPedGTA* pFiringEntity, CEntityGTA* victim, CVector* target);
+extern uint32_t (*CWeapon__FireInstantHit)(CWeapon* thiz, CPedGTA* pFiringEntity, CVector* vecOrigin, CVector* muzzlePosn, CEntityGTA* targetEntity, CVector *target, CVector* originForDriveBy, int arg6, int muzzle);
+extern uint32_t (*CWeapon__FireSniper)(CWeapon *pWeaponSlot, CPedGTA *pFiringEntity, CEntityGTA *a3, CVector *vecOrigin);
 
 CPlayerPed* g_pCurrentFiredPed = nullptr;
 BULLET_DATA* g_pCurrentBulletData = nullptr;
@@ -1327,18 +1361,10 @@ void CPlayerPed::FireInstant()
 
 	if (GetCurrentWeapon() == WEAPON_SNIPER)
 	{
-		if (m_pPed)
-		{
-			// CWeapon::FireSniper
-			((void (*)(CWeapon*, CPedGTA*, uint32_t, uint32_t))(g_libGTASA + 0x5DD6F0 + 1))(
-					&m_pPed->m_aWeapons[m_pPed->m_nActiveWeaponSlot], m_pPed, 0, 0);
-		}
-		else
-		{
-			// CWeapon::FireSniper
-			((void (*)(CWeapon*, CPedGTA*, uint32_t, uint32_t))(g_libGTASA + 0x5DD6F0 + 1))(
-					nullptr, nullptr, 0, 0);
-		}
+        if(m_pPed)
+            CWeapon__FireSniper(GetCurrentWeaponSlot(), m_pPed, nullptr, nullptr);
+        else
+            CWeapon__FireSniper(nullptr, m_pPed, nullptr, nullptr);
 	}
 	else
 	{
@@ -1346,9 +1372,10 @@ void CPlayerPed::FireInstant()
 
         CWeapon* pSlot = GetCurrentWeaponSlot();
 
-		// CWeapon::FireInstantHit
-		((void (*)(CWeapon*, CPedGTA*, CVector*, CVector*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5DC128 + 1))(
-				pSlot, m_pPed, &vecBonePos, &vecOut, 0, 0, 0, 0, 1);
+        if(m_pPed)
+            CWeapon__FireInstantHit(pSlot, m_pPed, &vecBonePos, &vecOut, nullptr, nullptr, nullptr, 0, 1);
+        else
+            CWeapon__FireInstantHit(nullptr, m_pPed, &vecBonePos, &vecOut, nullptr, nullptr, nullptr, 0, 1);
 	}
 
 	g_pCurrentFiredPed = nullptr;
@@ -1694,7 +1721,7 @@ void CPlayerPed::ApplyCrouch()
         {
             if (m_pPed->m_pIntelligence)
             {
-                ((int (*)(uintptr_t, uint16_t))(g_libGTASA + (VER_x32 ? 0x004C07B0 + 1 : 0x5BCE70)))(m_pPed->m_pIntelligence, 0);
+                ((int (*)(CPedIntelligence*, uint16_t))(g_libGTASA + (VER_x32 ? 0x004C07B0 + 1 : 0x5BCE70)))(m_pPed->m_pIntelligence, 0);
             }
         }
     }
@@ -1713,7 +1740,7 @@ void CPlayerPed::ResetCrouch()
     m_pPed->bIsDucking = false;
     if (m_pPed->m_pIntelligence)
     {
-        ((int (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x004C08A8 + 1 : 0x5BCFF8)))(m_pPed->m_pIntelligence);
+        ((int (*)(CPedIntelligence*))(g_libGTASA + (VER_x32 ? 0x004C08A8 + 1 : 0x5BCFF8)))(m_pPed->m_pIntelligence);
     }
 }
 
@@ -1733,7 +1760,7 @@ void CPlayerPed::StartJetpack()
 	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId) || IsInVehicle() || !m_pPed->IsAdded())
 		return;
 
-	*pbyteCurrentPlayer = m_bytePlayerNumber;
+	CWorld::PlayerInFocus = m_bytePlayerNumber;
 
 	// reset CTasks so the CJetPack task priority can be enforced
 	m_pPed->SetPosn(m_pPed->m_matrix->m_pos.x, m_pPed->m_matrix->m_pos.y, m_pPed->m_matrix->m_pos.z);
@@ -1741,7 +1768,7 @@ void CPlayerPed::StartJetpack()
 	// CCheat::JetpackCheat
 	(( void (*)())(g_libGTASA+0x2FE1E8+1))();
 
-	*pbyteCurrentPlayer = 0;
+	CWorld::PlayerInFocus = 0;
 }
 
 void CPlayerPed::StopJetpack()
@@ -2184,7 +2211,7 @@ uint8_t CPlayerPed::IsEnteringVehicle()
 		if(iType == 701 || iType == 713)
 			return 1;
 	}*/
-	return 0;
+	return m_pPed->IsEnteringCar();
 }
 
 bool CPlayerPed::IsExitingVehicle()
@@ -2192,7 +2219,7 @@ bool CPlayerPed::IsExitingVehicle()
 	//if(m_pPed && m_pPed->Tasks && m_pPed->Tasks->pdwJumpJetPack)
 		//return GetTaskTypeFromTask(m_pPed->Tasks->pdwJumpJetPack) == 704;
 
-	return false;
+	return m_pPed->IsExitingVehicle();
 }
 
 bool CPlayerPed::IsSitTask()

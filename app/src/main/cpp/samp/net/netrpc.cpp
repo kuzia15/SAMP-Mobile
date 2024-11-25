@@ -574,7 +574,7 @@ void ServerQuit(RPCParameters *rpcParams)
 // 0.3.7
 void WorldPlayerAdd(RPCParameters *rpcParams)
 {
-	Log::traceLastFunc("[RPC-IN] World player add");
+	FLog("[RPC-IN] World player add");
 
 	unsigned char * Data = reinterpret_cast<unsigned char *>(rpcParams->input);
 	int iBitLength = rpcParams->numberOfBitsOfData;
@@ -631,11 +631,12 @@ void WorldPlayerAdd(RPCParameters *rpcParams)
 		{
 			if (pRemotePlayer->Spawn(byteTeam, iSkin, &vecPos, fRotation, dwColor, byteFightingStyle))
 			{
+                FLog("WorldPlayerAdd");
 				pPlayerPed = pRemotePlayer->GetPlayerPed();
 				if (pPlayerPed)
 				{
 					for (int i = 0; i < 11; i++) {
-						pPlayerPed->SetSkillLevel(i, wUnkData[i]);
+						//pPlayerPed->SetSkillLevel(i, wUnkData[i]);
 					}
 				}
 

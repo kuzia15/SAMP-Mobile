@@ -21,13 +21,15 @@ bool CGame::bIsGameExiting = false;
 
 inline int FindFirstFreePlayerPedSlot()
 {
-	uint8_t x = 2;
-	while (x != PLAYER_PED_SLOTS) {
-		if (!bUsedPlayerSlots[x]) return x;
-		x++;
-	}
-
-	return 0;
+    for (uint8_t x = 2; x < PLAYER_PED_SLOTS; ++x) {
+        if (!bUsedPlayerSlots[x]) {
+            FLog("Found free slot: %d", x);
+            return x;
+        }
+    }
+    FLog("No free slot found!");
+    // Return -1 or an appropriate error code if no free slot is found
+    return -1;
 }
 
 CGame::CGame()
@@ -64,7 +66,6 @@ void CGame::StartGame()
 	//*(int*)(g_libGTASA + 0x6E0098) = 0;
 	//*(char*)(g_libGTASA + 0x6E00D9) = 0;
 
-    ApplyGlobalPatches();
     InstallHooks();
 
 	GameAimSyncInit();
@@ -384,15 +385,26 @@ CObject* CGame::NewObject(int iModel, CVector vecPos, CVector vecRot, float fDra
 // 0.3.7 (�� ����������� ������ bIsNPC)
 CPlayerPed* CGame::NewPlayer(int iSkin, float fX, float fY, float fZ, float fRotation, bool unk, bool bIsNPC)
 {
+    FLog("CGame::NewPlayer");
 	uint8_t bytePedSlot = FindFirstFreePlayerPedSlot();
+    FLog("CGame::NewPlayer 1");
 	if (!bytePedSlot) return nullptr;
-
-	CPlayerPed* pPed = new CPlayerPed(bytePedSlot, iSkin, fX, fY, fZ, fRotation);
+    FLog("CGame::NewPlayer 2");
+	auto pPed = new CPlayerPed(bytePedSlot, iSkin, fX, fY, fZ, fRotation);
+    FLog("CGame::NewPlayer 3");
+    FLog("pPed address: %p", pPed);
+    if (pPed) {
+        FLog("pPed->m_pPed address: %p", pPed->m_pPed);
+    }
+    FLog("bytePedSlot: %d", bytePedSlot);
 	if (pPed && pPed->m_pPed) {
+        FLog("CGame::NewPlayer created");
 		bUsedPlayerSlots[bytePedSlot] = true;
 	}
 
-	return pPed;
+    FLog("CGame::NewPlayer");
+
+    return pPed;
 }
 // 0.3.7
 bool CGame::RemovePlayer(CPlayerPed* pPed)
@@ -671,11 +683,11 @@ bool CGame::InitialiseRenderWare() {
     TextureDatabaseRuntime::Load("player", false, TextureDatabaseFormat::DF_PVR);
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
 #else
-    TextureDatabaseRuntime::Load("samp", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("mobile", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("txd", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("gta3", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_ETC);
+    TextureDatabaseRuntime::Load("samp", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("mobile", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("txd", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("gta3", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_Default);
     TextureDatabaseRuntime::Load("player", false, TextureDatabaseFormat::DF_PVR);
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
 
@@ -948,7 +960,6 @@ void CGame::InjectHooks()
 
     CHook::Write(g_libGTASA + (VER_x32 ? 0x006796E8 : 0x850DF0), &CGame::m_pWorkingMatrix1);
     CHook::Write(g_libGTASA + (VER_x32 ? 0x00677B38 : 0x84D6A0), &CGame::m_pWorkingMatrix2);
-    CHook::Redirect("_ZN5CGame20InitialiseRenderWareEv", &CGame::InitialiseRenderWare);
 }
 
 bool CGame::CanSeeOutSideFromCurrArea() {

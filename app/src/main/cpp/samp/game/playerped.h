@@ -14,7 +14,6 @@ enum eStuffType {
 
 #define PLAYER_PED_SLOTS	120
 
-#pragma pack(push, 1)
 typedef struct _NEW_ATTACHED_OBJECT
 {
 	int iModel;
@@ -38,7 +37,6 @@ typedef struct _BULLET_DATA
 } BULLET_DATA;
 #pragma pack(pop)
 
-#pragma pack(push, 1)
 class CPlayerPed
 {
 public:
@@ -265,4 +263,3 @@ public:
 
     uintptr		m_dwGTAId;
 };
-#pragma pack(pop)

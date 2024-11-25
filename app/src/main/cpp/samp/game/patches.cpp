@@ -6,8 +6,10 @@
 extern CSettings* pSettings;
 
 VehicleAudioPropertiesStruct VehicleAudioProperties[20000];
-char* WORLD_PLAYERS = nullptr;
 #include "game.h"
+#include "World.h"
+#include "net/netgame.h"
+
 extern CGame* pGame;
 void readVehiclesAudioSettings()
 {
@@ -114,31 +116,24 @@ void ApplySAMPPatchesInGame()
     CHook::NOP(g_libGTASA + (VER_x32 ? 0x2AB4A6 : 0x36A190), 2); // название местности
 }
 
-int32_t CWorld__FindPlayerSlotWithPedPointer(uint32_t pPlayersPed)
+int32_t CWorld__FindPlayerSlotWithPedPointer(CPedGTA* pPlayersPed)
 {
     uint32_t result = 0;
 
-    uint32_t *dwWorldPlayers = (uint32_t*)WORLD_PLAYERS;
-    while(*dwWorldPlayers != pPlayersPed)
+    for(int i = 0; i < MAX_PLAYERS; ++i)
     {
-        ++result;
-        dwWorldPlayers += 101;
-        if(result > 210)
-            return 0;
+        if(CWorld::Players[i].m_pPed == pPlayersPed)
+            return i;
     }
-
-    return result;
+    return -1;
 }
 
 void ApplyPatches_level0()
 {
     FLog("ApplyPatches_level0");
 
-    WORLD_PLAYERS = new char[0x404 * PLAYER_PED_SLOTS];
-    memset(WORLD_PLAYERS, 0, 0x404 * PLAYER_PED_SLOTS);
-    CHook::UnFuck(g_libGTASA+(VER_x32 ? 0x006783C0 : 0x84E7A8));
-    *(char**)(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8)) = WORLD_PLAYERS;
-    FLog("CWorld::Players new address: 0x%X", WORLD_PLAYERS);
+    CHook::Write(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8), &CWorld::Players);
+    CHook::Write(g_libGTASA + (VER_x32 ? 0x00679B5C : 0x8516D8), &CWorld::PlayerInFocus);
 
     CHook::Redirect("_ZN6CWorld28FindPlayerSlotWithPedPointerEPv", &CWorld__FindPlayerSlotWithPedPointer);
 

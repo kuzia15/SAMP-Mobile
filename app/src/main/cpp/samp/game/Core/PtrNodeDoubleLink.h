@@ -19,6 +19,10 @@ public:
 
     CPtrNodeDoubleLink(void* item) { m_item = item; }
 
+    static void* operator new(size_t size);
+    static void  operator delete(void* ptr, size_t sz);
+
+    void AddToList(class CPtrListDoubleLink* list);
     auto GetNext() const { return m_next; }
 
     template<typename T>

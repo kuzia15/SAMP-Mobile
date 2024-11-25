@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId "com.samp.mobile"
-        minSdk 28
+        minSdk 26
         targetSdk 34
         versionCode 86
         versionName "4.7.1.2"

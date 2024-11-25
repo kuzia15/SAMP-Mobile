@@ -1,13 +1,11 @@
 #pragma once
 
-#pragma pack(push, 1)
 typedef struct _GANG_ZONE
 {
 	float fPos[4];
 	uint32_t dwColor;
 	uint32_t dwAltColor;
 } GANG_ZONE;
-#pragma pack(pop)
 
 class CGangZonePool
 {

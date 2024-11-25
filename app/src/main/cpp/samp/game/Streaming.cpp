@@ -226,6 +226,7 @@ void CStreaming::InjectHooks() {
 
     CHook::Redirect("_ZN10CStreaming13InitImageListEv", &CStreaming::InitImageList);
     CHook::Redirect("_ZN10CStreaming12MakeSpaceForEi", &CStreaming::MakeSpaceFor);
+    //CHook::Redirect("_ZN10CStreaming22LoadAllRequestedModelsEb", &CStreaming::LoadAllRequestedModels);
 }
 
 int CStreaming::AddImageToList(char const* pFileName, bool bNotPlayerImg) {
@@ -264,8 +265,8 @@ void CStreaming::InitImageList() {
     //CStreaming::AddImageToList("TEXDB\\SKINS.IMG", true);
     //CStreaming::AddImageToList("TEXDB\\CARS.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMP.IMG", true);
-    CStreaming::AddImageToList("TEXDB\\PLAYER.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMPCOL.IMG", true);
+    CStreaming::AddImageToList("TEXDB\\PLAYER.IMG", true);
 #endif
 }
 

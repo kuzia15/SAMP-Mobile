@@ -24,6 +24,14 @@ typedef uint64_t arch_ulong;
 typedef uint64_t arch_ulonglong;
 #endif
 
+void *aligned_alloc_fallback(size_t alignment, size_t size) {
+    void *ptr = NULL;
+    if (posix_memalign(&ptr, alignment, size) != 0) {
+        return NULL; // Allocation failed
+    }
+    return ptr;
+}
+
 void SHA1(const char *message, arch_ulong *out) {
     arch_ulong h0 = 0x67452301;
     arch_ulong h1 = 0xEFCDAB89;
@@ -43,7 +51,7 @@ void SHA1(const char *message, arch_ulong *out) {
     arch_ulong newlen = len + complement + 8 + 1;
 
     // Aligned memory allocation
-    char *pMessage = (char *)aligned_alloc(8, newlen);
+    char *pMessage = (char *)aligned_alloc_fallback(8, newlen);
     if (!pMessage)
         return;
 

@@ -17,6 +17,7 @@
 #include "game/PlayerPedData.h"
 #include "../PedIK.h"
 #include "game/Animation/AnimBlendFrameData.h"
+#include "game/PedIntelligence.h"
 
 enum ePedNode : int32 {
     PED_NODE_UPPER_TORSO     = 1,
@@ -86,7 +87,7 @@ struct CPedGTA : public CPhysical {
     uint8_t             m_PedWeaponAudioEntity[0xC8];
 #endif
 
-    uintptr_t  m_pIntelligence;
+    CPedIntelligence*  m_pIntelligence;
     CPlayerPedData*     m_pPlayerData;
     ePedCreatedBy       m_nCreatedBy;
     uint8_t             pad6[3];
@@ -320,10 +321,21 @@ struct CPedGTA : public CPhysical {
     uint32          LastTalkSfx;
 
 public:
+    CPedGTA(ePedType pedType);
+    ~CPedGTA() override;
+
     void GetBonePosition(RwV3d *posn, uint32 boneTag, bool bCalledFromCamera);
 
     bool IsInVehicle() const noexcept   { return bInVehicle && pVehicle != nullptr; }
     bool IsAPassenger() const noexcept  { return bInVehicle && pVehicle != nullptr && pVehicle->pDriver != this; }
+
+    CPedIntelligence* GetIntelligence() { return m_pIntelligence; }
+    CPedIntelligence* GetIntelligence() const { return m_pIntelligence; }
+    CTaskManager& GetTaskManager() { return m_pIntelligence->m_TaskMgr; }
+    CTaskManager& GetTaskManager() const { return m_pIntelligence->m_TaskMgr; }
+
+    bool IsEnteringCar();
+    bool IsExitingVehicle();
 };
 
 VALIDATE_SIZE(CPedGTA, (VER_x32 ? 0x7A4 : 0x988));

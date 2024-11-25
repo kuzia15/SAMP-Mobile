@@ -71,11 +71,11 @@ bool ImGuiWrapper::initialize()
 	m_renderer = new ImGuiRenderer(ImGui::GetBackgroundDrawList(), font);
 
 	// voice 
-	for (const auto& deviceInitCallback : Render::deviceInitCallbacks) {
+	/*for (const auto& deviceInitCallback : Render::deviceInitCallbacks) {
 		if (deviceInitCallback != nullptr) {
 			deviceInitCallback();
 		}
-	}
+	}*/
 
 	return true;
 }
@@ -86,7 +86,7 @@ void ImGuiWrapper::render()
 
 
 	// voice
-	if (pNetGame) {
+	/*if (pNetGame) {
 
 		if (pUI->dialog()->visible() || pUI->playertablist()->visible() || pNetGame->GetTextDrawPool()->GetState()) {
 			SpeakerList::Hide();
@@ -102,7 +102,7 @@ void ImGuiWrapper::render()
 				renderCallback();
 			}
 		}
-	}
+	}*/
 
 	drawList();
 	ImGui::EndFrame();
@@ -115,11 +115,11 @@ void ImGuiWrapper::shutdown()
 	Log::traceLastFunc("ImGuiWrapper::shutdown");
 
 	// voice
-	for (const auto& deviceFreeCallback : Render::deviceFreeCallbacks) {
+	/*for (const auto& deviceFreeCallback : Render::deviceFreeCallbacks) {
 		if (deviceFreeCallback != nullptr) {
 			deviceFreeCallback();
 		}
-	}
+	}*/
 
 	destroyFontTexture();
 }
