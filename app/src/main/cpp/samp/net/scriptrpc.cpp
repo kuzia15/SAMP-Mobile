@@ -885,7 +885,7 @@ void ScrSetObjectRotation(RPCParameters* rpcParams)
 	CObject* pObject = pObjectPool->GetAt(ObjectID);
 	if (!pObject) return;
 
-	pObject->SetRotation(&vecRot);
+	pObject->InstantRotate(vecRot.x, vecRot.y, vecRot.z);
 }
 // 0.3.7
 void ScrCreateExplosion(RPCParameters* rpcParams)
@@ -1301,7 +1301,11 @@ void ScrSetPlayerPos(RPCParameters* rpcParams)
 	if (!pLocalPlayer) return;
 
     pLocalPlayer->DisableSurf();
-	pLocalPlayer->GetPlayerPed()->m_pPed->SetPosn(vecPos.x, vecPos.y, vecPos.z);
+
+    if(pLocalPlayer->GetPlayerPed()->m_pPed->IsInVehicle())
+        pLocalPlayer->GetPlayerPed()->RemoveFromVehicleAndPutAt(vecPos.x, vecPos.y, vecPos.z);
+    else
+        pLocalPlayer->GetPlayerPed()->m_pPed->SetPosn(vecPos.x, vecPos.y, vecPos.z);
 }
 // 0.3.7
 void ScrSetPlayerPosFindZ(RPCParameters* rpcParams)
@@ -1340,13 +1344,26 @@ void ScrPutPlayerInVehicle(RPCParameters* rpcParams)
 	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
 	if (!pVehiclePool) return;
 
-	uint32_t dwGtaVehicleID = pVehiclePool->FindGtaIDFromID(VehicleID);
-	CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
+    CPlayerPed *pPed = pGame->FindPlayerPed();
+    if(!pPed)return;
 
-	if (dwGtaVehicleID && pVehicle)
-	{
-		pGame->FindPlayerPed()->PutDirectlyInVehicle(dwGtaVehicleID, byteSeatID);
-	}
+    //if(vehicleid == pPed->GetCurrentSampVehicleID()) return;
+
+    if(pPed->m_pPed->IsInVehicle()) {
+        pPed->m_pPed->RemoveFromVehicle();
+    }
+    CVehicle *pVehicle = pVehiclePool->GetAt(VehicleID);
+    if(!pVehicle)return;
+    //   DLOG("seatid = %d", vehicleid);
+    if(byteSeatID == 0) {
+        ScriptCommand(&put_actor_in_car, pPed->m_dwGTAId, pVehicle->m_dwGTAId);
+        //	CCarEnterExit::SetPedInCarDirect(pPed->m_pPed, pVehicle->m_pVehicle, 0, true);
+    } else {
+        byteSeatID --;
+        ScriptCommand(&put_actor_in_car2, pPed->m_dwGTAId, pVehicle->m_dwGTAId, byteSeatID);
+//		seatid = CCarEnterExit::ComputeTargetDoorToEnterAsPassenger(pVehicle->m_pVehicle, seatid);
+//		CCarEnterExit::SetPedInCarDirect(pPed->m_pPed, pVehicle->m_pVehicle, seatid);
+    }
 }
 // 0.3.7
 void ScrRemovePlayerFromVehicle(RPCParameters* rpcParams)

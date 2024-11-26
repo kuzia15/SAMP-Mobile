@@ -5,7 +5,7 @@
 constexpr int32_t EXTRA_DIR_SIZE = 550;
 
 // used in CStreaming
-constexpr uint32_t TOTAL_DFF_MODEL_IDS = 30000;
+constexpr uint32_t TOTAL_DFF_MODEL_IDS = 20000;
 constexpr uint32_t TOTAL_TXD_MODEL_IDS = 5000;
 constexpr uint32_t TOTAL_COL_MODEL_IDS = 255;
 constexpr uint32_t TOTAL_IPL_MODEL_IDS = 256;

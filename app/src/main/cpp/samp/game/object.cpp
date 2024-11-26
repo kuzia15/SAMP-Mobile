@@ -4,6 +4,7 @@
 
 #include "RW/RenderWare.h"
 #include "Streaming.h"
+#include "game/Models/ModelInfo.h"
 
 #include <cmath>
 
@@ -13,6 +14,9 @@ extern MaterialTextGenerator* pMaterialTextGenerator;
 
 CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance, uint8_t bAttached)
 {
+    if(!CModelInfo::GetModelInfo(iModel))
+        iModel = 18631; // ��������
+
 	m_AttachedVehicleID = INVALID_VEHICLE_ID;
 	m_AttachedObjectID = INVALID_OBJECT_ID;
 	m_bAttachedToPed = bAttached;
@@ -28,19 +32,13 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 	m_vecAttachedRot.z = 0.0f;
 	m_bSyncRotation = true;
 
-	if (!IsValidModel(iModel)) {
-		iModel = 18631;
-	}
+	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &m_dwGTAId);
 
-	uint32_t dwRetID;
-	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &dwRetID);
+	CPhysical* pEntity = GamePool_Object_GetAt(m_dwGTAId);
 
-	CPhysical* pEntity = GamePool_Object_GetAt(dwRetID);
-
-	if (dwRetID && pEntity)
+	if (pEntity)
 	{
 		m_pEntity = pEntity;
-		m_dwGTAId = dwRetID;
 
 		m_byteMoving = 0;
 		m_fMoveSpeed = 0.0f;
@@ -53,7 +51,7 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 		m_Matrix.pos.y = vecPos.y;
 		m_Matrix.pos.z = vecPos.z;
 		m_pEntity->SetMatrix((CMatrix&)m_Matrix);
-		SetRotation(&vecRot);
+		InstantRotate(vecRot.x, vecRot.y ,vecRot.z);
 	}
 
 	for (int i = 0; i < 16; i++)
@@ -254,13 +252,28 @@ void CObject::SetRotation(CVector * vecRotation)
 	}
 }
 
+// Converts degrees to radians
+// keywords: 0.017453292 flt_8595EC
+constexpr float DegreesToRadians(float angleInDegrees) {
+    return angleInDegrees * PI / 180.0F;
+}
+
 void CObject::InstantRotate(float x, float y, float z)
 {
-	if (GamePool_Object_GetAt(m_dwGTAId))
-	{
-        LOGI("InstantRotate: x: %f, y: %f, z: %f", x, y, z);
-		ScriptCommand(&set_object_rotation, m_dwGTAId, x, y, z);
-	}
+    if(!m_pEntity)return;
+    x = DegreesToRadians(x);
+    y = DegreesToRadians(y);
+    z = DegreesToRadians(z);
+
+    // CPhysical::Remove
+    ((void (*)(CEntityGTA*))(*(uintptr_t*)( *(uintptr*)(m_pEntity) + (VER_x32 ? 0x10 : 0x10*2) )))(m_pEntity);
+
+    m_pEntity->SetOrientation(x, y, z);
+
+    m_pEntity->UpdateRW();
+    m_pEntity->UpdateRwFrame();
+
+    m_pEntity->Add();
 }
 
 // 0.3.7

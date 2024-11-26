@@ -4,6 +4,29 @@
 #include "game.h"
 #include "../net/netgame.h"
 #include "../gui/gui.h"
+#include "Textures/TextureDatabase.h"
+#include "Textures/TextureDatabaseEntry.h"
+#include "Textures/TextureDatabaseRuntime.h"
+#include "Scene.h"
+#include "sprite2d.h"
+#include "Entity/PlayerPedGta.h"
+#include "Pools.h"
+#include "java/jniutil.h"
+#include "game/Models/ModelInfo.h"
+#include "MatrixLink.h"
+#include "MatrixLinkList.h"
+#include "game/Collision/Collision.h"
+#include "TxdStore.h"
+#include "util/CUtil.h"
+#include "Coronas.h"
+#include "multitouch.h"
+#include "Streaming.h"
+#include "References.h"
+#include "VisibilityPlugins.h"
+#include "game/Animation/AnimManager.h"
+#include "FileLoader.h"
+#include "Renderer.h"
+#include "CrossHair.h"
 
 extern UI* pUI;
 extern CGame* pGame;
@@ -88,14 +111,76 @@ void CStream_InitImageList()
 
 /* =============================================================================== */
 
+void RenderEffects() {
+//	RenderEffects();
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x0059DA40 + 1 : 0x6C1D6C));
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, RWRSTATE(TRUE));
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005BE914 + 1 : 0x6E2FB4));
+//    CRopes::Render();
+//    CGlass::Render();
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005A6BC8 + 1 : 0x6CA5D0));
+    CVisibilityPlugins::RenderReallyDrawLastObjects();
+    CCoronas::Render();
+
+    // FIXME
+    CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+    auto g_fx = *(uintptr_t *) (g_libGTASA + (VER_x32 ? 0x00820520 : 0xA062A8));
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x00363DF0 + 1 : 0x433F54), &g_fx, TheCamera.m_pRwCamera, false);
+
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005CBBAC + 1 : 0x6F054C));
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x0059BF84 + 1 : 0x6C0268));
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005A1C38 + 1 : 0x6C552C));
+    //   CClouds::VolumetricCloudsRender();
+////    if (CHeli::NumberOfSearchLights || CTheScripts::NumberOfScriptSearchLights) {
+////        CHeli::Pre_SearchLightCone();
+////        CHeli::RenderAllHeliSearchLights();
+////        CTheScripts::RenderAllSearchLights();
+////        CHeli::Post_SearchLightCone();
+////    }
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005E3390 + 1 : 0x708DF0));
+////    if (CReplay::Mode != MODE_PLAYBACK && !CPad::GetPad(0)->DisablePlayerControls) {
+////        FindPlayerPed()->DrawTriangleForMouseRecruitPed();
+////    }
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005C0B14 + 1 : 0x6E50CC));
+//    //CVehicleRecording::Render();
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005B19D0 + 1 : 0x6D6068));
+//    //CRenderer::RenderFirstPersonVehicle();
+    CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005B5F78 + 1 : 0x6DA2B8));
+
+    //DebugModules::Render3D();
+}
+
 void MainLoop();
-void(*Render2dStuff)();
-void Render2dStuff_hook()
+void Render2dStuff()
 {
-	Render2dStuff();
+    if( CHook::CallFunction<bool>(g_libGTASA + (VER_x32 ? 0x001BB7F4 + 1 : 0x24EA90)) ) // emu_IsAltRenderTarget()
+        CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x001BC20C + 1 : 0x24F5B8)); // emu_FlushAltRenderTarget()
+
+    RwRenderStateSet(rwRENDERSTATEZTESTENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATESRCBLEND, RWRSTATE(rwBLENDSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEDESTBLEND, RWRSTATE(rwBLENDINVSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEFOGENABLE, RWRSTATE(rwRENDERSTATENARENDERSTATE));
+    RwRenderStateSet(rwRENDERSTATECULLMODE, RWRSTATE(rwCULLMODECULLNONE));
+
     if (pUI) pUI->render();
-	MainLoop();
-	return;
+
+    CCrossHair::Render();
+
+    ((void (*)()) (g_libGTASA + (VER_x32 ? 0x00437B0C + 1 : 0x51CFF0)))(); // CHud::DrawRadar
+    //	GPS::Draw();
+    //
+    ( ( void(*)(bool) )(g_libGTASA + (VER_x32 ? 0x002B0BD8 + 1 : 0x36FB00)) )(false); // CTouchInterface::DrawAll
+
+    //CSpecialFX::Render2DFXs(void)	00000000006E5A78
+    //CSpecialFX::Render2DFXs(void)	005C156C
+    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x1C0750+1:0x252CE4), 1);
+    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x5C156C:0x6E5A78));
+
+    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x0054BDD4 + 1 : 0x66B678)))(1u); // CMessages::Display - gametext
+    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x005A9120 + 1 : 0x6CCEA0)))(1u); // CFont::RenderFontBuffer
+    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x1C0750+1:0x252CE4), 0);
 }
 
 void CPools_Initialise(void)
@@ -975,6 +1060,10 @@ void CRenderer_RenderEverythingBarRoads_hook() {
 }
 
 #include "CFPSFix.h"
+#include "ES2VertexBuffer.h"
+#include "RQ_Commands.h"
+#include "Pickups.h"
+
 CFPSFix g_fps;
 
 void (*ANDRunThread)(void* a1);
@@ -1229,22 +1318,6 @@ void CCamera__Process_hook(uintptr_t thiz)
 	CCamera__Process(thiz);
 }
 
-#include "java/jniutil.h"
-#include "game/Models/ModelInfo.h"
-#include "MatrixLink.h"
-#include "MatrixLinkList.h"
-#include "game/Collision/Collision.h"
-#include "TxdStore.h"
-#include "util/CUtil.h"
-#include "Coronas.h"
-#include "multitouch.h"
-#include "Streaming.h"
-#include "References.h"
-#include "VisibilityPlugins.h"
-#include "game/Animation/AnimManager.h"
-#include "FileLoader.h"
-#include "Renderer.h"
-
 extern CJavaWrapper* pJavaWrapper;
 void (*MainMenuScreen__OnExit)();
 void MainMenuScreen__OnExit_hook()
@@ -1468,8 +1541,7 @@ void (*CRadar_ClearBlip)(uint32_t a2);
 void CRadar_ClearBlip_hook(uint32_t a2)
 {
 	uintptr_t dwRetAddr = 0;
-	__asm__ volatile ("mov %0, lr" : "=r" (dwRetAddr));
-	dwRetAddr -= g_libGTASA;
+	GET_LR(dwRetAddr);
 
 	//LOGI("[CRadar::ClearBlip]: %d called from 0x%X", (uint16_t)a2, dwRetAddr);
 
@@ -1547,7 +1619,7 @@ void InstallSAMPHooks()
 	CHook::InstallPLT(g_libGTASA + 0x671984, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
     CHook::InstallPLT(g_libGTASA + 0x675320, (uintptr_t)CTaskComplexLeaveCar_hook, (uintptr_t*)& CTaskComplexLeaveCar);
     // attach obj to ped
-	CHook::InstallPLT(g_libGTASA + 0x675C68, (uintptr_t)CWorld_ProcessPedsAfterPreRender_Hook, (uintptr_t*)&CWorld_ProcessPedsAfterPreRender);
+	//CHook::InstallPLT(g_libGTASA + 0x675C68, (uintptr_t)CWorld_ProcessPedsAfterPreRender_Hook, (uintptr_t*)&CWorld_ProcessPedsAfterPreRender);
 	// game pause
 	//CHook::InstallPLT(g_libGTASA + 0x672644, (uintptr_t)CTimer_StartUserPause_hook, (uintptr_t*)&CTimer_StartUserPause);
 	//CHook::InstallPLT(g_libGTASA + 0x67056C, (uintptr_t)CTimer_EndUserPause_hook, (uintptr_t*)&CTimer_EndUserPause);
@@ -1770,13 +1842,45 @@ void CTaskSimpleUseGun__RemoveStanceAnims_hook(uintptr* thiz, void* ped, float a
     CTaskSimpleUseGun__RemoveStanceAnims(thiz, ped, a3);
 }
 
-#include "Textures/TextureDatabase.h"
-#include "Textures/TextureDatabaseEntry.h"
-#include "Textures/TextureDatabaseRuntime.h"
-#include "Scene.h"
-#include "sprite2d.h"
-#include "Entity/PlayerPedGta.h"
-#include "Pools.h"
+int (*CCollision__ProcessVerticalLine)(float *a1, float *a2, int a3, int a4, int *a5, int a6, int a7, int a8);
+int CCollision__ProcessVerticalLine_hook(float *a1, float *a2, int a3, int a4, int *a5, int a6, int a7, int a8)
+{
+    int result; // r0
+
+    if (a3)
+        result = CCollision__ProcessVerticalLine(a1, a2, a3, a4, a5, a6, a7, a8);
+    else
+        result = 0;
+    return result;
+}
+
+int(*CUpsideDownCarCheck__IsCarUpsideDown)(int, int);
+int CUpsideDownCarCheck__IsCarUpsideDown_hook(int a1, int a2)
+{
+    /* Passengers leave the vehicle out of fear if it overturns */
+
+//	if (*(uintptr_t*)(a2 + 20))
+//	{
+//		return CUpsideDownCarCheck__IsCarUpsideDown(a1, a2);
+//	}
+    return 0;
+}
+
+int (*CTaskSimpleGetUp__ProcessPed)(uintptr_t* thiz, CPedGTA* ped);
+int CTaskSimpleGetUp__ProcessPed_hook(uintptr_t* thiz, CPedGTA* ped)
+{
+    //return false;
+    if(!ped)return 0;
+    int res = 0;
+    try {
+        res = CTaskSimpleGetUp__ProcessPed(thiz, ped);
+    }
+    catch(...) {
+        return 0;
+    }
+
+    return res;
+}
 
 void InjectHooks()
 {
@@ -1814,8 +1918,8 @@ void InjectHooks()
     //CPedIntelligence::InjectHooks(); //
     CWorld::InjectHooks(); //
     CGame::InjectHooks();
-    //ES2VertexBuffer::InjectHooks();
-    //CRQ_Commands::InjectHooks();
+    ES2VertexBuffer::InjectHooks();
+    CRQ_Commands::InjectHooks();
     CTxdStore::InjectHooks();
     CVisibilityPlugins::InjectHooks();
     //CAdjustableHUD::InjectHooks();
@@ -1834,7 +1938,7 @@ void InjectHooks()
     CSprite2d::InjectHooks();
     //CFileLoader::InjectHooks();
     //CShadows::InjectHooks();
-    //CPickups::InjectHooks();
+    CPickups::InjectHooks();
     CRenderer::InjectHooks();
     CStreamingInfo::InjectHooks();
     TextureDatabase::InjectHooks();
@@ -1861,15 +1965,15 @@ void InstallSpecialHooks()
 
     CHook::InlineHook("_ZN14MainMenuScreen6UpdateEf", &MainMenuScreen__Update_hook, &MainMenuScreen__Update);
 
-    //CHook::Redirect("_ZN10CStreaming13InitImageListEv", &CStream_InitImageList);
-    //CHook::Redirect("_ZN6CPools10InitialiseEv", &CPools_Initialise);
+    CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
 
     MultiTouch::initialize();
 }
 
 void InstallHooks()
 {
-    CHook::InlineHook("_Z13Render2dStuffv", &Render2dStuff_hook, &Render2dStuff);
+    CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
+    CHook::Redirect("_Z13RenderEffectsv", &RenderEffects);
     CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);
 
     CHook::Redirect("_ZN11CHudColours12GetIntColourEh", &CHudColours__GetIntColour); // dangerous
@@ -1892,5 +1996,12 @@ void InstallHooks()
 
     CHook::InlineHook("_ZN11CFileLoader18LoadObjectInstanceEPKc", &CFileLoader__LoadObjectInstance_hook, &CFileLoader__LoadObjectInstance);
 
+    CHook::InlineHook("_ZN6CRadar9ClearBlipEi", &CRadar_ClearBlip_hook, &CRadar_ClearBlip);
+
+    CHook::InlineHook("_ZN10CCollision19ProcessVerticalLineERK8CColLineRK7CMatrixR9CColModelR9CColPointRfbbP15CStoredCollPoly", &CCollision__ProcessVerticalLine_hook, &CCollision__ProcessVerticalLine);
+
+    CHook::InlineHook("_ZN19CUpsideDownCarCheck15IsCarUpsideDownEPK8CVehicle", &CUpsideDownCarCheck__IsCarUpsideDown_hook, &CUpsideDownCarCheck__IsCarUpsideDown);
+
+    CHook::InlineHook("_ZN16CTaskSimpleGetUp10ProcessPedEP4CPed", &CTaskSimpleGetUp__ProcessPed_hook, &CTaskSimpleGetUp__ProcessPed); // CTaskSimpleGetUp::ProcessPed
     HookCPad();
 }

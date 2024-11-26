@@ -46,28 +46,22 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
 	// voice
 	//Network::OnRaknetConnect(szHostOrIp, iPort);
-    FLog("CNetGame initializing..1");
 
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 
-    FLog("CNetGame initializing..2");
 	m_pNetSet = new NET_SETTINGS;
 	memset(m_szHostName, 0, 256);
 	memset(m_szHostOrIp, 0, 256);
 
-    FLog("CNetGame initializing..3");
 	strcpy(m_szHostName, "SA-MP");
 	strncpy(m_szHostOrIp, szHostOrIp, sizeof(m_szHostOrIp));
 	m_iPort = iPort;
 
-    FLog("CNetGame initializing..4");
 	m_pRakClient = RakNetworkFactory::GetRakClientInterface();
-    FLog("CNetGame initializing..4 1");
 	InitializePools();
 
-    FLog("CNetGame initializing.. 5");
 	GetPlayerPool()->SetLocalPlayerName(szPlayerName);
 
 	RegisterRPCs(m_pRakClient);
@@ -76,11 +70,9 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
 	memset(m_dwMapIcon, 0, sizeof(m_dwMapIcon));
 
-    FLog("CNetGame initializing.. 6");
 	pGame->EnableClock(false);
 	pGame->EnableZoneNames(false);
 
-    FLog("CNetGame initializing..7");
 	m_pNetSet->iDeathDropMoney = 0;
 	m_pNetSet->iSpawnsAvailable = 0;
 	m_pNetSet->bNameTagLOS = 0;
@@ -124,29 +116,17 @@ CNetGame::~CNetGame()
 
 void CNetGame::InitializePools()
 {
-    FLog("InitializePools");
 	m_pPools = new NET_POOLS;
-    FLog("InitializePools 1");
 	m_pPools->pPlayerPool = new CPlayerPool();
-    FLog("InitializePools 2");
 	m_pPools->pVehiclePool = new CVehiclePool();
-    FLog("InitializePools 3");
 	m_pPools->pGangZonePool = new CGangZonePool();
-    FLog("InitializePools 4");
 	m_pPools->pPickupPool = new CPickupPool();
-    FLog("InitializePools 5");
 	m_pPools->pObjectPool = new CObjectPool();
-    FLog("InitializePools 6");
 	m_pPools->pTextLabelPool = new C3DTextLabelPool();
-    FLog("InitializePools 7");
 	m_pPools->pTextDrawPool = new CTextDrawPool();
-    FLog("InitializePools 8");
 	m_pPools->pActorPool = new CActorPool();
-    FLog("InitializePools 9");
 	m_pPools->pMenuPool = new CMenuPool();
-    FLog("InitializePools 10");
 	m_pPools->pPlayerBubblePool = new CPlayerBubblePool();
-    FLog("InitializePools 11");
 }
 
 void CNetGame::UninitializePools()
@@ -227,14 +207,12 @@ void CNetGame::Process()
 		pGame->SetWorldTime(m_pNetSet->byteWorldTime_Hour, m_pNetSet->byteWorldTime_Minute);
 	}
 
-	//pGame->PreloadObjectsAnims();
+	pGame->PreloadObjectsAnims();
 
 	if (GetGameState() == GAMESTATE_CONNECTED) {
-        FLog("CNetgame process4");
 		ProcessPools();
 	}
 	else {
-        FLog("CNetgame process5");
 		ProcessLoadingScreen();
 	}
 
@@ -412,22 +390,17 @@ void CNetGame::ShutdownForGameModeRestart()
 int iVehiclePoolProcessFlag = 0;
 void CNetGame::ProcessPools()
 {
-    FLog("ProcessPools1");
 	if (GetPlayerPool()) {
-        FLog("ProcessPools2");
 		GetPlayerPool()->Process();
 	}
 
 	if(GetVehiclePool()) {
-        FLog("ProcessPools3");
 		GetVehiclePool()->Process();
 	}
 
 	if (GetPickupPool()) {
-        FLog("ProcessPools4");
 		GetPickupPool()->Process();
 	}
-    FLog("ProcessPools5");
 }	
 // 0.3.7
 void CNetGame::ProcessLoadingScreen()
@@ -958,12 +931,12 @@ void CNetGame::SetMapIcon(uint8_t byteIconID, float fPosX, float fPosY, float fP
 		DisableMapIcon(byteIconID);
 	}
 
-	//m_dwMapIcon[byteIconID] = pGame->CreateRadarMarkerIcon(byteType, fPosX, fPosY, fPosZ, dwColor, byteStyle);
+	m_dwMapIcon[byteIconID] = pGame->CreateRadarMarkerIcon(byteType, fPosX, fPosY, fPosZ, dwColor, byteStyle);
 }
 // 0.3.7
 void CNetGame::DisableMapIcon(uint8_t byteIconID)
 {
-	//ScriptCommand(&disable_marker, m_dwMapIcon[byteIconID]);
+	ScriptCommand(&disable_marker, m_dwMapIcon[byteIconID]);
 	m_dwMapIcon[byteIconID] = 0;
 }
 // 0.3.7
@@ -1017,7 +990,7 @@ void CNetGame::ResetMapIcons()
 	for (int i = 0; i < MAX_MAP_ICONS; i++)
 	{
 		if (m_dwMapIcon[i]) {
-			//ScriptCommand(&disable_marker, m_dwMapIcon[i]);
+			ScriptCommand(&disable_marker, m_dwMapIcon[i]);
 			m_dwMapIcon[i] = 0;
 		}
 	}

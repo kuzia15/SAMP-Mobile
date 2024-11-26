@@ -327,7 +327,7 @@ void CTextDraw::SnapshotProcess()
 		return;
 	}
 
-	uintptr_t snapshot = 0;
+	/*uintptr_t snapshot = 0;
 
 	// PED MODEL
 	if (IsValidPedModel(m_TextDrawData.wModelID))
@@ -384,7 +384,7 @@ void CTextDraw::SnapshotProcess()
 	if (snapshot) {
 		m_TextDrawData.iTextureSlot = GetFreeTextDrawTextureSlot();
 		TextDrawTexture[m_TextDrawData.iTextureSlot] = snapshot;
-	}
+	}*/
 }
 
 /*

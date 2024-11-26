@@ -4,6 +4,9 @@
 
 #include "World.h"
 #include "../vendor/armhook/patch.h"
+#include "main.h"
+#include "game/game.h"
+#include "net/netgame.h"
 
 //CRepeatSector CWorld::ms_aRepeatSectors[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X];
 //CPtrListDoubleLink CWorld::ms_listMovingEntityPtrs;
@@ -25,7 +28,7 @@ CRepeatSector* GetRepeatSector(int32 x, int32 y) {
 
 void CWorld::InjectHooks() {
 
-    //CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x675C58 : 0x849A20), &ProcessPedsAfterPreRender);
+    CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x675C58 : 0x849A20), &ProcessPedsAfterPreRender);
 }
 
 bool CWorld::ProcessLineOfSight(const CVector* origin, const CVector* target, CColPoint* outColPoint, CEntityGTA** outEntity, bool buildings, bool vehicles, bool peds, bool objects, bool dummies, bool doSeeThroughCheck, bool doCameraIgnoreCheck, bool doShootThroughCheck) {
@@ -48,29 +51,31 @@ void CWorld::Remove(CEntityGTA *entity) {
     ((void (*)(CEntityGTA*))(g_libGTASA + (VER_x32 ? 0x0042330C + 1 : 0x5073A0))) (entity);
 }
 
+extern CNetGame *pNetGame;
 void CWorld::ProcessPedsAfterPreRender() {
-    /*if (CTimer::bSkipProcessThisFrame)
+    if (CTimer::bSkipProcessThisFrame)
         return;
 
-    for(auto &pair : CPlayerPool::spawnedPlayers) {
-        auto pPed = pair.second->GetPlayerPed();
-        if (!pPed->m_pPed->m_bRemoveFromWorld) {
-            pPed->ProcessAttach();
-            pPed->m_pPed->GetIntelligence()->ProcessAfterPreRender();
+    if(!pNetGame || !pNetGame->GetPlayerPool())
+        return;
+
+    for (PLAYERID i = 0; i < MAX_PLAYERS; i++)
+    {
+        CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
+        if(pRemotePlayer)
+        {
+            if(pRemotePlayer->GetPlayerPed() && pRemotePlayer->GetPlayerPed()->m_pPed->m_bRemoveFromWorld)
+            {
+                pRemotePlayer->GetPlayerPed()->ProcessAttachedObjects();
+                pRemotePlayer->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();
+            }
         }
     }
 
-    auto pLocalPlayer = CPlayerPool::GetLocalPlayer();
-    if(pLocalPlayer) {
-        pLocalPlayer->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();
-
-        pLocalPlayer->GetPlayerPed()->ProcessAttach();
+    if (pNetGame)
+    {
+        CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
+        if (pPlayerPool)
+            pPlayerPool->ProcessAttachedObjects();
     }
-
-    for(auto &pair : CActorPool::list) {
-        auto pPed = pair.second->m_pPed;
-        if (!pPed->m_bRemoveFromWorld) {
-            pPed->GetIntelligence()->ProcessAfterPreRender();
-        }
-    }*/
 }

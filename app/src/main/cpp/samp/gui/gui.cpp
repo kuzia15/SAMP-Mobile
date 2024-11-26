@@ -124,11 +124,11 @@ void UI::drawList()
 	label->setPosition(ImVec2(0.0, 0.0));
 	this->addChild(label);*/
 
-	/*if (pNetGame) //render custom gui
+	if (pNetGame) //render custom gui
 	{
 		CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
 		if (pTextDrawPool) pTextDrawPool->DrawImage();
-	}*/
+	}
 
 	if (pPlayerTags) pPlayerTags->Render(renderer());
 	if (pNetGame && pNetGame->GetTextLabelPool()) pNetGame->GetTextLabelPool()->Render(renderer());

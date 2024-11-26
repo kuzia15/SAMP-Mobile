@@ -262,11 +262,8 @@ void CStreaming::InitImageList() {
 #else
     CStreaming::AddImageToList("TEXDB\\GTA3.IMG", true);
     CStreaming::AddImageToList("TEXDB\\GTA_INT.IMG", true);
-    //CStreaming::AddImageToList("TEXDB\\SKINS.IMG", true);
-    //CStreaming::AddImageToList("TEXDB\\CARS.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMP.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMPCOL.IMG", true);
-    CStreaming::AddImageToList("TEXDB\\PLAYER.IMG", true);
 #endif
 }
 
@@ -556,12 +553,14 @@ int32 CStreaming::GetNextFileOnCd(uint32 streamLastPosn, bool bNotPriority) {
 //                }
 
                 // Check if it has an anim (IFP), if so, make sure it gets loaded
-                const int32 animFileIndex = modelInfo->GetAnimFileIndex();
-                if (animFileIndex != -1) {
-                    const int32 animModelId = IFPToModelId(animFileIndex);
-                    if (!GetInfo(animModelId).IsLoadedOrBeingRead()) {
-                        RequestModel(animModelId, STREAMING_KEEP_IN_MEMORY);
-                        continue;
+                if(modelInfo) {
+                    const int32 animFileIndex = modelInfo->GetAnimFileIndex();
+                    if (animFileIndex != -1) {
+                        const int32 animModelId = IFPToModelId(animFileIndex);
+                        if (!GetInfo(animModelId).IsLoadedOrBeingRead()) {
+                            RequestModel(animModelId, STREAMING_KEEP_IN_MEMORY);
+                            continue;
+                        }
                     }
                 }
                 break;

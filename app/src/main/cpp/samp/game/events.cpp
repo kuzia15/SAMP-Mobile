@@ -1,6 +1,7 @@
 #include "../main.h"
 #include "game.h"
 #include "../net/netgame.h"
+#include "Streaming.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -24,20 +25,25 @@ void ProcessIncommingEvent(PLAYERID playerId, int iEventType,
 	CVehicle* pVehicle = nullptr;
 	CRemotePlayer* pPlayer = nullptr;
 
+    int iVehicleID;
+    int iPaintJob;
+    int iComponent;
+    uint32_t v;
+
 	switch (iEventType)
 	{
 	case EVENT_TYPE_PAINTJOB:
-		pVehicle = pVehiclePool->GetAt(dwParam1);
-		if (pVehicle) {
-			pVehicle->SetPaintJob(dwParam2);
-		}
+        iVehicleID = pNetGame->GetVehiclePool()->FindGtaIDFromID(dwParam1);
+        iPaintJob = (int)dwParam2;
+        if (iVehicleID) ScriptCommand(&change_car_skin, iVehicleID, dwParam2);
 		break;
 
 	case EVENT_TYPE_CARCOMPONENT:
-		pVehicle = pVehiclePool->GetAt(dwParam1);
-		if (pVehicle) {
-			pVehicle->AddComponent(dwParam2);
-		}
+        iVehicleID = pNetGame->GetVehiclePool()->FindGtaIDFromID(dwParam1);
+        iComponent = (int)dwParam2;
+
+        if(CStreaming::TryLoadModel(iComponent))
+            ScriptCommand(&add_car_component, iVehicleID, iComponent, &v);
 		break;
 
 	case EVENT_TYPE_CARCOLOR:

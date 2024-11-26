@@ -2145,11 +2145,9 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
 {
     RemoveOccludersInRadius(vecPos, 500.0);
 
-    // CPools::ms_pBuildingPool
-    uintptr_t *pBuildingPool = *(uintptr_t**)(g_libGTASA+0x95AC4C);
-    for(int i = 0; i < 20000; i++)
+    for(int i = 0; i < GetBuildingPool()->m_nSize; i++)
     {
-        CEntityGTA *pEntity = CPools::G;
+        CEntityGTA *pEntity = GetBuildingPool()->GetAt(i);
         if(pEntity)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
@@ -2166,10 +2164,9 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     }
 
     // CPools::ms_pDummyPool
-    uintptr_t *pDummyPool = *(uintptr_t**)(g_libGTASA+0x95AC54);
-    for(int i = 0; i < 40000; i++)
+    for(int i = 0; i < GetDummyPool()->m_nSize; i++)
     {
-        CEntityGTA *pEntity = (CEntityGTA*)((i * 60) + *pDummyPool);
+        CEntityGTA *pEntity = GetDummyPool()->GetAt(i);
         if(pEntity)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
@@ -2186,10 +2183,9 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     }
 
     // CPools::ms_pObjectPool
-    uintptr_t *pObjectPool = *(uintptr_t**)(g_libGTASA+0x95AC50);
-    for(int i = 0; i < 3000; i++)
+    for(int i = 0; i < GetObjectPoolGta()->m_nSize; i++)
     {
-        CEntityGTA *pEntity = (CEntityGTA*)((i * 420) + *pObjectPool);
+        CEntityGTA *pEntity = GetObjectPoolGta()->GetAt(i);
         if(pEntity)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
@@ -2222,13 +2218,13 @@ struct stOccluders {
 
 void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
 {
-    int iOccludersOnMap = *(uint32_t *)(g_libGTASA+0xA45790);
+    int iOccludersOnMap = *(uint32_t *)(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538));
     if(iOccludersOnMap >= 1)
     {
-        uint32_t dwOccluders = g_libGTASA+0xA41140;
+        uint32_t dwOccluders = g_libGTASA+(VER_x32 ? 0xA41140:0xCE3EE8);
         for(int i = 0; i <= iOccludersOnMap; i++)
         {
-            stOccluders *aOccluders = (stOccluders*)((i * 18) + dwOccluders);
+            stOccluders *aOccluders = (stOccluders*)((i * (VER_x32 ? 18:18*2)) + dwOccluders);
 
             CVector vecOccluderPos;
             vecOccluderPos.x = (float)aOccluders->fMidX * 0.25;
@@ -2355,140 +2351,140 @@ uint8_t FindPlayerNumFromPedPtr(CPedGTA* dwPedPtr)
 
 int GameGetWeaponModelIDFromWeaponID(int iWeaponID)
 {
-	switch (iWeaponID)
-	{
-	case WEAPON_BRASSKNUCKLE:
-		return WEAPON_MODEL_BRASSKNUCKLE;
+    switch (iWeaponID)
+    {
+        case WEAPON_BRASSKNUCKLE:
+            return WEAPON_MODEL_BRASSKNUCKLE;
 
-	case WEAPON_GOLFCLUB:
-		return WEAPON_MODEL_GOLFCLUB;
+        case WEAPON_GOLFCLUB:
+            return WEAPON_MODEL_GOLFCLUB;
 
-	case WEAPON_NITESTICK:
-		return WEAPON_MODEL_NITESTICK;
+        case WEAPON_NIGHTSTICK:
+            return WEAPON_MODEL_NITESTICK;
 
-	case WEAPON_KNIFE:
-		return WEAPON_MODEL_KNIFE;
+        case WEAPON_KNIFE:
+            return WEAPON_MODEL_KNIFE;
 
-	case WEAPON_BAT:
-		return WEAPON_MODEL_BAT;
+        case WEAPON_BASEBALLBAT:
+            return WEAPON_MODEL_BAT;
 
-	case WEAPON_SHOVEL:
-		return WEAPON_MODEL_SHOVEL;
+        case WEAPON_SHOVEL:
+            return WEAPON_MODEL_SHOVEL;
 
-	case WEAPON_POOLSTICK:
-		return WEAPON_MODEL_POOLSTICK;
+        case WEAPON_POOL_CUE:
+            return WEAPON_MODEL_POOLSTICK;
 
-	case WEAPON_KATANA:
-		return WEAPON_MODEL_KATANA;
+        case WEAPON_KATANA:
+            return WEAPON_MODEL_KATANA;
 
-	case WEAPON_CHAINSAW:
-		return WEAPON_MODEL_CHAINSAW;
+        case WEAPON_CHAINSAW:
+            return WEAPON_MODEL_CHAINSAW;
 
-	case WEAPON_DILDO:
-		return WEAPON_MODEL_DILDO;
+        case WEAPON_DILDO1:
+            return WEAPON_MODEL_DILDO;
 
-	case WEAPON_DILDO2:
-		return WEAPON_MODEL_DILDO2;
+        case WEAPON_DILDO2:
+            return WEAPON_MODEL_DILDO2;
 
-	case WEAPON_VIBRATOR:
-		return WEAPON_MODEL_VIBRATOR;
+        case WEAPON_VIBE1:
+            return WEAPON_MODEL_VIBRATOR;
 
-	case WEAPON_VIBRATOR2:
-		return WEAPON_MODEL_VIBRATOR2;
+        case WEAPON_VIBE2:
+            return WEAPON_MODEL_VIBRATOR2;
 
-	case WEAPON_FLOWER:
-		return WEAPON_MODEL_FLOWER;
+        case WEAPON_FLOWERS:
+            return WEAPON_MODEL_FLOWER;
 
-	case WEAPON_CANE:
-		return WEAPON_MODEL_CANE;
+        case WEAPON_CANE:
+            return WEAPON_MODEL_CANE;
 
-	case WEAPON_GRENADE:
-		return WEAPON_MODEL_GRENADE;
+        case WEAPON_GRENADE:
+            return WEAPON_MODEL_GRENADE;
 
-	case WEAPON_TEARGAS:
-		return WEAPON_MODEL_TEARGAS;
+        case WEAPON_TEARGAS:
+            return WEAPON_MODEL_TEARGAS;
 
-	case WEAPON_MOLTOV:
-		return WEAPON_MODEL_MOLOTOV;
+        case WEAPON_MOLOTOV:
+            return -1;
 
-	case WEAPON_COLT45:
-		return WEAPON_MODEL_COLT45;
+        case WEAPON_PISTOL:
+            return WEAPON_MODEL_COLT45;
 
-	case WEAPON_SILENCED:
-		return WEAPON_MODEL_SILENCED;
+        case WEAPON_PISTOL_SILENCED:
+            return WEAPON_MODEL_SILENCED;
 
-	case WEAPON_DEAGLE:
-		return WEAPON_MODEL_DEAGLE;
+        case WEAPON_DESERT_EAGLE:
+            return WEAPON_MODEL_DEAGLE;
 
-	case WEAPON_SHOTGUN:
-		return WEAPON_MODEL_SHOTGUN;
+        case WEAPON_SHOTGUN:
+            return WEAPON_MODEL_SHOTGUN;
 
-	case WEAPON_SAWEDOFF:
-		return WEAPON_MODEL_SAWEDOFF;
+        case WEAPON_SAWNOFF_SHOTGUN:
+            return WEAPON_MODEL_SAWEDOFF;
 
-	case WEAPON_SHOTGSPA:
-		return WEAPON_MODEL_SHOTGSPA;
+        case WEAPON_SPAS12_SHOTGUN:
+            return WEAPON_MODEL_SHOTGSPA;
 
-	case WEAPON_UZI:
-		return WEAPON_MODEL_UZI;
+        case WEAPON_MICRO_UZI:
+            return WEAPON_MODEL_UZI;
 
-	case WEAPON_MP5:
-		return WEAPON_MODEL_MP5;
+        case WEAPON_MP5:
+            return WEAPON_MODEL_MP5;
 
-	case WEAPON_AK47:
-		return WEAPON_MODEL_AK47;
+        case WEAPON_AK47:
+            return WEAPON_MODEL_AK47;
 
-	case WEAPON_M4:
-		return WEAPON_MODEL_M4;
+        case WEAPON_M4:
+            return WEAPON_MODEL_M4;
 
-	case WEAPON_TEC9:
-		return WEAPON_MODEL_TEC9;
+        case WEAPON_TEC9:
+            return WEAPON_MODEL_TEC9;
 
-	case WEAPON_RIFLE:
-		return WEAPON_MODEL_RIFLE;
+        case WEAPON_COUNTRYRIFLE:
+            return WEAPON_MODEL_RIFLE;
 
-	case WEAPON_SNIPER:
-		return WEAPON_MODEL_SNIPER;
+        case WEAPON_SNIPERRIFLE:
+            return WEAPON_MODEL_SNIPER;
 
-	case WEAPON_ROCKETLAUNCHER:
-		return WEAPON_MODEL_ROCKETLAUNCHER;
+        case WEAPON_RLAUNCHER:
+            return WEAPON_MODEL_ROCKETLAUNCHER;
 
-	case WEAPON_HEATSEEKER:
-		return WEAPON_MODEL_HEATSEEKER;
+        case WEAPON_RLAUNCHER_HS:
+            return WEAPON_MODEL_HEATSEEKER;
 
-	case WEAPON_FLAMETHROWER:
-		return WEAPON_MODEL_FLAMETHROWER;
+        case WEAPON_FLAMETHROWER:
+            return WEAPON_MODEL_FLAMETHROWER;
 
-	case WEAPON_MINIGUN:
-		return WEAPON_MODEL_MINIGUN;
+        case WEAPON_MINIGUN:
+            return WEAPON_MODEL_MINIGUN;
 
-	case WEAPON_SATCHEL:
-		return WEAPON_MODEL_SATCHEL;
+        case WEAPON_REMOTE_SATCHEL_CHARGE:
+            return WEAPON_MODEL_SATCHEL;
 
-	case WEAPON_BOMB:
-		return WEAPON_MODEL_BOMB;
+        case WEAPON_DETONATOR:
+            return WEAPON_MODEL_BOMB;
 
-	case WEAPON_SPRAYCAN:
-		return WEAPON_MODEL_SPRAYCAN;
+        case WEAPON_SPRAYCAN:
+            return WEAPON_MODEL_SPRAYCAN;
 
-	case WEAPON_FIREEXTINGUISHER:
-		return WEAPON_MODEL_FIREEXTINGUISHER;
+        case WEAPON_EXTINGUISHER:
+            return WEAPON_MODEL_FIREEXTINGUISHER;
 
-	case WEAPON_CAMERA:
-		return WEAPON_MODEL_CAMERA;
+        case WEAPON_CAMERA:
+            return WEAPON_MODEL_CAMERA;
 
-	case WEAPON_NIGHTVISION:
-		return WEAPON_MODEL_NIGHTVISION;
+        case -1:
+            return WEAPON_MODEL_NIGHTVISION;
 
-	case WEAPON_INFRARED:
-		return WEAPON_MODEL_INFRARED;
+        case -2:
+            return WEAPON_MODEL_INFRARED;
 
-	case WEAPON_PARACHUTE:
-		return WEAPON_MODEL_PARACHUTE;
+        case WEAPON_PARACHUTE:
+            return WEAPON_MODEL_PARACHUTE;
 
-	}
+    }
 
-	return -1;
+    return -1;
 }
 
 bool IsPointInRect(float x, float y, CRect* rect)
@@ -2602,7 +2598,7 @@ void GamePrepareTrain(CVehicleGTA* pGtaVehicle)
 		if (pDriver->m_nPedType != (ePedType)0 && pDriver->m_nPedType != (ePedType)1)
 		{
 			// CPlayerPed::Destructor
-			((void (*)(CPedGTA*))(*(void**)(pDriver + (VER_x32?0x4:0x4*2))))(pDriver);
+            ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x004CE6A0 + 1 : 0x5CDC64)))((uintptr_t)pDriver);
 
 			pGtaVehicle->pDriver = nullptr;
 		}
@@ -2631,7 +2627,7 @@ static CVector _axis[3] = {
 // 0.3.7
 void RwMatrixRotate(RwMatrix* mat, int axis, float angle)
 {
-	((void (*) (RwMatrix*, RwV3d*, float, int))(g_libGTASA + 0x1E3974 + 1))(mat, &_axis[axis], angle, 1);
+	((void (*) (RwMatrix*, RwV3d*, float, int))(g_libGTASA + (VER_x32 ? 0x001E38F4 + 1 : 0x27E710)))(mat, &_axis[axis], angle, 1);
 }
 // 0.3.7
 void RwMatrixScale(RwMatrix* matrix, RwV3d* scale)

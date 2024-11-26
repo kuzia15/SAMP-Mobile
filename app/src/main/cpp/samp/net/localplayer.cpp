@@ -39,11 +39,9 @@ CLocalPlayer::CLocalPlayer()
 	m_statsData.dwLastMoney = 0;
 	m_statsData.dwLastDrunkLevel = 0;
 
-    FLog("CLocalPlayer::CLocalPlayer() 1");
 	m_pPlayerPed = pGame->FindPlayerPed();
 	m_bIsActive = false;
 	m_bIsWasted = false;
-    FLog("CLocalPlayer::CLocalPlayer() 2");
 	
 	m_iDisplayZoneTick = 0;
 	m_dwLastSendTick = GetTickCount();
@@ -77,16 +75,13 @@ extern bool DriveBy;
 
 bool CLocalPlayer::Process()
 {
-    FLog("CLocalPlayer::Process");
 	//UpdateVoice();
 
 	if (m_bIsActive && m_pPlayerPed != nullptr)
 	{
-        FLog("CLocalPlayer::Process1");
 		// local player is dead
 		if (!m_bIsWasted && m_pPlayerPed->GetActionTrigger() == ACTION_DEATH || m_pPlayerPed->IsDead())
 		{
-            FLog("CLocalPlayer::Process2");
 			ToggleSpectating(false);
 
 			if(m_pPlayerPed->GetDanceStyle() != -1) m_pPlayerPed->StopDancing();
@@ -113,11 +108,9 @@ bool CLocalPlayer::Process()
 			m_bIsActive = false;
 			m_bIsWasted = true;
 			pGame->EnableZoneNames(false);
-            FLog("CLocalPlayer::Process2");
 			return true;
 		}
 
-        FLog("CLocalPlayer::Process4");
 		uint16_t wKeys, lrAnalog, udAnalog;
 		wKeys = m_pPlayerPed->GetKeys(&lrAnalog, &udAnalog, false);
 
@@ -185,59 +178,45 @@ bool CLocalPlayer::Process()
 			}
 		}
 
-        FLog("CLocalPlayer::Process5");
 		// HANDLE DRUNK
 		m_pPlayerPed->ProcessDrunk();
-        FLog("CLocalPlayer::Process6");
 
 		if (dwEnterVehTimeElasped != -1 &&
 			(dwThisTick - dwEnterVehTimeElasped) > 5000 &&
 			!m_pPlayerPed->IsInVehicle())
 		{
-            FLog("CLocalPlayer::Process7");
 			CCamera::SetBehindPlayer();
 			dwEnterVehTimeElasped = -1;
 		}
-        FLog("CLocalPlayer::Process8");
 		if (dwThisTick >= m_iDisplayZoneTick) {
 			pGame->EnableZoneNames(pNetGame->m_pNetSet->bZoneNames);
 		}
-        FLog("CLocalPlayer::Process9");
-		//pGame->UpdateCheckpoints();
-        FLog("CLocalPlayer::Process10");
+		pGame->UpdateCheckpoints();
 		if ((dwThisTick - m_dwLastStatsUpdateTick) > 1000) {
 			SendStatsUpdate();
 			m_dwLastStatsUpdateTick = dwThisTick;
 		}
-        FLog("CLocalPlayer::Process11");
-		//UpdateSurfing();
-        FLog("CLocalPlayer::Process12");
+		UpdateSurfing();
 		CheckWeapons();
-        FLog("CLocalPlayer::Process13");
 		uint8_t byteInterior = pGame->GetActiveInterior();
 		if (byteInterior != m_byteCurInterior) {
 			UpdateRemoteInterior(byteInterior);
 		}
-        FLog("CLocalPlayer::Process14");
 		UpdateCameraTarget();
-        FLog("CLocalPlayer::Process15");
 		// PLAYER DATA UPDATES
 		if (m_bIsSpectating) {
-            FLog("CLocalPlayer::Process16");
 			ProcessSpectating();
 			m_bPassengerDriveByMode = false;
-            FLog("CLocalPlayer::Process17");
 		}
 		// DRIVER CONDITIONS
 		else if (m_pPlayerPed->IsInVehicle() && !m_pPlayerPed->IsAPassenger())
 		{
-            FLog("CLocalPlayer::Process18");
 			g_bLockEnterVehicleWidget = false;
 
             CVehicleGTA* pGtaVehicle = m_pPlayerPed->GetGtaVehicle();
 			m_nLastVehicle = pNetGame->GetVehiclePool()->FindIDFromGtaPtr(pGtaVehicle);
 
-			m_pPlayerPed->RemoveWeaponWhenEnteringVehicle();
+			//m_pPlayerPed->RemoveWeaponWhenEnteringVehicle();
 			MoveHeadWithCamera();
 			ProcessInCarWorldBounds();
 
@@ -281,28 +260,24 @@ bool CLocalPlayer::Process()
 			}
 
 			m_bPassengerDriveByMode = false;
-            FLog("CLocalPlayer::Process19");
 		}
 		// ONFOOT CONDITIONS
 		else if (m_pPlayerPed->GetActionTrigger() == ACTION_NORMAL || m_pPlayerPed->GetActionTrigger() == ACTION_SCOPE)
 		{
-            FLog("CLocalPlayer::Process20");
 			g_bLockEnterVehicleWidget = true;
 			if(m_bWasInCar)
 			{
 				m_bWasInCar = false;
 			}
 
-            FLog("CLocalPlayer::Process21");
 			//ProcessSurfing();
 			MoveHeadWithCamera();
 
 			if (m_bInRCMode)
 			{
 				m_bInRCMode = false;
-				//m_pPlayerPed->Add();
+				m_pPlayerPed->m_pPed->Add();
 			}
-            FLog("CLocalPlayer::Process22");
 
 			//HandlePassengerEntry();
 			ProcessOnFootWorldBounds();
@@ -313,7 +288,6 @@ bool CLocalPlayer::Process()
 				m_CurrentVehicle = 0xFFFF;
 			}
 
-            FLog("CLocalPlayer::Process23");
 			if (CompareOnFootSyncKeys(wKeys, udAnalog, lrAnalog) 
 				|| (dwThisTick - m_dwLastSendTick) > GetOptimumOnFootSendRate())
 			{
@@ -321,7 +295,6 @@ bool CLocalPlayer::Process()
 				SendOnFootFullSyncData();
 			}
 
-            FLog("CLocalPlayer::Process24");
             if((dwThisTick - m_dwLastSendTick) < 1000)
             {
                 if(IS_TARGETING(m_pPlayerPed->m_pPed) && IS_FIRING(m_pPlayerPed->m_pPed))
@@ -351,12 +324,10 @@ bool CLocalPlayer::Process()
             }
 
 			m_bPassengerDriveByMode = false;
-            FLog("CLocalPlayer::Process21");
 		}
 		// PASSENGER CONDITIONS
 		else if (m_pPlayerPed->GetActionTrigger() == ACTION_INCAR && m_pPlayerPed->IsAPassenger())
 		{
-            FLog("CLocalPlayer::Process22");
 			g_bLockEnterVehicleWidget = false;
 
             CVehicleGTA* pGtaVehicle = m_pPlayerPed->GetGtaVehicle();
@@ -374,7 +345,7 @@ bool CLocalPlayer::Process()
 
 			if(!m_bPassengerDriveByMode && LocalPlayerKeys.bKeys[KEY_CTRL_BACK]) {
 				// NOT IN DRIVEBY MODE AND HORN HELD
-				if(m_pPlayerPed->GetCurrentWeapon() == WEAPON_UZI || m_pPlayerPed->GetCurrentWeapon() == WEAPON_MP5 || m_pPlayerPed->GetCurrentWeapon() == WEAPON_TEC9) {
+				if(m_pPlayerPed->GetCurrentWeapon() == WEAPON_MICRO_UZI || m_pPlayerPed->GetCurrentWeapon() == WEAPON_MP5 || m_pPlayerPed->GetCurrentWeapon() == WEAPON_TEC9) {
 					if(m_pPlayerPed->StartPassengerDriveByMode()) {
 						m_bPassengerDriveByMode = true;
 					}
@@ -386,14 +357,12 @@ bool CLocalPlayer::Process()
 				m_dwLastSendTick = GetTickCount();
 				SendPassengerFullSyncData();
 			}
-            FLog("CLocalPlayer::Process23");
 		}
 	}
 
 	// HANDLE !IsActive spectating
 	if (m_bIsSpectating && !m_bIsActive)
 	{
-        FLog("CLocalPlayer::Process24");
 		if (m_bSpawnDialogShowed)
 		{
 			m_bSpawnDialogShowed = false;
@@ -401,18 +370,14 @@ bool CLocalPlayer::Process()
 		}
 
 		ProcessSpectating();
-        FLog("CLocalPlayer::Process25");
 		return true;
 	}
-
-    FLog("CLocalPlayer::Process32");
 
 	// HANDLE NEEDS TO RESPAWN AFTER DEATH
 	if (m_bIsWasted
 		&& m_pPlayerPed->GetActionTrigger() != ACTION_WASTED
 		&& m_pPlayerPed->GetActionTrigger() != ACTION_DEATH)
 	{
-        FLog("CLocalPlayer::Process26");
 		if (m_pPlayerPed->IsHaveAttachedObject())
 			m_pPlayerPed->RemoveAllAttachedObjects();
 
@@ -430,19 +395,16 @@ bool CLocalPlayer::Process()
 			m_bIsWasted = false;
 			HandleClassSelection();
 		}
-        FLog("CLocalPlayer::Process27");
 
 		return true;
 	}
 
-    FLog("CLocalPlayer::Process52");
 	if (m_pPlayerPed->GetActionTrigger() != ACTION_WASTED &&
 		m_pPlayerPed->GetActionTrigger() != ACTION_DEATH &&
 		pNetGame->GetGameState() == GAMESTATE_CONNECTED &&
 		!m_bIsActive &&
 		!m_bIsSpectating)
 	{
-        FLog("CLocalPlayer::Process28");
 		ProcessClassSelection();
 	}
 
@@ -619,15 +581,11 @@ bool CLocalPlayer::Spawn()
 		if (pUI) pUI->spawn()->setVisible(false);
 	}
 
-	FLog("Spawn localplayer");
 
     CCamera::SetBehindPlayer();
-    FLog("Spawn localplayer1");
 	pGame->DisplayHUD(true);
-    FLog("Spawn localplayer2");
 	m_pPlayerPed->TogglePlayerControllable(true);
 
-    FLog("Spawn localplayer1");
 	if (!bFirstSpawn) {
 		m_pPlayerPed->SetInitialState();
 	}
@@ -635,21 +593,15 @@ bool CLocalPlayer::Spawn()
 		bFirstSpawn = false;
 	}
 
-    FLog("Spawn localplayer2");
-
 	pGame->RefreshStreamingAt(m_SpawnInfo.vecPos.x, m_SpawnInfo.vecPos.y);
 
 	if (m_pPlayerPed->IsCuffed()) {
 	//	m_pPlayerPed->ToggleCuffed(false);
 	}
 
-    FLog("Spawn localplayer3");
 	m_pPlayerPed->RestartIfWastedAt(&m_SpawnInfo.vecPos, m_SpawnInfo.fRotation);
-    FLog("Spawn localplayer4");
 	m_pPlayerPed->SetModelIndex(m_SpawnInfo.iSkin);
-    FLog("Spawn localplayer5");
 	m_pPlayerPed->ClearWeapons();
-    FLog("Spawn localplayer6");
 	m_pPlayerPed->ResetDamageEntity();
 
 	//ApplySpecialAction(0);

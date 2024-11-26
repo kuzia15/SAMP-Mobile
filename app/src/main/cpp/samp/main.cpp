@@ -305,18 +305,15 @@ void MainLoop()
 
 	DoInitStuff();
 
-    FLog("MainLoop go on");
-
 	if (bDebug) {
 		DoDebugLoop();
 	}
 
 	if (pNetGame) {
-        FLog("MainLoop process");
 		pNetGame->Process();
 
-		//CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-		//if(pTextDrawPool) pTextDrawPool->Draw();
+		CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+        if(pTextDrawPool) pTextDrawPool->Draw();
 	}
 
 	if (pAudioStream) {

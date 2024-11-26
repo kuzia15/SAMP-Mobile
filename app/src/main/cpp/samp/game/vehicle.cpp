@@ -231,7 +231,7 @@ void CVehicle::SetPaintJob(uint8_t bytePaintJobID)
 		if (GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
 		{
 			if (bytePaintJobID <= 3) {
-				ScriptCommand(&change_car_skin, m_dwGTAId, bytePaintJobID);
+                if (m_dwGTAId) ScriptCommand(&change_car_skin, m_dwGTAId, bytePaintJobID);
 			}
 		}
 	}

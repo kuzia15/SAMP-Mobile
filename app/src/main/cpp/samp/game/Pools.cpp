@@ -35,7 +35,7 @@ void CPools::Initialise()
     CPools::ms_pTaskPool                = new CPool<CTask, CTaskSimpleSlideToCoord>(6000, "Task");
     CPools::ms_pEntryInfoNodePool       = new CPool<CEntryInfoNode>(20000, "EntryInfoNodePool");
     CPools::ms_pDummyPool               = new CPool<CDummy>(40000, "Dummies");
-    CPools::ms_pBuildingPool            = new CPool<CBuilding>(21000, "Buildings");
+    CPools::ms_pBuildingPool            = new CPool<CBuilding>(20000, "Buildings");
 
     CPools::ms_pColModelPool = PoolAllocator::Allocate(50000, (VER_x32 ? 0x30 : 0x38));
     // 13600 / 200 = 68

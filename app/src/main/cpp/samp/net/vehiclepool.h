@@ -1,6 +1,7 @@
 #pragma once
 
 #define INVALID_VEHICLE_ID	0xFFFF
+#include "../game/util.h"
 
 #pragma pack(push, 1)
 typedef struct _NEW_VEHICLE

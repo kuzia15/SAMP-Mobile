@@ -765,7 +765,7 @@ void WorldVehicleAdd(RPCParameters* rpcParams)
 		pVehiclePool->New(&VehicleInfo);
 	}
 
-	if (pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
+	/*if (pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_CAR)
 	{
 		for (int i = 0; i < 14; i++)
 		{
@@ -782,7 +782,7 @@ void WorldVehicleAdd(RPCParameters* rpcParams)
 
 	if (VehicleInfo.iBodyColor1 != -1 || VehicleInfo.iBodyColor2 != -1) {
 		pVehicle->SetColor(VehicleInfo.iBodyColor1, VehicleInfo.iBodyColor2);
-	}
+	}*/
 }
 // 0.3.7
 void WorldVehicleRemove(RPCParameters* rpcParams)

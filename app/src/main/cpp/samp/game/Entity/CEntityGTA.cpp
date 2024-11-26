@@ -10,6 +10,7 @@
 #include "game/Models/BaseModelInfo.h"
 #include "game/Models/ModelInfo.h"
 #include "game/References.h"
+#include "game/Pools.h"
 
 extern CGame* pGame;
 
@@ -183,4 +184,107 @@ void CEntityGTA::SetModelIndexNoCreate(uint32 index) {
 
 void CEntityGTA::SetIsStatic(bool isStatic) {
 
+}
+
+void CEntityGTA::RegisterReference(CEntityGTA** entity)
+{
+    if (IsBuilding() && !m_bIsTempBuilding && !m_bIsProcObject && !m_nIplIndex)
+        return;
+
+    auto refs = m_pReferences;
+    while (refs) {
+        if (refs->m_ppEntity == entity) {
+            return;
+        }
+        refs = refs->m_pNext;
+    }
+
+    if (!m_pReferences && !CReferences::pEmptyList) {
+        auto iPedsSize = GetPedPoolGta()->GetSize();
+        for (int32 i = 0; i < iPedsSize; ++i) {
+            auto ped = GetPedPoolGta()->GetAt(i);
+            if (ped) {
+                ped->PruneReferences();
+                if (CReferences::pEmptyList)
+                    break;
+            }
+
+        }
+
+        if (!CReferences::pEmptyList) {
+            auto iVehsSize = GetVehiclePoolGta()->GetSize();
+            for (int32 i = 0; i < iVehsSize; ++i) {
+                auto vehicle = GetVehiclePoolGta()->GetAt(i);
+                if (vehicle) {
+                    vehicle->PruneReferences();
+                    if (CReferences::pEmptyList)
+                        break;
+                }
+
+            }
+        }
+
+        if (!CReferences::pEmptyList) {
+            auto iObjectsSize = GetObjectPoolGta()->GetSize();
+            for (int32 i = 0; i < iObjectsSize; ++i) {
+                auto obj = GetObjectPoolGta()->GetAt(i);
+                if (obj) {
+                    obj->PruneReferences();
+                    if (CReferences::pEmptyList)
+                        break;
+                }
+            }
+        }
+    }
+
+    if (CReferences::pEmptyList) {
+        auto pEmptyRef = CReferences::pEmptyList;
+        CReferences::pEmptyList = pEmptyRef->m_pNext;
+        pEmptyRef->m_pNext = m_pReferences;
+        m_pReferences = pEmptyRef;
+        pEmptyRef->m_ppEntity = entity;
+    }
+}
+
+void CEntityGTA::PruneReferences()
+{
+    if (!m_pReferences)
+        return;
+
+    auto refs = m_pReferences;
+    auto ppPrev = &m_pReferences;
+    while (refs) {
+        if (*refs->m_ppEntity == this) {
+            ppPrev = &refs->m_pNext;
+            refs = refs->m_pNext;
+        }
+        else {
+            auto refTemp = refs->m_pNext;
+            *ppPrev = refs->m_pNext;
+            refs->m_pNext = CReferences::pEmptyList;
+            CReferences::pEmptyList = refs;
+            refs->m_ppEntity = nullptr;
+            refs = refTemp;
+        }
+    }
+}
+
+void CEntityGTA::CleanUpOldReference(CEntityGTA** entity)
+{
+    if (!m_pReferences)
+        return;
+
+    auto refs = m_pReferences;
+    auto ppPrev = &m_pReferences;
+    while (refs->m_ppEntity != entity) {
+        ppPrev = &refs->m_pNext;
+        refs = refs->m_pNext;
+        if (!refs)
+            return;
+    }
+
+    *ppPrev = refs->m_pNext;
+    refs->m_pNext = CReferences::pEmptyList;
+    refs->m_ppEntity = nullptr;
+    CReferences::pEmptyList = refs;
 }

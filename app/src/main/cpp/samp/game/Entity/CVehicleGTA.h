@@ -8,7 +8,10 @@
 #include "game/common.h"
 #include "game/Enums/eVehicleType.h"
 #include "game/tHandlingData.h"
+#include "game/Entity/CPhysical.h"
 #include "game/Enums/eVehicleHandlingFlags.h"
+#include "game/RideAnimData.h"
+struct CPedGTA;
 
 enum eVehicleCreatedBy : uint8 {
     RANDOM_VEHICLE = 1,
@@ -22,7 +25,6 @@ enum eRotationAxis : int32 {
     AXIS_Y = 1,
     AXIS_Z = 2
 };
-struct CPedGTA;
 enum eCarLock : uint32 {
     CARLOCK_NOT_USED,
     CARLOCK_UNLOCKED,
@@ -269,6 +271,84 @@ struct CVehicleGTA : CPhysical {
     const char* m_remapTxdName;
     const char* m_newRemapTxdName;
     RwTexture *m_pRemapTexture;
+
+public:
+public: // NOTSA functions
+    // m_nVehicleType start
+    [[nodiscard]] bool IsVehicleTypeValid()     const { return m_nVehicleType != VEHICLE_TYPE_IGNORE; }
+    [[nodiscard]] bool IsAutomobile()           const { return m_nVehicleType == VEHICLE_TYPE_AUTOMOBILE; }
+    [[nodiscard]] bool IsMonsterTruck()         const { return m_nVehicleType == VEHICLE_TYPE_MTRUCK; }
+    [[nodiscard]] bool IsQuad()                 const { return m_nVehicleType == VEHICLE_TYPE_QUAD; }
+    [[nodiscard]] bool IsHeli()                 const { return m_nVehicleType == VEHICLE_TYPE_HELI; }
+    [[nodiscard]] bool IsPlane()                const { return m_nVehicleType == VEHICLE_TYPE_PLANE; }
+    [[nodiscard]] bool IsBoat()                 const { return m_nVehicleType == VEHICLE_TYPE_BOAT; }
+    [[nodiscard]] bool IsTrain()                const { return m_nVehicleType == VEHICLE_TYPE_TRAIN; }
+    [[nodiscard]] bool IsFakeAircraft()         const { return m_nVehicleType == VEHICLE_TYPE_FHELI || m_nVehicleType == VEHICLE_TYPE_FPLANE; }
+    [[nodiscard]] bool IsBike()                 const { return m_nVehicleType == VEHICLE_TYPE_BIKE; }
+    [[nodiscard]] bool IsBMX()                  const { return m_nVehicleType == VEHICLE_TYPE_BMX; }
+    [[nodiscard]] bool IsTrailer()              const { return m_nVehicleType == VEHICLE_TYPE_TRAILER ||  m_nVehicleSubType == VEHICLE_TYPE_TRAILER;}
+    [[nodiscard]] bool IsRCVehicleModelID();
+    // m_nVehicleType end
+
+    // m_nVehicleSubType start
+    [[nodiscard]] bool IsSubVehicleTypeValid() const { return m_nVehicleSubType != VEHICLE_TYPE_IGNORE; }
+    [[nodiscard]] bool IsSubAutomobile()       const { return m_nVehicleSubType == VEHICLE_TYPE_AUTOMOBILE; }
+    [[nodiscard]] bool IsSubMonsterTruck()     const { return m_nVehicleSubType == VEHICLE_TYPE_MTRUCK; }
+    [[nodiscard]] bool IsSubQuad()             const { return m_nVehicleSubType == VEHICLE_TYPE_QUAD; }
+    [[nodiscard]] bool IsSubHeli()             const { return m_nVehicleSubType == VEHICLE_TYPE_HELI; }
+    [[nodiscard]] bool IsSubPlane()            const { return m_nVehicleSubType == VEHICLE_TYPE_PLANE; }
+    [[nodiscard]] bool IsSubBoat()             const { return m_nVehicleSubType == VEHICLE_TYPE_BOAT; }
+    [[nodiscard]] bool IsSubTrain()            const { return m_nVehicleSubType == VEHICLE_TYPE_TRAIN; }
+    [[nodiscard]] bool IsSubFakeAircraft()     const { return m_nVehicleSubType == VEHICLE_TYPE_FHELI || m_nVehicleSubType == VEHICLE_TYPE_FPLANE; }
+    [[nodiscard]] bool IsSubBike()             const { return m_nVehicleSubType == VEHICLE_TYPE_BIKE; }
+    [[nodiscard]] bool IsSubBMX()              const { return m_nVehicleSubType == VEHICLE_TYPE_BMX; }
+    [[nodiscard]] bool IsSubTrailer()          const { return m_nVehicleSubType == VEHICLE_TYPE_TRAILER; }
+
+    [[nodiscard]] bool IsSubRoadVehicle()      const { return !IsSubHeli() && !IsSubPlane() && !IsSubTrain(); }
+    [[nodiscard]] bool IsSubFlyingVehicle()    const { return IsSubHeli() && IsSubPlane(); }
+    // m_nVehicleSubType end
+
+    [[nodiscard]] bool IsTransportVehicle()    const { return m_nModelIndex == MODEL_TAXI    || m_nModelIndex == MODEL_CABBIE; }
+    [[nodiscard]] bool IsAmphibiousHeli()      const { return m_nModelIndex == MODEL_SEASPAR || m_nModelIndex == MODEL_LEVIATHN; }
+    [[nodiscard]] bool IsConstructionVehicle() const { return m_nModelIndex == MODEL_DUMPER  || m_nModelIndex == MODEL_DOZER || m_nModelIndex == MODEL_FORKLIFT; }
+
+    [[nodiscard]] bool IsRealBike() const { return m_pHandlingData->m_bIsBike;  }
+    [[nodiscard]] bool IsRealHeli() const { return m_pHandlingData->m_bIsHeli;  }
+    [[nodiscard]] bool IsRealPlane()const { return m_pHandlingData->m_bIsPlane; }
+    [[nodiscard]] bool IsRealBoat() const { return m_pHandlingData->m_bIsBoat;  }
+
+    [[nodiscard]] eVehicleCreatedBy GetCreatedBy() const      { return m_nCreatedBy; }
+    [[nodiscard]] bool IsCreatedBy(eVehicleCreatedBy v) const { return v == m_nCreatedBy; }
+    [[nodiscard]] bool IsMissionVehicle() const { return m_nCreatedBy == MISSION_VEHICLE; }
+    auto GetMaxPassengerSeats() { return std::span{ m_apPassengers, m_nMaxPassengers }; }
+
+    void SetGettingInFlags(uint8 doorId);
+    void SetGettingOutFlags(uint8 doorId);
+    void ClearGettingInFlags(uint8 doorId);
+    void ClearGettingOutFlags(uint8 doorId);
+
+    bool GetLightsStatus() { return m_nVehicleFlags.bLightsOn;}
+    void SetLightStatus(bool status) { m_nVehicleFlags.bLightsOn = status; }
+public:
+    static inline auto m_aSpecialColModel = std::array<CColModel, 4>();
+
+public:
+    static void InjectHooks();
+
+    bool AddPassenger(CPedGTA* passenger);
+    bool AddPassenger(CPedGTA* passenger, uint8 seatNumber);
+    void RemovePassenger(CPedGTA* passenger);
+    void SetDriver(CPedGTA* driver);
+    void RemoveDriver(bool arg0);
+    void ApplyTurnForceToOccupantOnEntry(CPedGTA* passenger);
+    void RenderDriverAndPassengers();
+    void PreRenderDriverAndPassengers();
+    // get special ride anim data for bile or quad
+    CRideAnimData* GetRideAnimData() { return nullptr; }
+    int GetPassengerIndex(const CPedGTA* ped);
+
+    void AddVehicleUpgrade(int32 modelId);
+    void RemoveVehicleUpgrade(int32 upgradeModelIndex);
 };
 
 VALIDATE_SIZE(CVehicleGTA, (VER_x32 ? 0x5B4 : 0x758));

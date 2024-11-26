@@ -336,6 +336,10 @@ public:
 
     bool IsEnteringCar();
     bool IsExitingVehicle();
+
+    void GiveWeapon(int iWeaponID, int iAmmo);
+
+    void RemoveFromVehicle();
 };
 
 VALIDATE_SIZE(CPedGTA, (VER_x32 ? 0x7A4 : 0x988));

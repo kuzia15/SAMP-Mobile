@@ -9,6 +9,10 @@
 #include "TxdStore.h"
 #include "VisibilityPlugins.h"
 #include "net/netgame.h"
+#include "CrossHair.h"
+#include "Pickups.h"
+#include "game/Models/ModelInfo.h"
+#include "game/Collision/Collision.h"
 
 void ApplySAMPPatchesInGame();
 void InitScripting();
@@ -319,22 +323,19 @@ void CGame::DrawGangZone(float fPos[], uint32_t dwColor, uint32_t dwUnk)
 // 0.3.7
 uint32_t CGame::CreatePickup(int iModel, int iType, float x, float y, float z, int *pdwIndex)
 {
-	if (!IsValidModel(iModel)) {
-		iModel = 18631;
-	}
+    uintptr hnd;
 
-    if (!CStreaming::TryLoadModel(iModel))
-        throw std::runtime_error("Model not loaded");
+    auto dwModelArray = CModelInfo::ms_modelInfoPtrs;
+    if(dwModelArray[iModel] == nullptr)
+        iModel = 18631; // вопросик
 
-	uint32_t hnd;
-	ScriptCommand(&create_pickup, iModel, iType, x, y, z, &hnd);
-	int offset = 32 * (hnd & 0xFFFF);
-	if (offset) offset /= 32;
-	if (pdwIndex) {
-		*pdwIndex = offset;
-	}
+    ScriptCommand(&create_pickup, iModel, iType, x, y, z, &hnd);
 
-	return hnd;
+    int lol = 32 * (uint16_t)hnd;
+    if(lol) lol /= 32;
+    if(pdwIndex) *pdwIndex = lol;
+
+    return hnd;
 }
 // 0.3.7
 bool CGame::IsModelLoaded(int iModel)
@@ -351,7 +352,8 @@ void CGame::RequestModel(uint16_t iModelId, uint8_t iLoadingStream)
 {
 	// CStreaming::RequestModel
 	//(( void (*)(int32_t, int32_t))(g_libGTASA+0x2D292C+1))(iModelId, iLoadingStream);
-    CStreaming::TryLoadModel(iModelId);
+    //CStreaming::TryLoadModel(iModelId);
+    ScriptCommand(&request_model, iModelId);
 }
 // 0.3.7
 void CGame::LoadRequestedModels()
@@ -385,24 +387,12 @@ CObject* CGame::NewObject(int iModel, CVector vecPos, CVector vecRot, float fDra
 // 0.3.7 (�� ����������� ������ bIsNPC)
 CPlayerPed* CGame::NewPlayer(int iSkin, float fX, float fY, float fZ, float fRotation, bool unk, bool bIsNPC)
 {
-    FLog("CGame::NewPlayer");
 	uint8_t bytePedSlot = FindFirstFreePlayerPedSlot();
-    FLog("CGame::NewPlayer 1");
 	if (!bytePedSlot) return nullptr;
-    FLog("CGame::NewPlayer 2");
 	auto pPed = new CPlayerPed(bytePedSlot, iSkin, fX, fY, fZ, fRotation);
-    FLog("CGame::NewPlayer 3");
-    FLog("pPed address: %p", pPed);
-    if (pPed) {
-        FLog("pPed->m_pPed address: %p", pPed->m_pPed);
-    }
-    FLog("bytePedSlot: %d", bytePedSlot);
 	if (pPed && pPed->m_pPed) {
-        FLog("CGame::NewPlayer created");
 		bUsedPlayerSlots[bytePedSlot] = true;
 	}
-
-    FLog("CGame::NewPlayer");
 
     return pPed;
 }
@@ -423,42 +413,32 @@ void CGame::DisableMarker(uint32_t dwMarker)
 // 0.3.7
 uint32_t CGame::CreateRadarMarkerIcon(uint8_t byteType, float fPosX, float fPosY, float fPosZ, uint32_t dwColor, uint8_t byteStyle)
 {
-	uint32_t dwMapIcon = 0;
+    uintptr dwMarkerID = 0;
 
-	switch (byteStyle)
-	{
-	case 0:	// MAPICON_LOCAL
-		ScriptCommand(&create_radar_marker_without_sphere, fPosX, fPosY, fPosZ, byteType, &dwMapIcon);
-		break;
+    if(byteStyle == 1)
+        ScriptCommand(&create_marker_icon, fPosX, fPosY, fPosZ, byteType, &dwMarkerID);
+    else if(byteStyle == 2)
+        ScriptCommand(&create_radar_marker_icon, fPosX, fPosY, fPosZ, byteType, &dwMarkerID);
+    else if(byteStyle == 3)
+        ScriptCommand(&create_icon_marker_sphere, fPosX, fPosY, fPosZ, byteType, &dwMarkerID);
+    else
+        ScriptCommand(&create_radar_marker_without_sphere, fPosX, fPosY, fPosZ, byteType, &dwMarkerID);
 
-	case 1:	// MAPICON_GLOBAL
-		ScriptCommand(&create_marker_icon, fPosX, fPosY, fPosZ, byteType, &dwMapIcon);
-		break;
+    if(byteType == 0)
+    {
+        if(dwColor >= 1004)
+        {
+            ScriptCommand(&set_marker_color, dwMarkerID, dwColor);
+            ScriptCommand(&show_on_radar, dwMarkerID, 3);
+        }
+        else
+        {
+            ScriptCommand(&set_marker_color, dwMarkerID, dwColor);
+            ScriptCommand(&show_on_radar, dwMarkerID, 2);
+        }
+    }
 
-	case 2:	// MAPICON_LOCAL_CHECKPOINT
-		ScriptCommand(&create_radar_marker_icon, fPosX, fPosY, fPosZ, byteType, &dwMapIcon);
-		break;
-
-	case 3:	// MAPICON_GLOBAL_CHECKPOINT
-		ScriptCommand(&create_icon_marker_sphere, fPosX, fPosY, fPosZ, byteType, &dwMapIcon);
-		break;
-	}
-
-	if (byteType == 0)
-	{
-		if (dwColor < 1004)
-		{
-			ScriptCommand(&set_marker_color, dwMapIcon, dwColor);
-			ScriptCommand(&show_on_radar, dwMapIcon, 2);
-		}
-		else
-		{
-			ScriptCommand(&set_marker_color, dwMapIcon, dwColor);
-			ScriptCommand(&show_on_radar, dwMapIcon, 3);
-		}
-	}
-
-	return dwMapIcon;
+    return dwMarkerID;
 }
 // 0.3.7
 bool CGame::IsAnimationLoaded(const char* szAnimLib)
@@ -690,6 +670,7 @@ bool CGame::InitialiseRenderWare() {
     TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_Default);
     TextureDatabaseRuntime::Load("player", false, TextureDatabaseFormat::DF_PVR);
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
+    TextureDatabaseRuntime::Load("cutscene", false, TextureDatabaseFormat::DF_Default);
 
     /*TextureDatabaseRuntime* radar = TextureDatabaseRuntime::Load("radar", false, TextureDatabaseFormat::DF_ETC);
     TextureDatabaseRuntime::Register(radar);
@@ -774,10 +755,11 @@ extern CGame* pGame;
 extern CNetGame* pNetGame;
 extern UI *pUI;
 
+void MainLoop();
 void CGame::Process() {
     if(bIsGameExiting)return;
 
-    //MainLoop();
+    MainLoop();
     ProcessMainThreadTasks();
 
     uint32_t CurrentTimeInCycles;
@@ -832,6 +814,7 @@ void CGame::Process() {
         ((void (*)()) (g_libGTASA + (VER_x32 ? 0x005CC2E8 + 1 : 0x6F0BD8)))(); // CWeather::Update()
         ((void(*)())(g_libGTASA + (VER_x32 ? 0x0032AED8 + 1 : 0x3F3AD8)))(); // CTheScripts::Process()
         // CCollision::Update()
+        //CCollision::Update();
 
         // CPathFind::UpdateStreaming
 
@@ -864,7 +847,7 @@ void CGame::Process() {
 
         if ( !CTimer::bSkipProcessThisFrame )
         {
-            CHook::CallFunction<void>(g_libGTASA+(VER_x32 ? 0x31D17C + 1:0x3E4308));
+            CPickups::Update();
 //			CCarCtrl::PruneVehiclesOfInterest();
 //			CGarages::Update();
 // 			CEntryExitManager::Update();
@@ -921,7 +904,7 @@ void CGame::Process() {
     static bool once = false;
     if (!once)
     {
-
+        CCrossHair::Init();
         once = true;
         return;
     }

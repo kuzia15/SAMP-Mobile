@@ -100,8 +100,6 @@ void ApplySAMPPatchesInGame()
 
 //	CHook::WriteMemory(g_libGTASA + 0x00341F84, (uintptr_t)"\x00\xF0\x21\xBE", 4);
 
-    CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
-
     // no vehicle audio processing
     CHook::NOP(g_libGTASA + (VER_x32 ? 0x00553E96 : 0x674610), 2);
     CHook::NOP(g_libGTASA + (VER_x32 ? 0x00561AC2 : 0x682C1C), 2);
@@ -145,7 +143,7 @@ void ApplyPatches_level0()
 #endif
     DisableAutoAim();
 
-    CHook::RET("_ZN6CTrain10InitTrainsEv"); // CTrain::InitTrains
+    //CHook::RET("_ZN6CTrain10InitTrainsEv"); // CTrain::InitTrains
 
     CHook::RET("_ZN8CClothes4InitEv"); // CClothes::Init()
     CHook::RET("_ZN8CClothes13RebuildPlayerEP10CPlayerPedb"); // CClothes::RebuildPlayer

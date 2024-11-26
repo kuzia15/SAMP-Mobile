@@ -92,6 +92,14 @@ public:
 
 
 public:
+    [[nodiscard]] bool IsPhysical() const { return m_nType > ENTITY_TYPE_BUILDING && m_nType < ENTITY_TYPE_DUMMY; }
+    [[nodiscard]] bool IsNothing()  const { return m_nType == ENTITY_TYPE_NOTHING; }
+    [[nodiscard]] bool IsVehicle()  const { return m_nType == ENTITY_TYPE_VEHICLE; }
+    [[nodiscard]] bool IsPed()      const { return m_nType == ENTITY_TYPE_PED; }
+    [[nodiscard]] bool IsObject()   const { return m_nType == ENTITY_TYPE_OBJECT; }
+    [[nodiscard]] bool IsBuilding() const { return m_nType == ENTITY_TYPE_BUILDING; }
+    [[nodiscard]] bool IsDummy()    const { return m_nType == ENTITY_TYPE_DUMMY; }
+
     CEntityGTA();
     ~CEntityGTA() override;
 
@@ -128,6 +136,40 @@ public:
     auto GetModelId() const { return (eModelID)m_nModelIndex; }
     CBaseModelInfo* GetModelInfo() const;
 
+    void RegisterReference(CEntityGTA** entity);
+
+    // Register a reference to the entity that is stored in that given reference
+    template<typename T>
+    static void RegisterReference(T*& ref) requires std::is_base_of_v<CEntityGTA, T> {
+        ref->RegisterReference(reinterpret_cast<CEntityGTA**>(&ref));
+    }
+
+    void PruneReferences();
     void ResolveReferences();
+
+    template<typename T>
+    static void CleanUpOldReference(T*& ref) requires std::is_base_of_v<CEntityGTA, T> {
+        ref->CleanUpOldReference(reinterpret_cast<CEntityGTA**>(&ref));
+    }
+
+    template<typename T>
+    static void ClearReference(T*& ref) requires std::is_base_of_v<CEntityGTA, T> {
+        if (ref) {
+            ref->CleanUpOldReference(reinterpret_cast<CEntityGTA**>(&ref));
+            ref = nullptr;
+        }
+    }
+
+    template<typename T, typename Y>
+    requires std::is_base_of_v<CEntityGTA, T> && std::is_base_of_v<CEntityGTA, Y>
+    static void ChangeEntityReference(T*& inOutRef, Y* entity) {
+        ClearReference(inOutRef); // Clear old
+        if (entity) { // Set new (if any)
+            inOutRef = entity;
+            inOutRef->RegisterReference(reinterpret_cast<CEntityGTA**>(&inOutRef));
+        }
+    }
+
+    void CleanUpOldReference(CEntityGTA** entity); // See helper SafeCleanUpOldReference
 };
 static_assert(sizeof(CEntityGTA) == (VER_x32 ? 0x3C : 0x60));

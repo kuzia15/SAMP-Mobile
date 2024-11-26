@@ -3,6 +3,7 @@
 #include "vehicle.h"
 #include "object.h"
 #include "game/Entity/CPedGTA.h"
+#include "aimstuff.h"
 
 enum eStuffType {
 	STUFF_TYPE_NONE,
@@ -14,6 +15,7 @@ enum eStuffType {
 
 #define PLAYER_PED_SLOTS	120
 
+#pragma pack(push, 1)
 typedef struct _NEW_ATTACHED_OBJECT
 {
 	int iModel;
