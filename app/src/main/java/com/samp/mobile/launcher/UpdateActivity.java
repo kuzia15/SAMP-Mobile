@@ -26,7 +26,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 
-import com.samp.mobile.BuildConfig;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.config.Config;
 

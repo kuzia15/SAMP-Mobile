@@ -24,6 +24,7 @@ public class WarMedia extends WarGamepad
                 String absolutePath = externalFilesDir.getAbsolutePath();
                 this.baseDirectoryRoot = absolutePath.substring(0, absolutePath.indexOf("/Android"));
                 return externalFilesDir.getAbsolutePath() + "/";
+                //return Environment.getExternalStorageDirectory() + "/SAMPMOBILE/";
             } catch (Exception e)
             {
             }

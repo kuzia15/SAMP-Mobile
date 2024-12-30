@@ -664,7 +664,7 @@ bool CGame::InitialiseRenderWare() {
     TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_Default);
     TextureDatabaseRuntime::Load("player", false, TextureDatabaseFormat::DF_PVR);
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
-    TextureDatabaseRuntime::Load("cutscene", false, TextureDatabaseFormat::DF_Default);
+    //TextureDatabaseRuntime::Load("cutscene", false, TextureDatabaseFormat::DF_Default);
 
     /*TextureDatabaseRuntime* radar = TextureDatabaseRuntime::Load("radar", false, TextureDatabaseFormat::DF_ETC);
     TextureDatabaseRuntime::Register(radar);
@@ -883,8 +883,7 @@ void CGame::Process() {
         ((void (*)(CCamera*)) (g_libGTASA + (VER_x32 ? 0x003DC7D0 + 1 : 0x4BAB78)))(&TheCamera); // CCamera::Process()
 
         // CCullZones::Update() менты не могут найти?
-        // CGameLogic::Update() // FIXME: TEST
-        CHook::CallFunction<void>(g_libGTASA+(VER_x32 ? 0x307D8C+1:0x3CD630));
+        CHook::CallFunction<void>(g_libGTASA+(VER_x32 ? 0x307D8C+1:0x3CD630));// CGameLogic::Update()
         // CGangWars::Update();
         // CConversations::Update()
         // CPedToPlayerConversations::Update()

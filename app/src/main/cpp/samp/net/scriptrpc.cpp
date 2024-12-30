@@ -445,7 +445,7 @@ void ScrRemoveBuilding(RPCParameters *rpcParams)
 	bsData.Read(fY);
 	bsData.Read(fZ);
 	bsData.Read(fRadius);
-	//RemoveBuilding(iModel, CVector(fX, fY, fZ), fRadius);
+	RemoveBuilding(iModel, CVector(fX, fY, fZ), fRadius);
 }
 // 0.3.7
 void ScrSetPlayerSkin(RPCParameters* rpcParams)
@@ -698,15 +698,10 @@ void ScrShowTextDraw(RPCParameters* rpcParams)
 
 	char szText[1024 + 1];
 
-	if (wTextLength < 1024) {
-		bsData.Read(szText, wTextLength);
-		szText[wTextLength] = '\0';
+	bsData.Read(szText, wTextLength);
+    szText[wTextLength] = 0;
 
-		pTextDrawPool->New(wTextDrawID, &textDrawTransmit, szText);
-	}
-	else {
-		if (pUI) pUI->chat()->addInfoMessage("Warning: ignoring large TetDraw size=%u", wTextLength);
-	}
+    pTextDrawPool->New(wTextDrawID, &textDrawTransmit, szText);
 }
 // 0.3.7
 void ScrHideTextDraw(RPCParameters* rpcParams)

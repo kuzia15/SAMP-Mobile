@@ -378,6 +378,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	ApplyPatches_level0();
     ApplyGlobalPatches();
     InitRenderWareFunctions();
+    MultiTouch::initialize();
 
 	pGame = new CGame();
 

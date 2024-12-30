@@ -2001,12 +2001,12 @@ uintptr_t LoadTexture(const char* texname)
     {
         uintptr_t texture = (uintptr_t)CUtil::LoadTextureFromDB(texdb[i], texname);
         if (texture != 0) {
-            //Log("Texture: %s loaded from %s", texname, texdb[i]);
+            FLog("Texture: %s loaded from %s", texname, texdb[i]);
             return texture;
         }
     }
 
-    //Log("Texture: %s not found!", texname);
+    FLog("Texture: %s not found!", texname);
     return 0;
 }
 
@@ -2191,38 +2191,36 @@ struct stOccluders {
     unsigned short fWidthX;
     unsigned short fWidthY;
     unsigned short fHeight;
-    char cRotX;
-    char cRotY;
     char cRotZ;
+    char cRotY;
+    char cRotX;
     char cPad;
     unsigned short nFlags;
 };
+VALIDATE_SIZE(stOccluders, 0x12);
 
 void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
 {
     int iOccludersOnMap = *(uint32_t *)(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538));
     if(iOccludersOnMap >= 1)
     {
-        uint32_t dwOccluders = g_libGTASA+(VER_x32 ? 0xA41140:0xCE3EE8);
+        stOccluders* dwOccluders = (stOccluders *)(g_libGTASA + (VER_x32 ? 0xA41140 : 0xCE3EE8));
         for(int i = 0; i <= iOccludersOnMap; i++)
         {
-            stOccluders *aOccluders = (stOccluders*)((i * (VER_x32 ? 18:18)) + dwOccluders);
-            if(!aOccluders) return;
-
             CVector vecOccluderPos;
-            vecOccluderPos.x = (float)aOccluders->fMidX * 0.25;
-            vecOccluderPos.y = (float)aOccluders->fMidY * 0.25;
-            vecOccluderPos.z = (float)aOccluders->fMidZ * 0.25;
+            vecOccluderPos.x = (float)dwOccluders[i].fMidX * 0.25;
+            vecOccluderPos.y = (float)dwOccluders[i].fMidY * 0.25;
+            vecOccluderPos.z = (float)dwOccluders[i].fMidZ * 0.25;
 
             float fDistance = GetDistance(vecOccluderPos, vecPos);
             if(fDistance <= fRadius)
             {
-                aOccluders->fMidX = 0;
-                aOccluders->fMidY = 0;
-                aOccluders->fMidZ = 0;
-                aOccluders->fWidthX = 0;
-                aOccluders->fWidthY = 0;
-                aOccluders->fHeight = 0;
+                dwOccluders[i].fMidX = 0;
+                dwOccluders[i].fMidY = 0;
+                dwOccluders[i].fMidZ = 0;
+                dwOccluders[i].fWidthX = 0;
+                dwOccluders[i].fWidthY = 0;
+                dwOccluders[i].fHeight = 0;
             }
         }
     }
@@ -2262,7 +2260,7 @@ void DestroyTextDrawTexture(int index)
 		pTexture = TextDrawTexture[index];
 		bTextDrawTextureSlotState[index] = false;
 		if (pTexture)
-			DeleteRwTexture(pTexture);
+			RwTextureDestroy(reinterpret_cast<RwTexture *>(pTexture));
 
 		TextDrawTexture[index] = 0;
 	}
@@ -2273,7 +2271,7 @@ void DestroyTextDrawTexture(int index)
 void DeleteRwTexture(uintptr_t texture)
 {
 	// RwTextureDestroy
-	((void(*)(uintptr_t))(g_libGTASA + 0x1DB764 + 1))(texture);
+	//((void(*)(uintptr_t))(g_libGTASA + 0x1DB764 + 1))(texture);
 }
 
 void DrawRaster(RwRaster* raster, CRect const& rect)
@@ -2473,10 +2471,10 @@ int GameGetWeaponModelIDFromWeaponID(int iWeaponID)
 bool IsPointInRect(float x, float y, CRect* rect)
 {
 	if (x >= rect->left && x <= rect->right &&
-		y >= rect->top && y <= rect->bottom)
+		y >= rect->bottom && y <= rect->top)
 		return true;
 
-	return false;
+    return false;
 }
 
 RwObject* ModelInfoCreateInstance(int iModel)
@@ -2497,7 +2495,7 @@ void RenderClumpOrAtomic(uintptr_t rwObject)
         if (*(uint8_t *) rwObject == 1)
         {
             // Atomic
-            ((void (*)(uintptr_t))(*(uintptr_t *) (rwObject + (VER_x32 ? 0x48 : 0x48*2)))) (rwObject);
+            AtomicDefaultRenderCallBack(reinterpret_cast<RpAtomic *>(rwObject));
         }
         else if (*(uint8_t *) rwObject == 2)
         {
@@ -2627,7 +2625,7 @@ void RwMatrixScale(RwMatrix* matrix, RwV3d* scale)
 
 const char* getGameDataFolderDirectory()
 {
-	return (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
+	return "";
 }
 // 0.3.7
 // 0.3.7
@@ -2655,10 +2653,8 @@ int GetTaskTypeFromTask(uint32_t *task)
 
 int Game_PedStatPrim(int model_id)
 {
-	int *pStat;
-	uint32_t *d = (uint32_t *)(g_libGTASA+0x91DCB8+(model_id*4));
-	pStat = (int *)((*d)+40);
-	return *pStat;	
+
+	return CModelInfo::ms_modelInfoPtrs[model_id]->AsPedModelInfoPtr()->m_nStatType;
 }
 
 uintptr_t g_pWidgets[TYPE_SIZE];

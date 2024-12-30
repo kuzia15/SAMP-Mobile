@@ -123,8 +123,7 @@ bool CTextDrawPool::onTouchEvent(int type, bool multi, int x, int y)
             pTextDraw->m_bHovered = false;
             pTextDraw->m_dwHoverColor = 0;
 
-            if (pTextDraw->m_TextDrawData.byteSelectable &&
-                pTextDraw->m_TextDrawData.bHasRectArea)
+            if (pTextDraw->m_TextDrawData.byteSelectable)
             {
                 CRect* rect = &pTextDraw->m_rectArea;
                 if (rect)
@@ -164,7 +163,7 @@ void CTextDrawPool::SnapshotProcess()
     for (int i = 0; i < MAX_TEXT_DRAWS; i++)
     {
         if (m_bSlotState[i] && m_pTextDraw[i]) {
-            //m_pTextDraw[i]->SnapshotProcess();
+            m_pTextDraw[i]->SnapshotProcess();
         }
     }
 }

@@ -192,17 +192,12 @@ void CTextDraw::DrawTextured()
             0.0f, 1.0f,
             1.0f, 1.0f };
 
-    CRect rect;
-    rect.left = m_rectArea.left;
-    rect.bottom = m_rectArea.top;
-    rect.right = m_rectArea.right;
-    rect.top = m_rectArea.bottom;
     if (m_bHovered) {
-        if(TextDrawTexture[m_TextDrawData.iTextureSlot] != 0)DrawTextureUV(TextDrawTexture[m_TextDrawData.iTextureSlot], &rect, m_dwHoverColor,
+        if(TextDrawTexture[m_TextDrawData.iTextureSlot] != 0)DrawTextureUV(TextDrawTexture[m_TextDrawData.iTextureSlot], &m_rectArea, m_dwHoverColor,
                                                                            m_TextDrawData.dwStyle == 5 ? uv_reflected : uv_normal);
     }
     else {
-        if(TextDrawTexture[m_TextDrawData.iTextureSlot] != 0)DrawTextureUV(TextDrawTexture[m_TextDrawData.iTextureSlot], &rect, m_TextDrawData.dwLetterColor,
+        if(TextDrawTexture[m_TextDrawData.iTextureSlot] != 0)DrawTextureUV(TextDrawTexture[m_TextDrawData.iTextureSlot], &m_rectArea, m_TextDrawData.dwLetterColor,
                                                                            m_TextDrawData.dwStyle == 5 ? uv_reflected : uv_normal);
     }
 }

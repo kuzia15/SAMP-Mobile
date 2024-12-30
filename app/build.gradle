@@ -7,19 +7,20 @@ plugins {
 android {
     signingConfigs {
         debug {
-            storeFile file('C:\\Projects\\NewLauncher\\keystore_playmarket2.jks')
+            storeFile file('C:\\Work\\projects2\\Projects\\NewLauncher\\keystore_playmarket2.jks')
             storePassword 'hayk2010'
             keyAlias 'key0'
             keyPassword 'hayk2010'
         }
         release {
-            storeFile file('C:\\Projects\\NewLauncher\\keystore_playmarket2.jks')
+            storeFile file('C:\\Work\\projects2\\Projects\\NewLauncher\\keystore_playmarket2.jks')
             storePassword 'hayk2010'
             keyPassword 'hayk2010'
             keyAlias 'key0'
         }
     }
     compileSdk 34
+    namespace 'com.samp.mobile'
 
     defaultConfig {
         applicationId "com.samp.mobile"

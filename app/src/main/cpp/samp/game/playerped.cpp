@@ -1112,6 +1112,7 @@ void CPlayerPed::SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedO
 					memcpy(&m_attachedObjectInfo[index], pNewAttachedObject, sizeof(NEW_ATTACHED_OBJECT));
 
 					CObject* pNewObject = new CObject(pNewAttachedObject->iModel, mat.pos, pNewAttachedObject->vecRot, 200.0f, true);
+                    if(!pNewObject) return;
 
 					m_pAttachedObjects[index] = pNewObject;
 
@@ -1220,7 +1221,7 @@ void CPlayerPed::ProcessAttachedObjects()
                     {
                         continue;
                     }
-                    ((void (*)(CEntityGTA*))(*(void**)(*(uintptr*)m_pAttachedObjects[i]->m_pEntity + (VER_x32 ? 16:16*2))))(m_pAttachedObjects[i]->m_pEntity); // CPhysical::Remove
+                    m_pAttachedObjects[i]->m_pEntity->Remove();
 
                     RwMatrix boneMatrix;
                     memcpy(&boneMatrix, &hierarchy->pMatrixArray[iID], sizeof(RwMatrix));
@@ -1475,7 +1476,7 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 									else
 									{
 										OBJECTID ObjectID = pObjectPool->FindIDFromGtaPtr(
-                                                dynamic_cast<CPhysical *>(btData->pEntity));
+                                                (CPhysical *)(btData->pEntity));
 										if (ObjectID != INVALID_OBJECT_ID)
 										{
 											byteHitType = BULLET_HIT_TYPE_OBJECT;
@@ -1564,7 +1565,7 @@ uint8_t CPlayerPed::FindDeathReasonAndResponsiblePlayer(uint16_t *nPlayer)
                 if(byteDeathReason < WEAPON_CAMERA || byteDeathReason == 50 || byteDeathReason == WEAPON_EXPLOSION)
                 {
                     PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(
-                            dynamic_cast<CPedGTA *>(m_pPed->m_pLastEntityDamage));
+                            (CPedGTA *)(m_pPed->m_pLastEntityDamage));
                     if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
                     {
                         // killed by another player with a weapon, this is all easy.
@@ -1574,9 +1575,9 @@ uint8_t CPlayerPed::FindDeathReasonAndResponsiblePlayer(uint16_t *nPlayer)
                     else
                     {
                         if(pVehiclePool->FindIDFromGtaPtr(
-                                dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                                (CVehicleGTA *)(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
                         {
-                            CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                            CVehicleGTA *pGtaVehicle = (CVehicleGTA *)(m_pPed->m_pLastEntityDamage);
                             PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
                             if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
                             {
@@ -1593,9 +1594,9 @@ uint8_t CPlayerPed::FindDeathReasonAndResponsiblePlayer(uint16_t *nPlayer)
                     // we can probably derive the responsible player.
                     // Look in the vehicle pool for this vehicle.
                     if(pVehiclePool->FindIDFromGtaPtr(
-                            dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                            (CVehicleGTA *)(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
                     {
-                        CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                        CVehicleGTA *pGtaVehicle = (CVehicleGTA *)(m_pPed->m_pLastEntityDamage);
                         PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
                         if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
                         {
@@ -1607,9 +1608,9 @@ uint8_t CPlayerPed::FindDeathReasonAndResponsiblePlayer(uint16_t *nPlayer)
                 else if(byteDeathReason == 54)
                 {
                     if(pVehiclePool->FindIDFromGtaPtr(
-                            dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                            (CVehicleGTA *)(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
                     {
-                        CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                        CVehicleGTA *pGtaVehicle = (CVehicleGTA *)(m_pPed->m_pLastEntityDamage);
                         PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
                         if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
                         {
@@ -1654,7 +1655,7 @@ bool CPlayerPed::IsOnGround()
 	return false;
 }
 
-extern uint32_t(*CWorld_ProcessLineOfSight)(CVector*, CVector*, CVector*, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
+extern uint32_t(*CWorld__ProcessLineOfSight)(CVector*, CVector*, CVector*, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
 CEntityGTA* CPlayerPed::GetEntityUnderPlayer()
 {
 	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId))
@@ -1674,7 +1675,7 @@ CEntityGTA* CPlayerPed::GetEntityUnderPlayer()
 	vecEnd.y = m_pPed->m_matrix->m_pos.y;
 	vecEnd.z = vecStart.z - 1.75f;
 
-	LineOfSight(&vecStart, &vecEnd, (void*)buf, (uintptr_t)&entity, 0, 1, 0, 1, 0, 0, 0, 0);
+    CWorld__ProcessLineOfSight(&vecStart, &vecEnd, &vecPos, &entity, 0, 1, 0, 1, 0, 0, 0, 0);
 	return (CEntityGTA*)entity;
 }
 

@@ -164,7 +164,7 @@ int CRadar__SetCoordBlip_hook(int r0, float X, float Y, float Z, int r4, int r5,
 {
 	if(pNetGame && !strncmp(name, "CODEWAY", 7))
 	{
-		float fFindZ = pGame->FindGroundZForCoord(X, Y, Z) + 1.5f;
+		float fFindZ = CWorld::FindGroundZForCoord(X, Y) + 1.5f;
 
 		if(pNetGame->GetGameState() != GAMESTATE_CONNECTED) return 0;
 
@@ -269,7 +269,7 @@ void CObject_Render_hook(CObjectGta* thiz)
 		}
 	}
 
-    //((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
+    ((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
 	CObject_Render(thiz);
     //((void (*)(void))(g_libGTASA + 0x5D1F5C + 1))();
 }
@@ -1448,6 +1448,30 @@ stFile* NvFOpen(const char* r0, const char* r1, int r2, int r3)
         FLog("Loading weapon.dat..");
     }
 
+    if (!strncmp(r1, "DATA/FONTS.DAT", 15))
+    {
+        sprintf(path, "%sdata/fonts.dat", g_pszStorage);
+        FLog("Loading weapon.dat..");
+    }
+
+    if (!strncmp(r1, "DATA/PEDSTATS.DAT", 15))
+    {
+        sprintf(path, "%sdata/pedstats.dat", g_pszStorage);
+        FLog("Loading weapon.dat..");
+    }
+
+    if (!strncmp(r1, "DATA/TIMECYC.DAT", 15))
+    {
+        sprintf(path, "%sdata/timecyc.dat", g_pszStorage);
+        FLog("Loading weapon.dat..");
+    }
+
+    if (!strncmp(r1, "DATA/POPCYCLE.DAT", 15))
+    {
+        sprintf(path, "%sdata/popcycle.dat", g_pszStorage);
+        FLog("Loading weapon.dat..");
+    }
+
 #if VER_x32
     auto *st = (stFile*)malloc(8);
 #else
@@ -1455,7 +1479,6 @@ stFile* NvFOpen(const char* r0, const char* r1, int r2, int r3)
 #endif
     st->isFileExist = false;
 
-    FLog("%s", path);
     FILE *f  = fopen(path, "rb");
 
     if(f)
@@ -1559,6 +1582,22 @@ int CTaskSimpleGetUp__ProcessPed_hook(uintptr_t* thiz, CPedGTA* ped)
     return res;
 }
 
+int64 getmip()
+{
+    return 1;
+}
+
+uint64_t* RQCommand_rqSetAlphaTest(uint64_t *result)
+{
+    *result += 8;
+    return result;
+}
+
+int64 GetInputType(void)
+{
+    return 0LL;
+}
+
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1643,10 +1682,10 @@ void InstallSpecialHooks()
     CHook::InlineHook("_ZN14MainMenuScreen6UpdateEf", &MainMenuScreen__Update_hook, &MainMenuScreen__Update);
 
     CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
-
-    MultiTouch::initialize();
 }
 
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>   // If using OpenGL ES 2.0 or 3.0
 void InstallHooks()
 {
     CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
@@ -1683,5 +1722,23 @@ void InstallHooks()
     CHook::InlineHook("_ZN7CObject6RenderEv", &CObject_Render_hook, & CObject_Render);
 
     CHook::Redirect("_Z19PlayerIsEnteringCarv", &PlayerIsEnteringCar);
+    if(*(uint8_t *)(g_libGTASA + (VER_x32 ? 0x6B8B9C:0x896135)))
+    {
+        CHook::Redirect("_ZNK14TextureListing11GetMipCountEv", &getmip);
+    }
+
+    if (!eglGetProcAddress("glAlphaFuncQCOM")) {
+        // If "glAlphaFuncQCOM" is not available, try "glAlphaFunc"
+
+        if (eglGetProcAddress("glAlphaFunc")) {
+            // If "glAlphaFunc" is found, store the address in the global library
+            *((void**)(g_libGTASA + 0x89A1B0)) = (void*)eglGetProcAddress("glAlphaFunc");
+        } else {
+            // If neither function is available, hook the fallback symbol
+            CHook::Redirect("_Z25RQ_Command_rqSetAlphaTestRPc", &RQCommand_rqSetAlphaTest);
+        }
+    }
+
+    CHook::Redirect("_ZN4CHID12GetInputTypeEv", &GetInputType);
     HookCPad();
 }

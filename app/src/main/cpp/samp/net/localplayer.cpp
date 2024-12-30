@@ -280,7 +280,7 @@ bool CLocalPlayer::Process()
 				m_bWasInCar = false;
 			}
 
-			//ProcessSurfing();
+			ProcessSurfing();
 			MoveHeadWithCamera();
 
 			if (m_bInRCMode)
@@ -1078,10 +1078,10 @@ void CLocalPlayer::ProcessSurfing() {
 					//}
 				}
 			}else{
-                CEntityGTA* contactEntity = m_pPlayerPed->GetEntityUnderPlayer();
+                CPhysical* contactEntity = (CPhysical*)m_pPlayerPed->GetEntityUnderPlayer();
 				if(contactEntity){
 					uint32_t objectId = pNetGame->GetObjectPool()->FindIDFromGtaPtr(
-                            dynamic_cast<CPhysical *>(contactEntity));
+                            (contactEntity));
 					if(objectId && objectId != INVALID_OBJECT_ID){
 						CObject* pObject = pNetGame->GetObjectPool()->GetAt(objectId);
 						if(pObject){

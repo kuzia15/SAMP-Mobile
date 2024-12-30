@@ -347,7 +347,7 @@ void CObject::SetMaterial(int iModel, int iMaterialIndex, char* txdname, char* t
 	if (iMaterialIndex < 16)
 	{
 		if (m_MaterialTexture[iMaterialIndex]) {
-			DeleteRwTexture(m_MaterialTexture[iMaterialIndex]);
+			RwTextureDestroy(reinterpret_cast<RwTexture *>(m_MaterialTexture[iMaterialIndex]));
 			m_MaterialTexture[iMaterialIndex] = 0;
 		}
 
@@ -365,7 +365,7 @@ void CObject::SetMaterialText(int index, char* text, int materialSize, char* fon
 	if (index > 16) return;
 
 	if (m_MaterialTextTexture[index]) {
-		DeleteRwTexture(m_MaterialTextTexture[index]);
+        RwTextureDestroy(reinterpret_cast<RwTexture *>(m_MaterialTextTexture[index]));
 		m_MaterialTextTexture[index] = 0;
 	}
 

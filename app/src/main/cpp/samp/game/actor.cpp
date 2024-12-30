@@ -15,7 +15,7 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
         iSkin = 0;
     }
 
-    ScriptCommand(&create_actor, 22, iSkin, fX, fY, fZ, &m_dwGTAId);
+    ScriptCommand(&create_actor, 5, iSkin, fX, fY, fZ, &m_dwGTAId);
 
     m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
 
@@ -27,19 +27,17 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 // 0.3.7
 CActor::~CActor()
 {
-	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) &&
-		IsValidGamePed(m_pPed))
-	{
-		// CPlayerPed::Destructor
-        // CPopulation::RemovePed
-        ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x004CE6A0 + 1 : 0x5CDC64)))((uintptr_t)m_pPed);
-		m_pPed = nullptr;
-	}
-	else
-	{
-		m_dwGTAId = 0;
-		m_pPed = nullptr;
-	}
+    auto modelId = m_pPed->m_nModelIndex;
+
+    if (IsValidGamePed(m_pPed))
+    {
+        ((void (*)(CPedGTA*))(g_libGTASA + (VER_x32 ? 0x004CE6A0 + 1 : 0x5CDC64)))(m_pPed);
+    }
+
+    m_pPed = nullptr;
+    m_dwGTAId = 0;
+
+    CStreaming::RemoveModelIfNoRefs(modelId);
 }
 void CActor::ForceTargetRotation(float fRotation)
 {
@@ -62,10 +60,6 @@ void CActor::SetHealth(float fHealth)
 {
 	if (m_pPed) {
 		m_pPed->m_fHealth = fHealth;
-
-		if (m_pPed->m_fHealth <= 0.0f) {
-			ScriptCommand(&kill_actor, m_dwGTAId);
-		}
 	}
 }
 // 0.3.7
@@ -77,7 +71,7 @@ void CActor::SetInvulnerable(bool bInvulnerable)
 		ScriptCommand(&set_actor_immunities, m_dwGTAId, 1, 1, 1, 1, 1);
 	}
 	else {
-		ScriptCommand(&set_actor_immunities, m_dwGTAId, 0, 0, 0, 1, 0);
+		ScriptCommand(&set_actor_immunities, m_dwGTAId, 0, 0, 0, 0, 0);
 	}
 }
 // 0.3.7 (adapted)

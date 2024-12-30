@@ -16,7 +16,7 @@ uint8_t ExecuteScriptBuf()
 int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
 {
     if (!pScriptCommand || !pScriptCommand->Params) {
-        FLog("Error: Invalid ScriptCommand structure!");
+        //FLog("Error: Invalid ScriptCommand structure!");
         return 0;
     }
 
@@ -31,11 +31,11 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
         gst->dwLocalVar[i] = 0;
     }
 
-    FLog("ScriptCommand: OpCode=0x%04x, Params=%s", pScriptCommand->OpCode, pScriptCommand->Params);
+    //FLog("ScriptCommand: OpCode=0x%04x, Params=%s", pScriptCommand->OpCode, pScriptCommand->Params);
 
     while (*p) {
         if (buf_pos >= sizeof(ScriptBuf)) {
-            FLog("Error: Buffer overflow detected in ScriptBuf!");
+            //FLog("Error: Buffer overflow detected in ScriptBuf!");
             va_end(ap);
             return 0;
         }
@@ -44,7 +44,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
             case 'i': {
                 int i = va_arg(ap, int);
                 if (buf_pos + 5 > sizeof(ScriptBuf)) {
-                    FLog("Error: Buffer overflow detected while processing 'i'!");
+                    //FLog("Error: Buffer overflow detected while processing 'i'!");
                     va_end(ap);
                     return 0;
                 }
@@ -56,7 +56,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
             case 'f': {
                 float f = (float)va_arg(ap, double);
                 if (buf_pos + 5 > sizeof(ScriptBuf)) {
-                    FLog("Error: Buffer overflow detected while processing 'f'!");
+                    //FLog("Error: Buffer overflow detected while processing 'f'!");
                     va_end(ap);
                     return 0;
                 }
@@ -67,7 +67,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
             }
             case 'v': {
                 if (var_pos >= sizeof(pdwParamVars) / sizeof(pdwParamVars[0])) {
-                    FLog("Error: Too many variables for ScriptCommand!");
+                    //FLog("Error: Too many variables for ScriptCommand!");
                     va_end(ap);
                     return 0;
                 }
@@ -84,7 +84,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
                 char* sz = va_arg(ap, char*);
                 unsigned char aLen = strlen(sz);
                 if (buf_pos + aLen + 2 > sizeof(ScriptBuf)) {
-                    FLog("Error: Buffer overflow detected while processing 's'!");
+                    //FLog("Error: Buffer overflow detected while processing 's'!");
                     va_end(ap);
                     return 0;
                 }
@@ -96,7 +96,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
             }
             case 'z': {
                 if (buf_pos + 1 > sizeof(ScriptBuf)) {
-                    FLog("Error: Buffer overflow detected while processing 'z'!");
+                    //FLog("Error: Buffer overflow detected while processing 'z'!");
                     va_end(ap);
                     return 0;
                 }
@@ -104,7 +104,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
                 break;
             }
             default: {
-                FLog("Error: Invalid parameter type '%c'", *p);
+                //FLog("Error: Invalid parameter type '%c'", *p);
                 va_end(ap);
                 return 0;
             }
@@ -114,7 +114,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
 
     va_end(ap);
 
-    FLog("Executing ScriptBuf...");
+    //FLog("Executing ScriptBuf...");
     int result = ExecuteScriptBuf();
     if (var_pos) {
         for (int i = 0; i < var_pos; i++) {
@@ -122,7 +122,7 @@ int ScriptCommand(const SCRIPT_COMMAND *pScriptCommand, ...)
         }
     }
 
-    FLog("ScriptCommand execution finished with result: %d", result);
+    //FLog("ScriptCommand execution finished with result: %d", result);
     return result;
 }
 

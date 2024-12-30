@@ -61,7 +61,9 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
 	// RwTextureCreate
 	RwTexture* bufferTexture = RwTextureCreate(raster);
 
-	if (!raster || !bufferTexture) return bufferTexture;
+    FLog("Object snapshot 1");
+
+	if (!raster || !bufferTexture) return nullptr;
 
 	if (iModel == 1373 || iModel == 3118 || iModel == 3552 || iModel == 3553)
 		iModel = 18631;
@@ -69,8 +71,12 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
     if (!CStreaming::TryLoadModel(iModel))
         iModel = 18631;
 
+    if(!CModelInfo::GetModelInfo(iModel))
+        return nullptr;
+
+    FLog("Object snapshot 2");
 	RwObject* atomic = ModelInfoCreateInstance(iModel);
-	if (!atomic) return bufferTexture;
+	if (!atomic) return nullptr;
 
 	CVector vec;
 	vec.x = 0.0f;
@@ -79,8 +85,9 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
 
     float fRadius = CModelInfo::GetModelInfo(iModel)->m_pColModel->GetBoundRadius();
     CVector vecCenter = CModelInfo::GetModelInfo(iModel)->m_pColModel->GetBoundCenter();
-
+    FLog("Object snapshot 3");
 	RwFrame* parent = static_cast<RwFrame *>(atomic->parent);
+    if(!parent) return nullptr;
     fZoom = (-0.1f - fRadius * 2.25f) * fZoom;
 	if (parent)
 	{
@@ -106,29 +113,32 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
 			}
 		}
 	}
-
+    FLog("Object snapshot 4");
     m_camera->frameBuffer = raster;
-
+    FLog("Object snapshot 5");
     CVisibilityPlugins::SetRenderWareCamera(m_camera);
     RwCameraClear(m_camera, reinterpret_cast<RwRGBA *>(&dwColor), 3);
 	RwCameraBeginUpdate((RwCamera*)m_camera);
 	RpWorldAddLight(Scene.m_pRpWorld, m_light);
-
+    FLog("Object snapshot 6");
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
 	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODENACULLMODE);
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)false);
-
+    FLog("Object snapshot 7");
 	// DefinedState
 	DefinedState();
-
-	RenderClumpOrAtomic(reinterpret_cast<uintptr_t>(atomic));
+    FLog("Object snapshot 8");
+	RenderClumpOrAtomic((uintptr_t)atomic);
+    FLog("Object snapshot 9");
 	RwCameraEndUpdate(m_camera);
+    FLog("Object snapshot 10");
 	RpWorldRemoveLight(Scene.m_pRpWorld, m_light);
+    FLog("Object snapshot 11");
 	DestroyAtomicOrClump(reinterpret_cast<uintptr_t>(atomic));
-
+    FLog("Object snapshot 12");
 	return bufferTexture;
 }
 // 0.3.7
