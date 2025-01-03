@@ -1,5 +1,5 @@
 //
-// Created by plaka on 26.07.2023.
+// Created by x1y2z on 26.07.2023.
 //
 
 #include "Camera.h"

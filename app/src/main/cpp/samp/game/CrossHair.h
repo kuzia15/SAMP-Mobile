@@ -1,5 +1,5 @@
 //
-// Created by plaka on 10.11.2023.
+// Created by x1y2z on 10.11.2023.
 //
 
 #ifndef LIVERUSSIA_CROSSHAIR_H

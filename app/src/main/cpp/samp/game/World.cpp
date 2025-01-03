@@ -1,5 +1,5 @@
 //
-// Created by plaka on 13.05.2023.
+// Created by x1y2z on 13.05.2023.
 //
 
 #include "World.h"

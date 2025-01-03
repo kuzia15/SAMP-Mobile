@@ -1,5 +1,5 @@
 //
-// Created by plaka on 06.05.2023.
+// Created by x1y2z on 06.05.2023.
 //
 
 #include "AnimBlendNode.h"

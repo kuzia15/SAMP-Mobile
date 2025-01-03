@@ -1,5 +1,5 @@
 //
-// Created by plaka on 27.04.2023.
+// Created by x1y2z on 27.04.2023.
 //
 
 #include "Vector.h"

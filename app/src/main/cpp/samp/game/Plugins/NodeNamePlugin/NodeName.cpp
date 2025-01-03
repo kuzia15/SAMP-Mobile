@@ -1,5 +1,5 @@
 //
-// Created by plaka on 23.11.2023.
+// Created by x1y2z on 23.11.2023.
 //
 
 #include "NodeName.h"

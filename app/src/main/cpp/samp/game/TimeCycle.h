@@ -1,5 +1,5 @@
 //
-// Created by plaka on 20.09.2023.
+// Created by x1y2z on 20.09.2023.
 //
 
 #ifndef LIVERUSSIA_TIMECYCLE_H

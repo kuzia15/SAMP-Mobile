@@ -1,5 +1,5 @@
 //
-// Created by plaka on 15.11.2023.
+// Created by x1y2z on 15.11.2023.
 //
 
 #include "Renderer.h"
