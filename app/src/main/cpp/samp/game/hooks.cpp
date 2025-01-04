@@ -391,8 +391,6 @@ void AND_TouchEvent_hook(int type, int num, int posX, int posY)
 	// imgui
 	//bool bRet = pUI->OnTouchEvent(type, num, posX, posY);
 
-    FLog("%f %f", posX, posY);
-
 	if (pGame->IsGamePaused())
 		return AND_TouchEvent(type, num, posX, posY);
 
@@ -769,16 +767,15 @@ bool ComputeDamageResponse(CPedDamageResponseCalculator* calculator, CPedGTA* pP
 }
 
 // 0.3.7
-void (*CPedDamageResponseCalculator__ComputeDamageResponse)(CPedDamageResponseCalculator* thiz, CPedGTA* pPed, uint32_t a3, uint32_t a4);
-void CPedDamageResponseCalculator__ComputeDamageResponse_hook(CPedDamageResponseCalculator* thiz, CPedGTA* pPed, uint32_t a3, uint32_t a4)
+void (*CPedDamageResponseCalculator__ComputeDamageResponse)(CPedDamageResponseCalculator* thiz, CPedGTA* pPed, uintptr_t* a3, uint32_t a4);
+void CPedDamageResponseCalculator__ComputeDamageResponse_hook(CPedDamageResponseCalculator* thiz, CPedGTA* pPed, uintptr_t *a3, uint32_t a4)
 {
-	if (thiz != nullptr && pPed != nullptr)
-	{
-		if (ComputeDamageResponse(thiz, pPed))
-			return;
-	}
+	if (thiz == nullptr || pPed == nullptr || a3 == nullptr) return;
 
-	return CPedDamageResponseCalculator__ComputeDamageResponse(thiz, pPed, a3, a4);
+    if (ComputeDamageResponse(thiz, pPed))
+        return;
+
+	CPedDamageResponseCalculator__ComputeDamageResponse(thiz, pPed, a3, a4);
 }
 
 void (*CRenderer_RenderEverythingBarRoads)();
@@ -792,7 +789,11 @@ void CRenderer_RenderEverythingBarRoads_hook() {
 			for (OBJECTID i = 0; i < MAX_OBJECTS; i++) {
 				CObject* pObject = pObjectPool->GetAt(i);
 				if (pObject && pObject->m_bForceRender) {
-					//pObject->Render();
+                    // CEntity::PreRender
+                    ((void (*)(CEntityGTA*))(*(void**)(pObject->m_pEntity + (VER_x32 ? 0x48:0x48*2))))(pObject->m_pEntity);
+
+                    // CRenderer::RenderOneNonRoad
+                    ((void (*)(CEntityGTA*))(g_libGTASA+ (VER_x32 ? 0x41030C + 1:0x4F56E0)))(pObject->m_pEntity);
 				}
 			}
 		}
@@ -1129,40 +1130,44 @@ void player_control_zelda_hook(unsigned int *a2, unsigned int *a3)
 	rotate_ped_if_local(a2, a3);
 }
 
-#pragma pack(push, 1)
-typedef struct _RES_ENTRY_OBJ
-{
-	PADDING(_pad0, 48); // 0-48
-	uintptr_t validate; // 48-52
-	PADDING(_pad1, 4); // 52-56
-} RES_ENTRY_OBJ;
-#pragma pack(pop)
-
 // 006778B0
-int (*rxOpenGLDefaultAllInOneRenderCB)(uintptr_t resEntry, uintptr_t object, uint8_t type, uint32_t flags);
-int rxOpenGLDefaultAllInOneRenderCB_hook(uintptr_t resEntry, uintptr_t object, uint8_t type, uint32_t flags)
+int (*rxOpenGLDefaultAllInOneRenderCB)(RwResEntry* resEntry, uintptr_t object, uint8_t type, uint32_t flags);
+int rxOpenGLDefaultAllInOneRenderCB_hook(RwResEntry* resEntry, uintptr_t object, uint8_t type, uint32_t flags)
 {
 	if(!resEntry || !flags)
 		return 0;
 
-	uint16_t size = *(uint16_t *)(resEntry+26);
-	if(size)
+    FLog("rxOpenGLDefaultAllInOneRenderCB");
+
+	if(resEntry->size)
 	{
-		RES_ENTRY_OBJ *arr = (RES_ENTRY_OBJ*)(resEntry+28);
+        FLog("rxOpenGLDefaultAllInOneRenderCB size ok");
+		RwResEntry *arr = *(resEntry->ownerRef);
 		if(arr)
 		{
+            FLog("rxOpenGLDefaultAllInOneRenderCB ownerref ok");
 			uint32_t validFlag = flags & 0x84;
 			if(validFlag)
 			{
-				for(int i = 0; i < size; i++)
+                FLog("rxOpenGLDefaultAllInOneRenderCB flag ok");
+				for(int i = 0; i < resEntry->size; i++)
 				{
-					if(!arr[i].validate) break;
-
-					uintptr_t *v4 = *(uintptr_t**)(arr[i].validate);
+					if(!arr[i].ownerRef)
+                    {
+                        FLog("rxOpenGLDefaultAllInOneRenderCB no owner ref");
+                        break;
+                    }
+                    FLog("rxOpenGLDefaultAllInOneRenderCB %d 0", i);
+					uintptr_t *v4 = *(uintptr_t**)(arr[i].ownerRef);
+                    FLog("rxOpenGLDefaultAllInOneRenderCB %d 1", i);
 					if(v4)
 					{
-						if(!*v4 || v4 > (uintptr_t*)0xFFFFFF00)
-							return 0;
+                        FLog("rxOpenGLDefaultAllInOneRenderCB v4 ok", i);
+						if(!*v4 || v4 > (uintptr_t*)(VER_x32 ? 0xFFFFFF00:0xFFFFFFFFFFFFFF00))
+                        {
+                            FLog("rxOpenGLDefaultAllInOneRenderCB no pointer", i);
+                            return 0;
+                        }
 					}
 				}
 			}
@@ -1173,35 +1178,34 @@ int rxOpenGLDefaultAllInOneRenderCB_hook(uintptr_t resEntry, uintptr_t object, u
 }
 
 // 00677CB4
-int (*CCustomBuildingDNPipeline__CustomPipeRenderCB)(uintptr_t resEntry, uintptr_t object, uint8_t type, uint32_t flags);
-int CCustomBuildingDNPipeline__CustomPipeRenderCB_hook(uintptr_t resEntry, uintptr_t object, uint8_t type, uint32_t flags)
+int (*CCustomBuildingDNPipeline__CustomPipeRenderCB)(RwResEntry* resEntry, uintptr_t object, uint8_t type, uint32_t flags);
+int CCustomBuildingDNPipeline__CustomPipeRenderCB_hook(RwResEntry* resEntry, uintptr_t object, uint8_t type, uint32_t flags)
 {
-	if(!resEntry || !flags)
-		return 0;
+    if(!resEntry || !flags)
+        return 0;
 
-	uint16_t size = *(uint16_t *)(resEntry+26);
-	if(size)
-	{
-		RES_ENTRY_OBJ *arr = (RES_ENTRY_OBJ*)(resEntry+28);
-		if(arr)
-		{
-			uint32_t validFlag = flags & 0x84;
-			if(validFlag)
-			{
-				for(int i = 0; i < size; i++)
-				{
-					if(!arr[i].validate) break;
+    if(resEntry->size)
+    {
+        RwResEntry *arr = *(resEntry->ownerRef);
+        if(arr)
+        {
+            uint32_t validFlag = flags & 0x84;
+            if(validFlag)
+            {
+                for(int i = 0; i < resEntry->size; i++)
+                {
+                    if(!arr[i].ownerRef) break;
 
-					uintptr_t *v4 = *(uintptr_t**)(arr[i].validate);
-					if(v4)
-					{
-						if(!*v4 || v4 > (uintptr_t*)0xFFFFFF00)
-							return 0;
-					}
-				}
-			}
-		}
-	}
+                    uintptr_t *v4 = *(uintptr_t**)(arr[i].ownerRef);
+                    if(v4)
+                    {
+                        if(!*v4 || v4 > (uintptr_t*)(VER_x32 ? 0xFFFFFF00:0xFFFFFFFFFFFFFF00))
+                            return 0;
+                    }
+                }
+            }
+        }
+    }
 
 	return CCustomBuildingDNPipeline__CustomPipeRenderCB(resEntry, object, type, flags);
 }
@@ -1835,10 +1839,8 @@ void InstallSpecialHooks()
 
     CHook::InlineHook("_Z11OS_FileReadPvS_i", &OS_FileRead_hook, &OS_FileRead);
 
-#if VER_x32
-	CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);
-	CHook::InlineHook("_ZN25CCustomBuildingDNPipeline18CustomPipeRenderCBEP10RwResEntryPvhj", &CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, &CCustomBuildingDNPipeline__CustomPipeRenderCB);
-#endif
+	//CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);
+	//CHook::InlineHook("_ZN25CCustomBuildingDNPipeline18CustomPipeRenderCBEP10RwResEntryPvhj", &CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, &CCustomBuildingDNPipeline__CustomPipeRenderCB);
 }
 
 #include <EGL/egl.h>
@@ -1910,6 +1912,8 @@ void InstallHooks()
 
     CHook::InlineHook("_ZN13FxEmitterBP_c6RenderEP8RwCamerajfh", &FxEmitterBP_c__Render_hook, &FxEmitterBP_c__Render);
     CHook::InlineHook("_Z23RwResourcesFreeResEntryP10RwResEntry", &RwResourcesFreeResEntry_hook, &RwResourcesFreeResEntry);
+
+    CHook::InlineHook("_ZN9CRenderer24RenderEverythingBarRoadsEv", &CRenderer_RenderEverythingBarRoads_hook, &CRenderer_RenderEverythingBarRoads);
 
     HookCPad();
 }

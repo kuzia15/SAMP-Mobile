@@ -40,13 +40,6 @@ CPlayerPed::CPlayerPed()
 	m_stuffData.type = eStuffType::STUFF_TYPE_NONE;
 	m_stuffData.dwLastUpdateTick = 0;
 
-	for (int i = 0; i < 10; i++)
-	{
-		m_bObjectSlotUsed[i] = false;
-		memset(&m_attachedObjectInfo[i], 0, sizeof(NEW_ATTACHED_OBJECT));
-		m_pAttachedObjects[i] = nullptr;
-	}
-
 	m_bHaveBulletData = false;
 }
 
@@ -139,13 +132,6 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 	m_stuffData.type = eStuffType::STUFF_TYPE_NONE;
 	m_stuffData.dwLastUpdateTick = 0;
 
-	for (int i = 0; i < 10; i++)
-	{
-		m_bObjectSlotUsed[i] = false;
-		memset(&m_attachedObjectInfo[i], 0, sizeof(NEW_ATTACHED_OBJECT));
-		m_pAttachedObjects[i] = nullptr;
-	}
-
 	m_bHaveBulletData = false;
     FLog("CPlayerPed3");
     FLog("m_pPed: %p, m_dwGTAId: %d", m_pPed, m_dwGTAId);
@@ -169,8 +155,7 @@ CPlayerPed::~CPlayerPed()
 			m_dwParachuteObject = 0;
 		}
 
-		if (IsHaveAttachedObject())
-			RemoveAllAttachedObjects();
+        FlushAttach();
 
 		// if(field_2C1)
 
@@ -1090,178 +1075,6 @@ int CPlayerPed::GetVehicleSeatID()
     if(m_pPed->pVehicle->m_apPassengers[6] == m_pPed) return 7;
 
     return (-1);
-}
-// 0.3.7 (comment matcolor)
-void CPlayerPed::SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedObject)
-{
-	FLog("CPlayerPed::SetAttachedObject BoneID: %d", pNewAttachedObject->iBoneID);
-	if (m_pPed && IsValidGamePed(m_pPed))
-	{
-		if (m_pPed->m_pRwObject)
-		{
-			if (index >= 0 && index < 10)
-			{
-				int iBoneID = pNewAttachedObject->iBoneID;
-				if (iBoneID > 0 && iBoneID <= 18)
-				{
-					if (GetObjectSlotState(index))
-						RemoveAttachedObject(index);
-
-					RwMatrix mat;
-					mat = m_pPed->GetMatrix().ToRwMatrix();
-					memcpy(&m_attachedObjectInfo[index], pNewAttachedObject, sizeof(NEW_ATTACHED_OBJECT));
-
-					CObject* pNewObject = new CObject(pNewAttachedObject->iModel, mat.pos, pNewAttachedObject->vecRot, 200.0f, true);
-                    if(!pNewObject) return;
-
-					m_pAttachedObjects[index] = pNewObject;
-
-					//if (pNewAttachedObject->dwMaterialColor1)
-					//	pNewObject->SetMaterial(-1, 0, 0, 0, pNewAttachedObject->dwMaterialColor1);
-					//if (pNewAttachedObject->dwMaterialColor2)
-					//	pNewObject->SetMaterial(-1, 1, 0, 0, pNewAttachedObject->dwMaterialColor2);
-
-					pNewObject->m_pEntity->SetCollisionChecking(false);
-					m_bObjectSlotUsed[index] = true;
-				}
-			}
-		}
-	}
-}
-// 0.3.7
-void CPlayerPed::RemoveAttachedObject(int index)
-{
-	if (GetObjectSlotState(index))
-	{
-		if (m_pAttachedObjects[index])
-		{
-			delete m_pAttachedObjects[index];
-			m_pAttachedObjects[index] = nullptr;
-		}
-
-		memset(&m_attachedObjectInfo[index], 0, sizeof(NEW_ATTACHED_OBJECT));
-		m_bObjectSlotUsed[index] = false;
-	}
-}
-// 0.3.7
-bool CPlayerPed::GetObjectSlotState(int index)
-{
-	if (index < 0 || index >= 10) return false;
-
-	return m_bObjectSlotUsed[index];
-}
-// 0.3.7
-bool CPlayerPed::IsHaveAttachedObject()
-{
-	for (int i = 0; i < 10; i++)
-	{
-		if (m_bObjectSlotUsed[i]) return true;
-	}
-
-	return false;
-}
-// 0.3.7
-void CPlayerPed::RemoveAllAttachedObjects()
-{
-	for (int i = 0; i < 10; i++)
-	{
-		if (m_bObjectSlotUsed[i])
-		{
-			if (m_pAttachedObjects[i])
-			{
-				delete m_pAttachedObjects[i];
-				m_pAttachedObjects[i] = nullptr;
-			}
-
-			memset(&m_attachedObjectInfo[i], 0, sizeof(NEW_ATTACHED_OBJECT));
-			m_bObjectSlotUsed[i] = false;
-		}
-	}
-}
-
-// 0.3.7
-void CPlayerPed::ProcessAttachedObjects()
-{
-	bool bAnimUpdated = false;
-
-	for (int i = 0; i < 10; i++)
-	{
-		if (m_bObjectSlotUsed[i])
-		{
-			if(m_pPed->IsAdded()) {
-                if (m_pAttachedObjects[i]) {
-                    if (!bAnimUpdated) {
-                        if (m_pPed) {
-                            // CEntity::UpdateRpHAnim
-                            //((void (*)(CPedGTA*))(g_libGTASA + 0x3EBFF6 + 1))(m_pPed);
-                            m_pPed->UpdateRpHAnim();
-                            bAnimUpdated = true;
-                        }
-                    }
-
-                    int iBoneID = m_attachedObjectInfo[i].iBoneID;
-
-                    int iBoneIndex = 0;
-                    if (m_pPed->m_apBones[iBoneID] == nullptr) return;
-                    iBoneIndex = m_pPed->m_apBones[iBoneID]->m_nNodeId;
-                    // CPhysical::Remove
-                    auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
-
-                    int iID;
-                    if (hierarchy)
-                    {
-
-                        iID = RpHAnimIDGetIndex(hierarchy, m_attachedObjectInfo[i].iBoneID);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    if (iID == -1)
-                    {
-                        continue;
-                    }
-                    m_pAttachedObjects[i]->m_pEntity->Remove();
-
-                    RwMatrix boneMatrix;
-                    memcpy(&boneMatrix, &hierarchy->pMatrixArray[iID], sizeof(RwMatrix));
-
-                    CVector vecOut;
-                    ProjectMatrix(&vecOut, reinterpret_cast<CMatrix *>(&boneMatrix),
-                                  &m_attachedObjectInfo[i].vecOffset);
-
-                    boneMatrix.pos.x = vecOut.x;
-                    boneMatrix.pos.y = vecOut.y;
-                    boneMatrix.pos.z = vecOut.z;
-
-                    CVector axis { 1.0f, 0.0f, 0.0f };
-                    if (m_attachedObjectInfo[i].vecRot.x != 0.0f)
-                    {
-                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.x);
-                    }
-                    axis.Set( 0.0f, 1.0f, 0.0f );
-                    if (m_attachedObjectInfo[i].vecRot.y != 0.0f)
-                    {
-                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.y);
-                    }
-                    axis.Set( 0.0f, 0.0f, 1.0f );
-                    if (m_attachedObjectInfo[i].vecRot.z != 0.0f)
-                    {
-                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.z);
-                    }
-
-                    RwMatrixScale(&boneMatrix, &m_attachedObjectInfo[i].vecScale);
-
-                    m_pAttachedObjects[i]->m_pEntity->SetMatrix((CMatrix&)boneMatrix);
-
-                    m_pAttachedObjects[i]->m_pEntity->UpdateRW();
-                    m_pAttachedObjects[i]->m_pEntity->UpdateRwFrame();
-
-                    m_pAttachedObjects[i]->m_pEntity->Add();
-                }
-            }
-		}
-	}
 }
 
 // 0.3.7
@@ -2426,4 +2239,176 @@ void CPlayerPed::SetWeaponSkill(uint32_t iWeaponType, uint16_t byteSkill)
 		GameUpdateLocalPlayerSkill(iWeaponType, byteSkill);
 	else
 		GameStoreRemotePlayerSkills(m_bytePlayerNumber, iWeaponType, byteSkill);
+}
+
+int GetInternalBoneIDFromSampID(int sampid);
+
+void CPlayerPed::AttachObject(ATTACHED_OBJECT_INFO* pInfo, int iSlot)
+{
+    if (GetAttachedObject(iSlot))
+    {
+        DeattachObject(iSlot);
+    }
+    auto& attach = m_aAttachedObject[iSlot] = CAttachedPlayerObject();
+
+    attach.vecRotation  = pInfo->vecRotation;
+    attach.vecOffset    = pInfo->vecOffset;
+    attach.dwModelId    = pInfo->dwModelId;
+    attach.vecScale     = pInfo->vecScale;
+    attach.dwColor[0]   = pInfo->dwColor[0];
+    attach.dwColor[1]   = pInfo->dwColor[1];
+    attach.dwSampBone   = pInfo->dwBoneId_MP;
+    attach.dwBone = GetInternalBoneIDFromSampID(attach.dwSampBone);
+
+    CVector vecPos = m_pPed->GetPosition();
+    CVector vecRot{ 0.0f, 0.0f, 0.0f };
+    attach.pObject = new CObject(pInfo->dwModelId, vecPos, vecRot, 200.0f, 1);
+    attach.pObject->m_pEntity->m_bUsesCollision = false;
+}
+
+void CPlayerPed::SetAttachOffset(int iSlot, CVector pos, CVector rot)
+{
+    auto attach = GetAttachedObject(iSlot);
+    if(attach) {
+        attach->vecOffset = pos;
+        attach->vecRotation = rot;
+    }
+}
+
+void CPlayerPed::DeattachObject(int iSlot)
+{
+    auto attach = GetAttachedObject(iSlot);
+    if(attach)
+    {
+        delete attach->pObject;
+        m_aAttachedObject.erase(iSlot);
+    }
+
+}
+
+bool CPlayerPed::IsValidAttach(int iSlot)
+{
+    auto attach = GetAttachedObject(iSlot);
+
+    return attach != nullptr;
+}
+void CPlayerPed::FlushAttach()
+{
+    std::vector<uint32> keysToDelete;
+
+    for (auto& element : m_aAttachedObject) {
+        keysToDelete.push_back(element.first);
+    }
+
+    for (auto& id : keysToDelete)
+    {
+        DeattachObject(id);
+    }
+}
+
+void CPlayerPed::ProcessAttach()
+{
+    bool needRender = true;
+
+    if(m_pPed->IsInVehicle() && m_pPed->pVehicle->IsRCVehicleModelID())
+        needRender = false;
+
+    m_pPed->UpdateRpHAnim();
+
+    if (m_pPed->IsAdded())
+    {
+        ProcessHeadMatrix();
+    }
+    for (auto iter : m_aAttachedObject)
+    {
+        auto attach = iter.second;
+
+        CObject* pObject = attach.pObject;
+        if (m_pPed->IsAdded())
+        {
+            auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
+
+            int iID;
+            if (hierarchy)
+            {
+
+                iID = RpHAnimIDGetIndex(hierarchy, attach.dwBone);
+            }
+            else
+            {
+                continue;
+            }
+            if (iID == -1)
+            {
+                continue;
+            }
+            pObject->m_pEntity->Remove();
+
+            if(!needRender)
+                continue;
+
+            RwMatrix outMat;
+            memcpy(&outMat, &hierarchy->pMatrixArray[iID], sizeof(RwMatrix));
+
+            CVector vecOut;
+            ProjectMatrix(&vecOut, (CMatrix*)&outMat, &attach.vecOffset);
+
+            outMat.pos = vecOut;
+
+            CVector axis { 1.0f, 0.0f, 0.0f };
+            if (attach.vecRotation.x != 0.0f)
+            {
+                RwMatrixRotate(&outMat, &axis, attach.vecRotation.x);
+            }
+            axis.Set( 0.0f, 1.0f, 0.0f );
+            if (attach.vecRotation.y != 0.0f)
+            {
+                RwMatrixRotate(&outMat, &axis, attach.vecRotation.y);
+            }
+            axis.Set( 0.0f, 0.0f, 1.0f );
+            if (attach.vecRotation.z != 0.0f)
+            {
+                RwMatrixRotate(&outMat, &axis, attach.vecRotation.z);
+            }
+
+            RwMatrixScale(&outMat, &attach.vecScale);
+
+            constexpr float boundaryLimit = 10000.0f;
+            if (std::abs(outMat.pos.x) >= boundaryLimit ||
+                std::abs(outMat.pos.y) >= boundaryLimit ||
+                std::abs(outMat.pos.z) >= boundaryLimit)
+            {
+                continue;
+            }
+
+            pObject->m_pEntity->SetMatrix((CMatrix&)outMat); // copy to CMatrix
+
+            pObject->m_pEntity->UpdateRW();
+            pObject->m_pEntity->UpdateRwFrame();
+
+            pObject->m_pEntity->Add();
+        }
+        else
+        {
+            pObject->m_pEntity->SetPosn(0.0f, 0.0f, 0.0f);
+        }
+    }
+}
+
+void CPlayerPed::ProcessHeadMatrix()
+{
+    auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
+
+    if(!hierarchy)
+        return;
+
+    uint32_t bone = 4;
+    int iID = RpHAnimIDGetIndex(hierarchy, bone);
+
+    if (iID == -1)
+    {
+        return;
+    }
+
+    memcpy(&m_HeadBoneMatrix, &hierarchy->pMatrixArray[iID], sizeof(RwMatrix));
 }

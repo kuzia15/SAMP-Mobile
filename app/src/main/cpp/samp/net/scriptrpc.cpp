@@ -1625,49 +1625,105 @@ void ScrSetArmedWeapon(RPCParameters* rpcParams)
 	}
 }
 
+#define ATTACH_BONE_SPINE	1
+#define ATTACH_BONE_HEAD	2
+#define ATTACH_BONE_LUPPER	3
+#define ATTACH_BONE_RUPPER	4
+#define ATTACH_BONE_LHAND	5
+#define ATTACH_BONE_RHAND	6
+#define ATTACH_BONE_LTHIGH	7
+#define ATTACH_BONE_RTHIGH	8
+#define ATTACH_BONE_LFOOT	9
+#define ATTACH_BONE_RFOOT	10
+#define ATTACH_BONE_RCALF	11
+#define ATTACH_BONE_LCALF	12
+#define ATTACH_BONE_LFARM	13
+#define ATTACH_BONE_RFARM	14
+#define ATTACH_BONE_LSHOULDER	15
+#define ATTACH_BONE_RSHOULDER	16
+#define ATTACH_BONE_NECK	17
+#define ATTACH_BONE_JAW		18
+
+int GetInternalBoneIDFromSampID(int sampid)
+{
+    switch (sampid)
+    {
+        case ATTACH_BONE_SPINE: // 3 or 2
+            return 3;
+        case ATTACH_BONE_HEAD: // ?
+            return 5;
+        case ATTACH_BONE_LUPPER: // left upper arm
+            return 22;
+        case ATTACH_BONE_RUPPER: // right upper arm
+            return 32;
+        case ATTACH_BONE_LHAND: // left hand
+            return 34;
+        case ATTACH_BONE_RHAND: // right hand
+            return 24;
+        case ATTACH_BONE_LTHIGH: // left thigh
+            return 41;
+        case ATTACH_BONE_RTHIGH: // right thigh
+            return 51;
+        case ATTACH_BONE_LFOOT: // left foot
+            return 43;
+        case ATTACH_BONE_RFOOT: // right foot
+            return 53;
+        case ATTACH_BONE_RCALF: // right calf
+            return 52;
+        case ATTACH_BONE_LCALF: // left calf
+            return 42;
+        case ATTACH_BONE_LFARM: // left forearm
+            return 33;
+        case ATTACH_BONE_RFARM: // right forearm
+            return 23;
+        case ATTACH_BONE_LSHOULDER: // left shoulder (claviacle)
+            return 31;
+        case ATTACH_BONE_RSHOULDER: // right shoulder (claviacle)
+            return 21;
+        case ATTACH_BONE_NECK: // neck
+            return 4;
+        case ATTACH_BONE_JAW: // jaw ???
+            return 8; // i dont know
+    }
+    return 0;
+}
+
 void ScrSetPlayerAttachedObject(RPCParameters* rpcParams)
 {
-	unsigned char* Data = reinterpret_cast<unsigned char*>(rpcParams->input);
-	int iBitLength = rpcParams->numberOfBitsOfData;
+    FLog("ScrSetPlayerAttachedObject");
+    unsigned char* Data = reinterpret_cast<unsigned char*>(rpcParams->input);
+    int iBitLength = rpcParams->numberOfBitsOfData;
+    RakNet::BitStream bsData(Data, (iBitLength / 8) + 1, false);
 
-	NEW_ATTACHED_OBJECT NewAttachedObject;
-	memset(&NewAttachedObject, 0, sizeof(NEW_ATTACHED_OBJECT));
+    PLAYERID id;
+    uint32_t slot;
+    bool create;
+    ATTACHED_OBJECT_INFO info;
 
-	PLAYERID PlayerID;
-	int index;
-	bool bCreate;
-	RakNet::BitStream bsData(Data, (iBitLength / 8) + 1, false);
-	bsData.Read(PlayerID);
-	bsData.Read(index);
-	bsData.Read(bCreate);
+    bsData.Read(id);
+    bsData.Read(slot);
+    bsData.Read(create);
+    CPlayerPed* pPed = nullptr;
+    if (id == pNetGame->GetPlayerPool()->GetLocalPlayerID())
+    {
+        pPed = pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed();
+    }
+    else
+    {
+        if (pNetGame->GetPlayerPool()->GetAt(id))
+        {
+            pPed = pNetGame->GetPlayerPool()->GetAt(id)->GetPlayerPed();
+        }
+    }
+    if (!pPed) return;
+    if (!create)
+    {
+        pPed->DeattachObject(slot);
+        return;
+    }
+    bsData.Read((char*)& info, sizeof(ATTACHED_OBJECT_INFO));
 
-	if (bCreate)
-		bsData.Read((char*)& NewAttachedObject, sizeof(NEW_ATTACHED_OBJECT));
-
-	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-	if (pPlayerPool)
-	{
-		CPlayerPed* pPlayerPed = nullptr;
-
-		if (pPlayerPool->GetLocalPlayerID() == PlayerID)
-		{
-			pPlayerPed = pPlayerPool->GetLocalPlayer()->GetPlayerPed();
-		}
-		else
-		{
-			CRemotePlayer* pRemotePlayer = pPlayerPool->GetAt(PlayerID);
-			if (pRemotePlayer)
-				pPlayerPed = pRemotePlayer->GetPlayerPed();
-		}
-
-		if (pPlayerPed)
-		{
-			if (bCreate)
-				pPlayerPed->SetAttachedObject(index, &NewAttachedObject);
-			else
-				pPlayerPed->RemoveAttachedObject(index);
-		}
-	}
+    pPed->AttachObject(&info, slot);
 }
 // 0.3.7
 void ScrApplyActorAnimation(RPCParameters* rpcParams)

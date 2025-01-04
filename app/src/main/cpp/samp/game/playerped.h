@@ -16,20 +16,6 @@ enum eStuffType {
 #define PLAYER_PED_SLOTS	120
 
 #pragma pack(push, 1)
-typedef struct _NEW_ATTACHED_OBJECT
-{
-	int iModel;
-	int iBoneID;
-	CVector vecOffset;
-	CVector vecRot;
-	CVector vecScale;
-	uint32_t dwMaterialColor1;
-	uint32_t dwMaterialColor2;
-
-} NEW_ATTACHED_OBJECT;
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 typedef struct _BULLET_DATA
 {
 	CVector vecOrigin;
@@ -38,6 +24,32 @@ typedef struct _BULLET_DATA
 	CEntityGTA* pEntity;
 } BULLET_DATA;
 #pragma pack(pop)
+
+struct CAttachedPlayerObject
+{
+    uint32_t 	    dwModelId;
+    uint32_t 	    dwBone;
+    CVector 	    vecOffset;
+    CVector 	    vecRotation;
+    CVector 	    vecScale;
+    CRGBA 	        dwColor[2];
+
+    class CObject*  pObject;
+    uint32_t 	    dwSampBone;
+};
+
+#pragma pack(push, 1)
+struct ATTACHED_OBJECT_INFO
+{
+    uint32_t 	dwModelId;
+    uint32_t 	dwBoneId_MP;
+    CVector 	vecOffset;
+    CVector 	vecRotation;
+    CVector 	vecScale;
+    uint32_t 	dwColor[2];
+};
+#pragma pack(pop)
+VALIDATE_SIZE(ATTACHED_OBJECT_INFO, 52);
 
 class CPlayerPed
 {
@@ -130,13 +142,6 @@ public:
 	void CheckVehicleParachute();
 	void ProcessVehicleHorn();
 
-	void SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedObject);
-	void RemoveAttachedObject(int index);
-	bool GetObjectSlotState(int index);
-	bool IsHaveAttachedObject();
-	void RemoveAllAttachedObjects();
-
-	void ProcessAttachedObjects();
 	void GetBoneMatrix(RwMatrix* matOut, int iBoneID);
 
 	void ClumpUpdateAnimations(float step, int flag);
@@ -209,15 +214,29 @@ public:
 
 	void SetCurrentWeapon(uint8_t weaponType);
 
+    void AttachObject(ATTACHED_OBJECT_INFO* pInfo, int iSlot);
+    void SetAttachOffset(int iSlot, CVector pos, CVector rot);
+    void DeattachObject(int iSlot);
+    bool IsHasAttach();
+    void FlushAttach();
+    void ProcessAttach();
+
+    void ProcessHeadMatrix();
+    bool IsValidAttach(int iSlot);
+
+    CAttachedPlayerObject* GetAttachedObject(uint32 id)
+    {
+        auto it = m_aAttachedObject.find(id);
+        return it != m_aAttachedObject.end() ? &it->second : nullptr;
+    }
+
+    RwMatrix m_HeadBoneMatrix;
+    std::unordered_map<int, CAttachedPlayerObject> m_aAttachedObject;
+
 	int m_iCuffedState;
 	int m_iCarryState;
     int iSpecialAction;
-	NEW_ATTACHED_OBJECT m_attachedObjectInfo[10];
 private:
-
-    // attached obj
-	bool m_bObjectSlotUsed[10];
-	CObject* m_pAttachedObjects[10];
 
 	bool m_bHaveBulletData;
 	BULLET_DATA m_bulletData;

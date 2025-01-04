@@ -228,7 +228,8 @@ void CPlayerPool::ProcessAttachedObjects()
 		if (pPlayerPed)
 		{
 			pPlayerPed->ProcessSpecialAction(pPlayerPed->iSpecialAction);
-			pPlayerPed->ProcessAttachedObjects();
+			pPlayerPed->ProcessAttach();
+            pPlayerPed->m_pPed->GetIntelligence()->ProcessAfterPreRender();
 		}
 	}
 
@@ -238,10 +239,11 @@ void CPlayerPool::ProcessAttachedObjects()
 		if (pRemotePlayer)
 		{
 			CPlayerPed* pPlayerPed = pRemotePlayer->GetPlayerPed();
-			if (pPlayerPed)
+			if (pPlayerPed && !pPlayerPed->m_pPed->m_bRemoveFromWorld)
 			{
 				pPlayerPed->ProcessSpecialAction(pPlayerPed->iSpecialAction);
-				pPlayerPed->ProcessAttachedObjects();
+				pPlayerPed->ProcessAttach();
+                pPlayerPed->m_pPed->GetIntelligence()->ProcessAfterPreRender();
 			}
 		}
 	}

@@ -168,6 +168,7 @@ void ApplyPatches_level0()
     CHook::RET("_ZN6CGangs10InitialiseEv"); // CGangs::Initialise
     CHook::RET("_ZN5CHeli9InitHelisEv"); // CHeli::InitHelis(void)
     CHook::RET("_ZN11CFileLoader10LoadPickupEPKc"); // CFileLoader::LoadPickup
+    CHook::RET("_ZN14CLoadingScreen15DisplayPCScreenEv"); // Loading screen
 
     // entryexit
     //CHook::RET("_ZN17CEntryExitManager4InitEv");

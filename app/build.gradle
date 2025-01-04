@@ -26,8 +26,8 @@ android {
         applicationId "com.samp.mobile"
         minSdk 26
         targetSdk 34
-        versionCode 92
-        versionName "0.1"
+        versionCode 93
+        versionName "0.5"
 
         multiDexEnabled true
 
@@ -118,7 +118,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-ndk:18.3.5'
     implementation platform('com.google.firebase:firebase-bom:30.1.0')
     implementation 'com.google.firebase:firebase-analytics:21.2.0'
-    implementation 'c o m.google.firebase:firebas e-messaging:23.1.1'
+    implementation 'com.google.firebase:firebase-messaging:23.1.1'
 
     implementation 'org.ini4j:ini4j:0.5.4'
 

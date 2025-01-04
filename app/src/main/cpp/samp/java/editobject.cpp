@@ -17,7 +17,7 @@ extern CNetGame *pNetGame;
 
 void CObjectEditor::startEditPlayerAttach(int slot)
 {
-    if(!pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetObjectSlotState(slot)){
+    if(!pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetAttachedObject(slot)){
         pUI->chat()->addDebugMessage("Invalid attach slot %d", slot);
         return;
     }
@@ -59,14 +59,15 @@ Java_com_samp_mobile_game_ui_AttachEdit_Exit(JNIEnv *env, jobject thiz) {
 
     CObjectEditor::iEditedId = INVALID_EDITED_SLOT;
     if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
+        auto attach = pPlayer->GetAttachedObject(slot);
         CObjectEditor::SendOnEditAttach(
                 0,
                 slot,
-                pPlayer->m_attachedObjectInfo[slot].iModel,
-                pPlayer->m_attachedObjectInfo[slot].iBoneID,
-                pPlayer->m_attachedObjectInfo[slot].vecOffset,
-                pPlayer->m_attachedObjectInfo[slot].vecRot,
-                pPlayer->m_attachedObjectInfo[slot].vecScale
+                attach->dwModelId,
+                attach->dwSampBone,
+                attach->vecOffset,
+                attach->vecRotation,
+                attach->vecScale
         );
     }
 
@@ -125,11 +126,11 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
                                                   jboolean button_id) {
 
     auto pPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed();
-    int slot = 0;
+    int slot = CObjectEditor::iEditedId;
+    auto attach = pPlayer->GetAttachedObject(slot);
     if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-        slot = CObjectEditor::iEditedId;
 
-        if (!pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetObjectSlotState(
+        if (!pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetAttachedObject(
                 slot)) {
             CObjectEditor::time = 0;
             pJavaWrapper->HideEditObject();
@@ -151,7 +152,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.z += value;
+            attach->vecOffset.z += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
@@ -168,7 +169,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.x += value;
+            attach->vecOffset.x += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
@@ -184,7 +185,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecOffset.y += value;
+            attach->vecOffset.y += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
@@ -200,16 +201,16 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.006f):(-0.006f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecScale.x += value;
-            pPlayer->m_attachedObjectInfo[slot].vecScale.y += value;
-            pPlayer->m_attachedObjectInfo[slot].vecScale.z += value;
+            attach->vecScale.x += value;
+            attach->vecScale.y += value;
+            attach->vecScale.z += value;
         }
     }
     if(button_type == 4) { // rot x
         float value = (button_id)?(0.1f):(-0.1f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.x += value;
+            attach->vecRotation.x += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             float x, y, z;
@@ -224,7 +225,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(0.1f):(-0.1f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.y += value;
+            attach->vecRotation.y += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             float x, y, z;
@@ -239,7 +240,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         float value = (button_id)?(1.0f):(-1.0f);
 
         if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
-            pPlayer->m_attachedObjectInfo[slot].vecRot.z += value;
+            attach->vecRotation.z += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
 
@@ -259,11 +260,11 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
             CObjectEditor::SendOnEditAttach(
                     2,
                     slot,
-                    pPlayer->m_attachedObjectInfo[slot].iModel,
-                    pPlayer->m_attachedObjectInfo[slot].iBoneID,
-                    pPlayer->m_attachedObjectInfo[slot].vecOffset,
-                    pPlayer->m_attachedObjectInfo[slot].vecRot,
-                    pPlayer->m_attachedObjectInfo[slot].vecScale
+                    attach->dwModelId,
+                    attach->dwSampBone,
+                    attach->vecOffset,
+                    attach->vecRotation,
+                    attach->vecScale
             );
         }
         if (CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
@@ -296,16 +297,17 @@ JNIEXPORT void JNICALL
 Java_com_samp_mobile_game_ui_AttachEdit_Save(JNIEnv *env, jobject thiz) {
     CPlayerPed* pPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed();
     int slot = CObjectEditor::iEditedId;
+    auto attach = pPlayer->GetAttachedObject(slot);
 
     if(CObjectEditor::editType == CObjectEditor::TYPE_PLAYER_ATTACH) {
         CObjectEditor::SendOnEditAttach(
                 1,
                 slot,
-                pPlayer->m_attachedObjectInfo[slot].iModel,
-                pPlayer->m_attachedObjectInfo[slot].iBoneID,
-                pPlayer->m_attachedObjectInfo[slot].vecOffset,
-                pPlayer->m_attachedObjectInfo[slot].vecRot,
-                pPlayer->m_attachedObjectInfo[slot].vecScale
+                attach->dwModelId,
+                attach->dwSampBone,
+                attach->vecOffset,
+                attach->vecRotation,
+                attach->vecScale
         );
     }
     if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT)

@@ -277,36 +277,34 @@ bool CLocalPlayer::Process()
 		// ONFOOT CONDITIONS
 		else if (m_pPlayerPed->GetActionTrigger() == ACTION_NORMAL || m_pPlayerPed->GetActionTrigger() == ACTION_SCOPE)
 		{
-			g_bLockEnterVehicleWidget = true;
-			if(m_bWasInCar)
-			{
-				m_bWasInCar = false;
-			}
-
-			ProcessSurfing();
-			MoveHeadWithCamera();
-
-            MaybeSendEnterVehicle();
-
-			if (m_bInRCMode)
-			{
-				m_bInRCMode = false;
-				m_pPlayerPed->m_pPed->Add();
-			}
-
-			HandlePassengerEntry();
-			ProcessOnFootWorldBounds();
-
-			if (m_CurrentVehicle != 0xFFFF)
-			{
-				m_LastVehicle = m_CurrentVehicle;
-				m_CurrentVehicle = 0xFFFF;
-			}
-
-			if (CompareOnFootSyncKeys(wKeys, udAnalog, lrAnalog) 
-				|| (dwThisTick - m_dwLastSendTick) > GetOptimumOnFootSendRate())
+			if ((dwThisTick - m_dwLastSendTick) > GetOptimumOnFootSendRate())
 			{
 				m_dwLastSendTick = GetTickCount();
+                g_bLockEnterVehicleWidget = true;
+                if(m_bWasInCar)
+                {
+                    m_bWasInCar = false;
+                }
+
+                MoveHeadWithCamera();
+
+                if (m_bInRCMode)
+                {
+                    m_bInRCMode = false;
+                    m_pPlayerPed->m_pPed->Add();
+                }
+
+                HandlePassengerEntry();
+                ProcessOnFootWorldBounds();
+
+                if (m_CurrentVehicle != 0xFFFF)
+                {
+                    m_LastVehicle = m_CurrentVehicle;
+                    m_CurrentVehicle = 0xFFFF;
+                }
+
+                ProcessSurfing();
+                MaybeSendEnterVehicle();
 				SendOnFootFullSyncData();
 			}
 
@@ -394,8 +392,7 @@ bool CLocalPlayer::Process()
 		&& m_pPlayerPed->GetActionTrigger() != ACTION_WASTED
 		&& m_pPlayerPed->GetActionTrigger() != ACTION_DEATH)
 	{
-		if (m_pPlayerPed->IsHaveAttachedObject())
-			m_pPlayerPed->RemoveAllAttachedObjects();
+        m_pPlayerPed->FlushAttach();
 
 		//if (sub_100AC660(_this->m_pPlayerPed))
 		//	sub_100AC670(_this->m_pPlayerPed, 0);
@@ -783,10 +780,8 @@ void CLocalPlayer::SendInCarFullSyncData()
 
 	RwMatrix mat;
 	CVector vecMoveSpeed;
-    mat = pVehicle->m_pVehicle->GetMatrix().ToRwMatrix();
+    pVehicle->m_pVehicle->GetMatrix(&mat);
     vecMoveSpeed = pVehicle->m_pVehicle->GetMoveSpeed();
-
-	icSync.vecPos = mat.pos;
 
     icSync.quat.SetFromMatrix(&mat);
     icSync.quat.Normalize();
@@ -798,6 +793,8 @@ void CLocalPlayer::SendInCarFullSyncData()
     {
         icSync.quat.Set(m_icSync.quat);
     }
+
+    icSync.vecPos = mat.pos;
 
 	icSync.vecMoveSpeed.x = vecMoveSpeed.x;
 	icSync.vecMoveSpeed.y = vecMoveSpeed.y;
@@ -853,7 +850,7 @@ void CLocalPlayer::SendInCarFullSyncData()
         SendTrailerData(icSync.TrailerID);
 
 	//if (IsNeedSyncDataSend(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
-	if( /*(GetTickCount() - m_dwLastUpdateInCarData) > 500 || */memcmp(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
+	if( (GetTickCount() - m_dwLastUpdateInCarData) > 500 || memcmp(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
 	{
 		RakNet::BitStream bsVehicleSync;
 		bsVehicleSync.Write((uint8_t) ID_VEHICLE_SYNC);
@@ -885,7 +882,6 @@ void CLocalPlayer::SendTrailerData(VEHICLEID vehicleId)
 		RwMatrix matTrailer = pTrailer->m_pVehicle->GetMatrix().ToRwMatrix();
         CQuaternion syncQuat;
         syncQuat.SetFromMatrix(&matTrailer);
-		syncQuat.Normalize();
         trSync.quat = syncQuat;
 		
 		trSync.trailerId = vehicleId;
@@ -897,15 +893,15 @@ void CLocalPlayer::SendTrailerData(VEHICLEID vehicleId)
         trSync.vecMoveSpeed = pTrailer->m_pVehicle->GetMoveSpeed();
         trSync.vecTurnSpeed = pTrailer->m_pVehicle->GetTurnSpeed();
 
-		if(IsNeedSyncDataSend(&m_TrailerData, &trSync, sizeof(TRAILER_SYNC_DATA)))
-		{
+		//if(IsNeedSyncDataSend(&m_TrailerData, &trSync, sizeof(TRAILER_SYNC_DATA)))
+		//{
 			RakNet::BitStream bsTrailerSync;
 			bsTrailerSync.Write((uint8_t)ID_TRAILER_SYNC);
 			bsTrailerSync.Write((char*)&trSync, sizeof (TRAILER_SYNC_DATA));
 			pNetGame->GetRakClient()->Send(&bsTrailerSync,HIGH_PRIORITY,UNRELIABLE_SEQUENCED,0);
 
 			memcpy(&m_TrailerData, &trSync, sizeof(TRAILER_SYNC_DATA));
-		}
+		//}
 	}
 }
 
@@ -1120,7 +1116,7 @@ void CLocalPlayer::UpdateSurfing() {
 			return;
 		}
 		if (m_surfData.bIsActive) {
-			if (m_surfData.bIsVehicle) {
+			if (m_surfData.bIsVehicle && m_surfData.pSurfInst) {
 				CVehicle *pVeh = (CVehicle *) m_surfData.pSurfInst;
                 surfInstMatrix = pVeh->m_pVehicle->GetMatrix().ToRwMatrix();
                 surfPedMatrix = m_pPlayerPed->m_pPed->GetMatrix().ToRwMatrix();

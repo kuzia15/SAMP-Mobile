@@ -56,28 +56,11 @@ void CWorld::ProcessPedsAfterPreRender() {
     if (CTimer::bSkipProcessThisFrame)
         return;
 
-    if(!pNetGame || !pNetGame->GetPlayerPool())
-        return;
-
-    for (PLAYERID i = 0; i < MAX_PLAYERS; i++)
-    {
-        CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
-        if(pRemotePlayer)
-        {
-            if(pRemotePlayer->GetPlayerPed() && !pRemotePlayer->GetPlayerPed()->m_pPed->m_bRemoveFromWorld)
-            {
-                pRemotePlayer->GetPlayerPed()->ProcessAttachedObjects();
-                pRemotePlayer->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();
-            }
-        }
-    }
-
     if (pNetGame)
     {
         CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
         if (pPlayerPool)
         {
-            pPlayerPool->GetLocalPlayer()->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();
             pPlayerPool->ProcessAttachedObjects();
         }
     }
