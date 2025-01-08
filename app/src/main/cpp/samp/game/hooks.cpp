@@ -1790,6 +1790,13 @@ float CDraw__SetFOV_hook(float thiz, float a2)
     return thiz;
 }
 
+void(*CStreaming__Init2)();
+void CStreaming__Init2_hook()
+{
+    CStreaming__Init2();
+    *(uint32_t*)(g_libGTASA+(VER_x32 ? 0x00685FA0:0x85EBD8)) = 536870912;
+}
+
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1972,6 +1979,8 @@ void InstallHooks()
 #endif
 
     CHook::InlineHook("_ZN5CDraw6SetFOVEfb", &CDraw__SetFOV_hook, &CDraw__SetFOV);
+
+    CHook::InlineHook("_ZN10CStreaming5Init2Ev", &CStreaming__Init2_hook, &CStreaming__Init2);
 
     HookCPad();
 }
