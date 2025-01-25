@@ -920,7 +920,7 @@ void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatI
 
 		if (byteSeatID == 0)
 		{
-			if (pGtaVehicle->pDriver && pGtaVehicle->pDriver->IsInVehicle()) {
+			if (pGtaVehicle && pGtaVehicle->pDriver && pGtaVehicle->pDriver->IsInVehicle()) {
 				return;
 			}
 			ScriptCommand(&put_actor_in_car, m_dwGTAId, dwVehicleGTAId);
@@ -978,19 +978,18 @@ void CPlayerPed::EnterVehicle(uint32_t dwVehicleGTAId, bool bPassenger)
 		CWorld::PlayerInFocus = 0;
 	}
 
-	if (bPassenger)
-	{
-		if (pGtaVehicle->m_nModelIndex != TRAIN_PASSENGER || m_pPed != GamePool_FindPlayerPed()) {
-			ScriptCommand(&send_actor_to_car_passenger, m_dwGTAId, dwVehicleGTAId, 3000, -1);
-		}
-		else {
-			ScriptCommand(&put_actor_in_car2, m_dwGTAId, dwVehicleGTAId, -1);
-		}
-	}
-	else
-	{
-		ScriptCommand(&send_actor_to_car_driverseat, m_dwGTAId, dwVehicleGTAId, 3000);
-	}
+	if(pGtaVehicle) {
+        if (bPassenger) {
+            if (pGtaVehicle->m_nModelIndex != TRAIN_PASSENGER ||
+                m_pPed != GamePool_FindPlayerPed()) {
+                ScriptCommand(&send_actor_to_car_passenger, m_dwGTAId, dwVehicleGTAId, 3000, -1);
+            } else {
+                ScriptCommand(&put_actor_in_car2, m_dwGTAId, dwVehicleGTAId, -1);
+            }
+        } else {
+            ScriptCommand(&send_actor_to_car_driverseat, m_dwGTAId, dwVehicleGTAId, 3000);
+        }
+    }
 }
 // 0.3.7
 const SCRIPT_COMMAND TASK_LEAVE_ANY_CAR = { 0x0633, "i" };

@@ -278,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if(fragment.isAdded()) {
                     for (Fragment fragment2 : fragment.getChildFragmentManager().getFragments()) {
-                        if ((fragment2 instanceof ServerPagesItemFragment) && ((ServerPagesItemFragment) fragment2).getPage() == 0) {
+                        if ((fragment2 instanceof ServerPagesItemFragment) && ((ServerPagesItemFragment) fragment2).getPage() == 0 && fragment2 != null) {
                             RecyclerView view = Objects.requireNonNull( fragment2.requireView().findViewById(R.id.server_recycler));
                             if(view != null) {
                                 RecyclerView.Adapter adapter = view.getAdapter();

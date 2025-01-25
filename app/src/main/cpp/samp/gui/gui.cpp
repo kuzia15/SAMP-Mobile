@@ -95,7 +95,7 @@ bool UI::initialize()
 	// mem
 	Label* d_label1;
 
-	d_label1 = new Label(cryptor::create("0.8.1 x1y2z").decrypt(), ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 3);
+	d_label1 = new Label(cryptor::create("0.8.2 x1y2z").decrypt(), ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 3);
 	this->addChild(d_label1);
 	d_label1->setPosition(ImVec2(3.0, 3.0));
 

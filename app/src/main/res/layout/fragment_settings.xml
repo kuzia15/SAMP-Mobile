@@ -271,6 +271,35 @@
         app:layout_constraintStart_toStartOf="@+id/fps_seekbar"
         app:layout_constraintTop_toTopOf="@+id/fps_seekbar" />
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/monet_switch"
+        android:layout_width="@dimen/_50sdp"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:textOn=""
+        android:textOff=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.875"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
+        app:layout_constraintVertical_bias="0.56" />
+
+    <TextView
+        android:id="@+id/textView1868"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_bold"
+        android:text="Monet Loader"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_12sdp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.155"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
+        app:layout_constraintVertical_bias="0.565" />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
