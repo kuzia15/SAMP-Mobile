@@ -10,7 +10,7 @@
 > * Support `arm64` and `arm32`
 > * Built-in OpenGL reflections (cars)
 > * WaterShader
-> * custom SkyBox
+> * custom SkyBox 1
 > * disabled `CCorona` (optimization) 
 > * Added mini-map icons 
 > * Improved multi-touch 
