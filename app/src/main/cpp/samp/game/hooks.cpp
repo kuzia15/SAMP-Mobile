@@ -35,9 +35,7 @@ extern CGame* pGame;
 extern CNetGame *pNetGame;
 extern MaterialTextGenerator* pMaterialTextGenerator;
 extern CJavaWrapper* pJavaWrapper;
-//extern CMatrix *pMatrix;
-bool kuziak = false;
-bool kuziaclose = false;
+
 uint8_t byteInternalPlayer = 0;
 CPedGTA* dwCurPlayerActor = 0;
 uint8_t byteCurPlayer = 0;
