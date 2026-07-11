@@ -1,7 +1,0 @@
-//
-// Created by x1y2z on 01.05.2023.
-//
-
-#include "WidgetRegion.h"
-
-//FLog("Size of CWidgetRegionLook: %d", sizeof(CWidgetRegionLook));
