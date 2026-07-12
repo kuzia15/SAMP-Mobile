@@ -65,4 +65,6 @@ This project is under active development. New fixes and improvements are added r
 
 This project is provided for educational and research purposes only.
 
+Main author: [**Egor Kuzn**](https://github.com/bkuzn2)
+
 Grand Theft Auto, San Andreas and SA-MP are trademarks of their respective owners and are not affiliated with this project.
