@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: 💬 Contact me | Связаться со мной 
+    url: https://t.me/kuzia15
+    about: Send me a message with your question or suggestion | Напишите мне в личку с вопросом или предложением
+    
+  - name: 📢 Join the Telegram channel | Подписаться на Telegram-канал
+    url: https://t.me/+gbKnbDEf3oVmYzcy
+    about: Project news, updates | Новости проекта, обновления
