@@ -32,7 +32,7 @@ Modern **SA-MP 2.11** client for **Grand Theft Auto: San Andreas (Android)**.
 2. Download the game cache:
 
    ```
-   https://drive.google.com/file/d/11b8J0dNV2CVai7awc2ksiXkimBNEGme3/view?usp=drivesdk
+   https://drive.google.com/file/d/1KmC1dNHkwTZ_mWT9PC8JuGSi1IXb2CZa/view?usp=drivesdk
    ```
 3. Extract the cache to:
 
