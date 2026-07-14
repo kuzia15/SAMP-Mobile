@@ -38,6 +38,6 @@ Grand Theft Auto, Grand Theft Auto: San Andreas and SA-MP are trademarks of thei
 
 
 
-### Important! News about project
+### News about project
 
 [![Telegram](https://img.shields.io/badge/Join-Telegram-24A1DE?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+gbKnbDEf3oVmYzcy)
