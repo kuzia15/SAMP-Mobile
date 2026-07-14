@@ -1386,25 +1386,25 @@ stFile* NvFOpen(const char* r0, const char* r1, int r2, int r3)
     if (!strncmp(r1, "DATA/FONTS.DAT", 15))
     {
         sprintf(path, "%sdata/fonts.dat", g_pszStorage);
-        FLog("Loading weapon.dat..");
+        FLog("Loading fonts.dat..");
     }
 
     if (!strncmp(r1, "DATA/PEDSTATS.DAT", 15))
     {
         sprintf(path, "%sdata/pedstats.dat", g_pszStorage);
-        FLog("Loading weapon.dat..");
+        FLog("Loading pedstats.dat..");
     }
 
     if (!strncmp(r1, "DATA/TIMECYC.DAT", 15))
     {
         sprintf(path, "%sdata/timecyc.dat", g_pszStorage);
-        FLog("Loading weapon.dat..");
+        FLog("Loading timecyc.dat..");
     }
 
     if (!strncmp(r1, "DATA/POPCYCLE.DAT", 15))
     {
         sprintf(path, "%sdata/popcycle.dat", g_pszStorage);
-        FLog("Loading weapon.dat..");
+        FLog("Loading popcycle.dat..");
     }
 
 #if VER_x32
