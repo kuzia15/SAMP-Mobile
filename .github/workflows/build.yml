@@ -1,0 +1,33 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/../keys"
+          keytool -genkeypair -v -keystore "$GITHUB_WORKSPACE/../keys/new.jks" -alias key0 -keyalg RSA -keysize 2048 -validity 10000 -storepass 123123 -keypass 123123 -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
