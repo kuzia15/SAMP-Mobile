@@ -18,6 +18,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Fix known case-sensitivity issues
+        run: |
+          cd app/src/main/cpp/samp
+          find . -iname "playertablist.h" ! -name "playerTabList.h" -exec sh -c 'cp "$0" "$(dirname "$0")/playerTabList.h"' {} \;
+          find . -iname "rgba.h" | while read f; do
+            d=$(dirname "$f")
+            b=$(basename "$f")
+            if [ "$b" != "RGBA.h" ] && [ ! -f "$d/RGBA.h" ]; then
+              echo "#include \"$b\"" > "$d/RGBA.h"
+            fi
+          done
+          if [ -d vendor/raknet ] && [ ! -d vendor/RakNet ]; then
+            mkdir -p vendor/RakNet
+            for f in vendor/raknet/*.h; do
+              name=$(basename "$f")
+              echo "#include \"../raknet/$name\"" > "vendor/RakNet/$name"
+            done
+          fi
+
+      - name: Fix bad maven repo and library version
+        run: |
+          sed -i "/mint.splunk.com/d" build.gradle
+          sed -i "s/PRDownloader:1.0.1/PRDownloader:1.0.2/" app/build.gradle
+
       - name: Generate debug keystore
         run: |
           mkdir -p "$GITHUB_WORKSPACE/../keys"
