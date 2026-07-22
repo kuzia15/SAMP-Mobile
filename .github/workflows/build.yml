@@ -9,14 +9,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List files (debug)
-        run: ls -la
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/../keys"
+          keytool -genkeypair -v -keystore "$GITHUB_WORKSPACE/../keys/new.jks" -alias key0 -keyalg RSA -keysize 2048 -validity 10000 -storepass 123123 -keypass 123123 -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
