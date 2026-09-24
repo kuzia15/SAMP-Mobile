@@ -96,8 +96,14 @@ void Chat::activateEvent(bool active)
 void Chat::touchPopEvent()
 {
     if (pUI->playertablist()->visible()) return;
-
-    pUI->keyboard()->show(this);
+    if (pUI->keyboard()->visible())
+    {
+        pUI->keyboard()->hide();
+    }
+    else
+    {
+        pUI->keyboard()->show(this);
+    }
 }
 
 void Chat::keyboardEvent(const std::string& input)
