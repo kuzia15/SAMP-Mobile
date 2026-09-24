@@ -36,8 +36,50 @@ This project is provided for educational and research purposes only.
 
 Grand Theft Auto, Grand Theft Auto: San Andreas and SA-MP are trademarks of their respective owners. This project is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive or the original SA-MP development team.
 
-
-
 ### News about project
+
+[![Telegram](https://img.shields.io/badge/Join-Telegram-24A1DE?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+ou4jTw2Cq8ZiZThi)
+
+---
+
+# SAMP Mobile
+
+Исходники Android-клиента SA-MP для **Grand Theft Auto: San Andreas**.
+
+Выберите нужную версию:
+
+## SA-MP 2.11
+
+* Только ARM64
+* Интеграция Gloss
+* Поддержка размера страниц 16 КБ
+* Путь кэша: `/storage/emulated/0/GTA/`
+
+[Открыть ветку GTA-2.11](https://github.com/kuzia15/SAMP-Mobile/tree/GTA-2.11)
+
+## SA-MP 2.10
+
+* Поддержка ARM32 и ARM64
+* Интеграция ShadowHook
+* Путь кэша: `/storage/emulated/0/GTA/`
+
+[Открыть ветку GTA-2.10](https://github.com/kuzia15/SAMP-Mobile/tree/GTA-2.10)
+
+## Структура репозитория
+
+Ветка `main` содержит общую информацию о проекте.
+
+Исходный код хранится в ветках, соответствующих версиям:
+
+* `GTA-2.11`
+* `GTA-2.10`
+
+## Отказ от ответственности
+
+Проект предоставлен исключительно в образовательных и исследовательских целях.
+
+Grand Theft Auto, Grand Theft Auto: San Andreas и SA-MP являются товарными знаками соответствующих правообладателей. Проект не связан с Rockstar Games, Take-Two Interactive и оригинальной командой разработчиков SA-MP и не одобрен ими.
+
+### Новости о проекте
 
 [![Telegram](https://img.shields.io/badge/Join-Telegram-24A1DE?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+ou4jTw2Cq8ZiZThi)
