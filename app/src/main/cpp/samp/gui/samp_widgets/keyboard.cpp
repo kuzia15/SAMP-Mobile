@@ -144,7 +144,10 @@ void Keyboard::send()
 
 void Keyboard::activateEvent(bool active)
 {
-    if (active == false) this->hide();
+    if (active == false && m_caller == nullptr)
+    {
+        this->hide();
+    }
 }
 
 KeyboardInput::KeyboardInput()
