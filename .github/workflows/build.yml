@@ -1,0 +1,39 @@
+name: Build SAMP Mobile APK
+
+on:
+  push:
+    branches: [ "GTA-2.11" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Set up Android SDK & NDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: 'platforms;android-33 build-tools;33.0.2 ndk;26.2.11394342'
+
+    - name: Grant Execute Permission for Gradlew
+      run: chmod +x gradlew
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-android.outputs.sdk-path }}/ndk/26.2.11394342
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: samp-mobile-debug-apk
+        path: app/build/outputs/apk/debug/*.apk
