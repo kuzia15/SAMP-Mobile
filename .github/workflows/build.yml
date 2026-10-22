@@ -31,8 +31,8 @@ jobs:
           set -o pipefail
           ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log || {
             # Publish the key error lines as annotations so they can be read without log access.
-            grep -nE "error:|fatal error|undefined reference|What went wrong|FAILED|Execution failed|> " build.log \
-              | head -9 | cut -c1-300 | while IFS= read -r l; do echo "::error::$l"; done
+            grep -A8 "What went wrong" build.log | cut -c1-400 | while IFS= read -r l; do echo "::error::$l"; done
+            grep -nE "error:|undefined reference|Duplicate|duplicate" build.log | head -6 | cut -c1-300 | while IFS= read -r l; do echo "::error::$l"; done
             exit 1
           }
 
