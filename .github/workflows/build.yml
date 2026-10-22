@@ -28,7 +28,13 @@ jobs:
       - name: Build debug APK
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log || {
+            # Publish the key error lines as annotations so they can be read without log access.
+            grep -nE "error:|fatal error|undefined reference|What went wrong|FAILED|Execution failed|> " build.log \
+              | head -9 | cut -c1-300 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          }
 
       - uses: actions/upload-artifact@v4
         with:
