@@ -28,6 +28,10 @@ android {
     packaging {
         jniLibs {
             excludes.add("META-INF/*")
+            // libbass*.so is built/imported by CMake and also sits in jniLibs
+            pickFirsts.add("**/libbass.so")
+            pickFirsts.add("**/libbass_fx.so")
+            pickFirsts.add("**/libbass_ssl.so")
         }
         resources {
             excludes.add("META-INF/*")
