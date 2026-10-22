@@ -1,7 +1,3 @@
-# Put this file at .github/workflows/build.yml inside YOUR private fork of
-# kuzia15/SAMP-Mobile, on the GTA-2.11 branch (ARM64, Gradle 8.13, JDK 17).
-# Versions below were read from that branch's Gradle files.
-# Not yet test-run on GitHub: if it fails, send me the log.
 name: Build APK (GTA-2.11)
 
 on:
@@ -11,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -20,15 +16,14 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
-
+      # The runner image already ships the Android SDK, so no setup action is needed.
       - name: Install SDK, NDK and CMake
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" \
-                     "ndk;26.2.11394342" "cmake;3.22.1"
-
-      - uses: gradle/actions/setup-gradle@v4
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" "platforms;android-36" "build-tools;36.0.0" \
+                  "ndk;26.2.11394342" "cmake;3.22.1"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Build debug APK
         run: |
