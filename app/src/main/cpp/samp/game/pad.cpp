@@ -2,7 +2,6 @@
 #include "game.h"
 #include "../net/netgame.h"
 #include "../gui/gui.h"
-#include "gui/samp_widgets/playertablist.h"
 #include "../vendor/armhook/patch.h"
 #include "World.h"
 extern UI* pUI;

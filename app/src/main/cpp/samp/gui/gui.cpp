@@ -2,7 +2,6 @@
 #include "../game/game.h"
 #include "../net/netgame.h"
 #include "gui.h"
-#include "../samp_widgets/playertablist.h"
 #include "../playertags.h"
 #include "../net/playerbubblepool.h"
 #include "../CDebugInfo.h"
